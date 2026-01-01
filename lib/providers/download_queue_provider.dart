@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:spotiflac_android/models/download_item.dart';
@@ -31,6 +33,28 @@ class DownloadHistoryItem {
     required this.service,
     required this.downloadedAt,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'trackName': trackName,
+    'artistName': artistName,
+    'albumName': albumName,
+    'coverUrl': coverUrl,
+    'filePath': filePath,
+    'service': service,
+    'downloadedAt': downloadedAt.toIso8601String(),
+  };
+
+  factory DownloadHistoryItem.fromJson(Map<String, dynamic> json) => DownloadHistoryItem(
+    id: json['id'] as String,
+    trackName: json['trackName'] as String,
+    artistName: json['artistName'] as String,
+    albumName: json['albumName'] as String,
+    coverUrl: json['coverUrl'] as String?,
+    filePath: json['filePath'] as String,
+    service: json['service'] as String,
+    downloadedAt: DateTime.parse(json['downloadedAt'] as String),
+  );
 }
 
 // Download History State
@@ -46,23 +70,54 @@ class DownloadHistoryState {
 
 // Download History Notifier (Riverpod 3.x)
 class DownloadHistoryNotifier extends Notifier<DownloadHistoryState> {
+  static const _storageKey = 'download_history';
+
   @override
   DownloadHistoryState build() {
+    // Load history from storage on init
+    Future.microtask(() => _loadFromStorage());
     return const DownloadHistoryState();
+  }
+
+  Future<void> _loadFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(_storageKey);
+      if (jsonStr != null) {
+        final List<dynamic> jsonList = jsonDecode(jsonStr);
+        final items = jsonList.map((e) => DownloadHistoryItem.fromJson(e as Map<String, dynamic>)).toList();
+        state = state.copyWith(items: items);
+      }
+    } catch (e) {
+      print('[DownloadHistory] Failed to load history: $e');
+    }
+  }
+
+  Future<void> _saveToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = state.items.map((e) => e.toJson()).toList();
+      await prefs.setString(_storageKey, jsonEncode(jsonList));
+    } catch (e) {
+      print('[DownloadHistory] Failed to save history: $e');
+    }
   }
 
   void addToHistory(DownloadHistoryItem item) {
     state = state.copyWith(items: [item, ...state.items]);
+    _saveToStorage();
   }
 
   void removeFromHistory(String id) {
     state = state.copyWith(
       items: state.items.where((item) => item.id != id).toList(),
     );
+    _saveToStorage();
   }
 
   void clearHistory() {
     state = const DownloadHistoryState();
+    _saveToStorage();
   }
 }
 

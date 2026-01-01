@@ -693,9 +693,19 @@ func (t *TidalDownloader) downloadFromManifest(manifestB64, outputPath string) e
 		Timeout: 120 * time.Second,
 	}
 
-	// If we have a direct URL (BTS format), download directly
+	// If we have a direct URL (BTS format), download directly with progress tracking
 	if directURL != "" {
-		resp, err := client.Get(directURL)
+		// Set current file being downloaded
+		SetCurrentFile(filepath.Base(outputPath))
+		SetDownloading(true)
+		defer SetDownloading(false)
+
+		req, err := http.NewRequest("GET", directURL, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create request: %w", err)
+		}
+
+		resp, err := client.Do(req)
 		if err != nil {
 			return fmt.Errorf("failed to download file: %w", err)
 		}
@@ -705,13 +715,20 @@ func (t *TidalDownloader) downloadFromManifest(manifestB64, outputPath string) e
 			return fmt.Errorf("download failed with status %d", resp.StatusCode)
 		}
 
+		// Set total bytes for progress tracking
+		if resp.ContentLength > 0 {
+			SetBytesTotal(resp.ContentLength)
+		}
+
 		out, err := os.Create(outputPath)
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
 		defer out.Close()
 
-		_, err = io.Copy(out, resp.Body)
+		// Use ProgressWriter for tracking
+		progressWriter := NewProgressWriter(out)
+		_, err = io.Copy(progressWriter, resp.Body)
 		return err
 	}
 
