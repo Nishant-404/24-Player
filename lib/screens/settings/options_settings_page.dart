@@ -39,7 +39,7 @@ class OptionsSettingsPage extends ConsumerWidget {
                       alignment: Alignment.bottomLeft,
                       padding: EdgeInsets.only(
                         left: Tween<double>(begin: 56, end: 24).evaluate(animation),
-                        bottom: Tween<double>(begin: 12, end: 16).evaluate(animation),
+                        bottom: Tween<double>(begin: 16, end: 16).evaluate(animation),
                       ),
                       child: Text('Options',
                         style: TextStyle(

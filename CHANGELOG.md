@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.2] - 2026-01-02
+
+### Changed
+- **Home Tab Rename**: Renamed "Search" tab to "Home" with home icon
+- **Branding**: Changed idle screen title from "Search Music" to "SpotiFLAC"
+
 ## [1.6.1] - 2026-01-02
 
 ### Added

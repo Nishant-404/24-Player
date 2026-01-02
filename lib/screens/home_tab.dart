@@ -231,7 +231,7 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
               expandedTitleScale: 1.3,
               titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
               title: Text(
-                'Search',
+                'Home',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -258,6 +258,21 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.music_note, size: 48, color: colorScheme.primary),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'SpotiFLAC',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Paste a Spotify link or search by name',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),

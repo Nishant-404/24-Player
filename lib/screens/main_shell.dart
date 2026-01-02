@@ -191,9 +191,9 @@ class _MainShellState extends ConsumerState<MainShell> {
           animationDuration: const Duration(milliseconds: 200),
           destinations: [
             const NavigationDestination(
-              icon: Icon(Icons.search_outlined),
-              selectedIcon: Icon(Icons.search),
-              label: 'Search',
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
             ),
             NavigationDestination(
               icon: Badge(
