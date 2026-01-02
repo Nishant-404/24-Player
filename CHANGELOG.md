@@ -2,9 +2,22 @@
 
 ## [1.6.2] - 2026-01-02
 
+### Added
+- **HTTPS-Only Downloads**: APK downloads and update checks now enforce HTTPS-only connections for security
+
 ### Changed
 - **Home Tab Rename**: Renamed "Search" tab to "Home" with home icon
 - **Branding**: Changed idle screen title from "Search Music" to "SpotiFLAC"
+- **About Page Redesign**: New Material Expressive 3 grouped layout with app header, contributors section with GitHub avatars, and organized links
+
+### Performance
+- **Optimized State Management**: Use `.select()` for Riverpod providers to prevent unnecessary widget rebuilds
+- **List Keys**: Added keys to all list builders for efficient list updates and reordering
+- **Request Cancellation**: Outdated API requests are ignored when new search/fetch is triggered
+- **Debounced URL Fetches**: All network requests now debounced to prevent rapid duplicate calls
+- **Bounded File Cache**: File existence cache now limited to 500 entries to prevent memory leak
+- **Timer Cleanup**: Progress polling timer properly disposed when provider is destroyed
+- **Stream Error Handling**: Share intent stream now has proper error handling
 
 ## [1.6.1] - 2026-01-02
 

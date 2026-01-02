@@ -249,6 +249,12 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
   @override
   DownloadQueueState build() {
+    // Cleanup timer when provider is disposed
+    ref.onDispose(() {
+      _progressTimer?.cancel();
+      _progressTimer = null;
+    });
+    
     // Initialize output directory and load persisted queue asynchronously
     Future.microtask(() async {
       await _initOutputDir();

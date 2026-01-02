@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:spotiflac_android/models/track.dart';
 import 'package:spotiflac_android/providers/track_provider.dart';
 import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
@@ -74,16 +75,14 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
       });
     }
     
-    // Don't live search for URLs - wait for submit
-    if (text.startsWith('http') || text.startsWith('spotify:')) {
-      _debounce?.cancel();
-      return;
-    }
-    
-    // Debounce search queries
+    // Debounce all requests (URLs and searches)
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      if (text.length >= 2) {
+      if (text.isEmpty) return;
+      
+      if (text.startsWith('http') || text.startsWith('spotify:')) {
+        _fetchMetadata();
+      } else if (text.length >= 2) {
         _performSearch(text);
       }
     });
@@ -196,12 +195,6 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
     );
   }
 
-  bool get _hasResults {
-    final trackState = ref.watch(trackProvider);
-    // Show results view when typing, loading, or has results
-    return _isTyping || trackState.tracks.isNotEmpty || trackState.artistAlbums != null || trackState.isLoading;
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -209,11 +202,21 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
     // Listen for state changes to sync search bar
     ref.listen<TrackState>(trackProvider, _onTrackStateChanged);
     
-    final trackState = ref.watch(trackProvider);
+    // Use select() to only rebuild when specific fields change
+    final tracks = ref.watch(trackProvider.select((s) => s.tracks));
+    final isLoading = ref.watch(trackProvider.select((s) => s.isLoading));
+    final error = ref.watch(trackProvider.select((s) => s.error));
+    final albumName = ref.watch(trackProvider.select((s) => s.albumName));
+    final playlistName = ref.watch(trackProvider.select((s) => s.playlistName));
+    final artistName = ref.watch(trackProvider.select((s) => s.artistName));
+    final coverUrl = ref.watch(trackProvider.select((s) => s.coverUrl));
+    final artistAlbums = ref.watch(trackProvider.select((s) => s.artistAlbums));
+    final hasSearchedBefore = ref.watch(settingsProvider.select((s) => s.hasSearchedBefore));
+    
     final colorScheme = Theme.of(context).colorScheme;
-    final hasResults = _hasResults;
+    final hasResults = _isTyping || tracks.isNotEmpty || artistAlbums != null || isLoading;
     final screenHeight = MediaQuery.of(context).size.height;
-    final historyItems = ref.watch(downloadHistoryProvider).items;
+    final historyItems = ref.watch(downloadHistoryProvider.select((s) => s.items));
 
     return Scaffold(
       body: CustomScrollView(
@@ -296,7 +299,7 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
                   ? const SizedBox.shrink()
                   : Column(
                       children: [
-                        if (!ref.watch(settingsProvider).hasSearchedBefore)
+                        if (!hasSearchedBefore)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
@@ -318,7 +321,18 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
           ),
           
           // Results content - always in tree
-          ..._buildResultsContent(trackState, colorScheme, hasResults),
+          ..._buildResultsContentOptimized(
+            tracks: tracks,
+            isLoading: isLoading,
+            error: error,
+            albumName: albumName,
+            playlistName: playlistName,
+            artistName: artistName,
+            coverUrl: coverUrl,
+            artistAlbums: artistAlbums,
+            colorScheme: colorScheme,
+            hasResults: hasResults,
+          ),
         ],
       ),
     );
@@ -346,42 +360,45 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
             itemCount: displayItems.length,
             itemBuilder: (context, index) {
               final item = displayItems[index];
-              return GestureDetector(
-                onTap: () => _navigateToMetadataScreen(item),
-                child: Container(
-                  width: 60,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: item.coverUrl != null
-                            ? CachedNetworkImage(
-                                imageUrl: item.coverUrl!,
-                                width: 56,
-                                height: 56,
-                                fit: BoxFit.cover,
-                                memCacheWidth: 112,
-                                memCacheHeight: 112,
-                              )
-                            : Container(
-                                width: 56,
-                                height: 56,
-                                color: colorScheme.surfaceContainerHighest,
-                                child: Icon(Icons.music_note, color: colorScheme.onSurfaceVariant, size: 24),
-                              ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.trackName,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+              return KeyedSubtree(
+                key: ValueKey(item.id),
+                child: GestureDetector(
+                  onTap: () => _navigateToMetadataScreen(item),
+                  child: Container(
+                    width: 60,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: item.coverUrl != null
+                              ? CachedNetworkImage(
+                                  imageUrl: item.coverUrl!,
+                                  width: 56,
+                                  height: 56,
+                                  fit: BoxFit.cover,
+                                  memCacheWidth: 112,
+                                  memCacheHeight: 112,
+                                )
+                              : Container(
+                                  width: 56,
+                                  height: 56,
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: Icon(Icons.music_note, color: colorScheme.onSurfaceVariant, size: 24),
+                                ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          item.trackName,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -401,8 +418,19 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
     ));
   }
 
-  // Results content slivers (without app bar and search bar)
-  List<Widget> _buildResultsContent(TrackState trackState, ColorScheme colorScheme, bool hasResults) {
+  // Results content slivers (without app bar and search bar) - optimized version
+  List<Widget> _buildResultsContentOptimized({
+    required List<Track> tracks,
+    required bool isLoading,
+    required String? error,
+    required String? albumName,
+    required String? playlistName,
+    required String? artistName,
+    required String? coverUrl,
+    required List<ArtistAlbum>? artistAlbums,
+    required ColorScheme colorScheme,
+    required bool hasResults,
+  }) {
     // Return empty slivers when no results to keep tree structure stable
     if (!hasResults) {
       return [const SliverToBoxAdapter(child: SizedBox.shrink())];
@@ -410,45 +438,187 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
     
     return [
       // Error message
-      if (trackState.error != null)
+      if (error != null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(trackState.error!, style: TextStyle(color: colorScheme.error)),
+          child: Text(error, style: TextStyle(color: colorScheme.error)),
         )),
 
       // Loading indicator
-      if (trackState.isLoading)
+      if (isLoading)
         const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: LinearProgressIndicator())),
 
       // Album/Playlist header
-      if (trackState.albumName != null || trackState.playlistName != null)
-        SliverToBoxAdapter(child: _buildHeader(trackState, colorScheme)),
+      if (albumName != null || playlistName != null)
+        SliverToBoxAdapter(child: _buildHeaderOptimized(
+          albumName: albumName,
+          playlistName: playlistName,
+          coverUrl: coverUrl,
+          trackCount: tracks.length,
+          colorScheme: colorScheme,
+        )),
 
       // Artist header and discography
-      if (trackState.artistName != null && trackState.artistAlbums != null)
-        SliverToBoxAdapter(child: _buildArtistHeader(trackState, colorScheme)),
+      if (artistName != null && artistAlbums != null)
+        SliverToBoxAdapter(child: _buildArtistHeaderOptimized(
+          artistName: artistName,
+          coverUrl: coverUrl,
+          albumCount: artistAlbums.length,
+          colorScheme: colorScheme,
+        )),
 
-      if (trackState.artistAlbums != null && trackState.artistAlbums!.isNotEmpty)
-        SliverToBoxAdapter(child: _buildArtistDiscography(trackState, colorScheme)),
+      if (artistAlbums != null && artistAlbums.isNotEmpty)
+        SliverToBoxAdapter(child: _buildArtistDiscographyOptimized(artistAlbums, colorScheme)),
 
       // Download All button
-      if (trackState.tracks.length > 1 && trackState.albumName == null && trackState.playlistName == null && trackState.artistAlbums == null)
+      if (tracks.length > 1 && albumName == null && playlistName == null && artistAlbums == null)
         SliverToBoxAdapter(child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: FilledButton.icon(onPressed: _downloadAll, icon: const Icon(Icons.download),
-            label: Text('Download All (${trackState.tracks.length})'),
+            label: Text('Download All (${tracks.length})'),
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48))),
         )),
 
-      // Track list
+      // Track list with keys for efficient updates
       SliverList(delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildTrackTile(index, colorScheme),
-        childCount: trackState.tracks.length,
+        (context, index) {
+          final track = tracks[index];
+          return KeyedSubtree(
+            key: ValueKey(track.id),
+            child: _buildTrackTileOptimized(track, index, colorScheme),
+          );
+        },
+        childCount: tracks.length,
       )),
 
       // Bottom padding
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
     ];
+  }
+
+  Widget _buildHeaderOptimized({
+    required String? albumName,
+    required String? playlistName,
+    required String? coverUrl,
+    required int trackCount,
+    required ColorScheme colorScheme,
+  }) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            if (coverUrl != null)
+              ClipRRect(borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(imageUrl: coverUrl, width: 80, height: 80, fit: BoxFit.cover,
+                  placeholder: (_, _) => Container(width: 80, height: 80, color: colorScheme.surfaceContainerHighest))),
+            const SizedBox(width: 16),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(albumName ?? playlistName ?? '',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+              Text('$trackCount tracks',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+            ])),
+            FilledButton.tonal(onPressed: _downloadAll,
+              style: FilledButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(16)),
+              child: const Icon(Icons.download)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArtistHeaderOptimized({
+    required String? artistName,
+    required String? coverUrl,
+    required int albumCount,
+    required ColorScheme colorScheme,
+  }) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            if (coverUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(40),
+                child: CachedNetworkImage(
+                  imageUrl: coverUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => Container(
+                    width: 80,
+                    height: 80,
+                    color: colorScheme.surfaceContainerHighest,
+                    child: Icon(Icons.person, color: colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    artistName ?? '',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$albumCount releases',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArtistDiscographyOptimized(List<ArtistAlbum> albums, ColorScheme colorScheme) {
+    final albumsOnly = albums.where((a) => a.albumType == 'album').toList();
+    final singles = albums.where((a) => a.albumType == 'single').toList();
+    final compilations = albums.where((a) => a.albumType == 'compilation').toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (albumsOnly.isNotEmpty) _buildAlbumSection('Albums', albumsOnly, colorScheme),
+        if (singles.isNotEmpty) _buildAlbumSection('Singles & EPs', singles, colorScheme),
+        if (compilations.isNotEmpty) _buildAlbumSection('Compilations', compilations, colorScheme),
+      ],
+    );
+  }
+
+  Widget _buildTrackTileOptimized(Track track, int index, ColorScheme colorScheme) {
+    return ListTile(
+      leading: track.coverUrl != null
+          ? ClipRRect(borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: track.coverUrl!, 
+                width: 48, 
+                height: 48, 
+                fit: BoxFit.cover,
+                memCacheWidth: 96,
+                memCacheHeight: 96,
+              ))
+          : Container(width: 48, height: 48,
+              decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
+              child: Icon(Icons.music_note, color: colorScheme.onSurfaceVariant)),
+      title: Text(track.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(track.artistName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.onSurfaceVariant)),
+      trailing: IconButton(icon: Icon(Icons.download, color: colorScheme.primary), onPressed: () => _downloadTrack(index)),
+      onTap: () => _downloadTrack(index),
+    );
   }
 
   Widget _buildSearchBar(ColorScheme colorScheme) {
@@ -498,101 +668,6 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
     );
   }
 
-  Widget _buildHeader(TrackState state, ColorScheme colorScheme) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            if (state.coverUrl != null)
-              ClipRRect(borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(imageUrl: state.coverUrl!, width: 80, height: 80, fit: BoxFit.cover,
-                  placeholder: (_, _) => Container(width: 80, height: 80, color: colorScheme.surfaceContainerHighest))),
-            const SizedBox(width: 16),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(state.albumName ?? state.playlistName ?? '',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 4),
-              Text('${state.tracks.length} tracks',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-            ])),
-            FilledButton.tonal(onPressed: _downloadAll,
-              style: FilledButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(16)),
-              child: const Icon(Icons.download)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArtistHeader(TrackState state, ColorScheme colorScheme) {
-    final albumCount = state.artistAlbums?.length ?? 0;
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            if (state.coverUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(40),
-                child: CachedNetworkImage(
-                  imageUrl: state.coverUrl!,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  placeholder: (_, _) => Container(
-                    width: 80,
-                    height: 80,
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Icon(Icons.person, color: colorScheme.onSurfaceVariant),
-                  ),
-                ),
-              ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    state.artistName ?? '',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$albumCount releases',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArtistDiscography(TrackState state, ColorScheme colorScheme) {
-    final albums = state.artistAlbums ?? [];
-    
-    final albumsOnly = albums.where((a) => a.albumType == 'album').toList();
-    final singles = albums.where((a) => a.albumType == 'single').toList();
-    final compilations = albums.where((a) => a.albumType == 'compilation').toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (albumsOnly.isNotEmpty) _buildAlbumSection('Albums', albumsOnly, colorScheme),
-        if (singles.isNotEmpty) _buildAlbumSection('Singles & EPs', singles, colorScheme),
-        if (compilations.isNotEmpty) _buildAlbumSection('Compilations', compilations, colorScheme),
-      ],
-    );
-  }
-
   Widget _buildAlbumSection(String title, List<ArtistAlbum> albums, ColorScheme colorScheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,7 +688,13 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: albums.length,
-            itemBuilder: (context, index) => _buildAlbumCard(albums[index], colorScheme),
+            itemBuilder: (context, index) {
+              final album = albums[index];
+              return KeyedSubtree(
+                key: ValueKey(album.id),
+                child: _buildAlbumCard(album, colorScheme),
+              );
+            },
           ),
         ),
       ],
@@ -673,29 +754,6 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
     // Use fetchAlbumFromArtist to save artist state for back navigation
     ref.read(trackProvider.notifier).fetchAlbumFromArtist(albumId);
     ref.read(settingsProvider.notifier).setHasSearchedBefore();
-  }
-
-  Widget _buildTrackTile(int index, ColorScheme colorScheme) {
-    final track = ref.watch(trackProvider).tracks[index];
-    return ListTile(
-      leading: track.coverUrl != null
-          ? ClipRRect(borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: track.coverUrl!, 
-                width: 48, 
-                height: 48, 
-                fit: BoxFit.cover,
-                memCacheWidth: 96,
-                memCacheHeight: 96,
-              ))
-          : Container(width: 48, height: 48,
-              decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
-              child: Icon(Icons.music_note, color: colorScheme.onSurfaceVariant)),
-      title: Text(track.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(track.artistName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.onSurfaceVariant)),
-      trailing: IconButton(icon: Icon(Icons.download, color: colorScheme.primary), onPressed: () => _downloadTrack(index)),
-      onTap: () => _downloadTrack(index),
-    );
   }
 }
 

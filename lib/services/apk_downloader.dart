@@ -14,9 +14,18 @@ class ApkDownloader {
     required String version,
     ProgressCallback? onProgress,
   }) async {
+    // Validate URL for security
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https') {
+      _log.e('Refusing to download from invalid or non-HTTPS URL');
+      return null;
+    }
+
+    final client = http.Client();
+    IOSink? sink;
+    
     try {
-      final client = http.Client();
-      final request = http.Request('GET', Uri.parse(url));
+      final request = http.Request('GET', uri);
       final response = await client.send(request);
 
       if (response.statusCode != 200) {
@@ -41,7 +50,7 @@ class ApkDownloader {
         await file.delete();
       }
 
-      final sink = file.openWrite();
+      sink = file.openWrite();
       int received = 0;
 
       await for (final chunk in response.stream) {
@@ -50,14 +59,15 @@ class ApkDownloader {
         onProgress?.call(received, contentLength);
       }
 
-      await sink.close();
-      client.close();
-
+      await sink.flush();
       _log.i('Downloaded to: $filePath');
       return filePath;
     } catch (e) {
       _log.e('Error: $e');
       return null;
+    } finally {
+      await sink?.close();
+      client.close();
     }
   }
 

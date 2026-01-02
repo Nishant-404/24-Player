@@ -47,11 +47,17 @@ class _MainShellState extends ConsumerState<MainShell> {
       _handleSharedUrl(pendingUrl);
     }
 
-    // Listen for future shared URLs
-    _shareSubscription = ShareIntentService().sharedUrlStream.listen((url) {
-      _log.d('Received shared URL from stream: $url');
-      _handleSharedUrl(url);
-    });
+    // Listen for future shared URLs with error handling
+    _shareSubscription = ShareIntentService().sharedUrlStream.listen(
+      (url) {
+        _log.d('Received shared URL from stream: $url');
+        _handleSharedUrl(url);
+      },
+      onError: (error) {
+        _log.e('Share stream error: $error');
+      },
+      cancelOnError: false,
+    );
   }
 
   void _handleSharedUrl(String url) {

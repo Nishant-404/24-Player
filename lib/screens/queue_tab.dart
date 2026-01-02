@@ -16,12 +16,19 @@ class QueueTab extends ConsumerStatefulWidget {
 
 class _QueueTabState extends ConsumerState<QueueTab> {
   final Map<String, bool> _fileExistsCache = {};
+  static const int _maxCacheSize = 500; // Limit cache size to prevent memory leak
 
   bool _checkFileExists(String? filePath) {
     if (filePath == null) return false;
     if (_fileExistsCache.containsKey(filePath)) {
       return _fileExistsCache[filePath]!;
     }
+    
+    // Limit cache size - remove oldest entry if full
+    if (_fileExistsCache.length >= _maxCacheSize) {
+      _fileExistsCache.remove(_fileExistsCache.keys.first);
+    }
+    
     Future.microtask(() async {
       final exists = await File(filePath).exists();
       if (mounted && _fileExistsCache[filePath] != exists) {
@@ -69,8 +76,13 @@ class _QueueTabState extends ConsumerState<QueueTab> {
 
   @override
   Widget build(BuildContext context) {
-    final queueState = ref.watch(downloadQueueProvider);
-    final historyState = ref.watch(downloadHistoryProvider);
+    // Use select() to only rebuild when specific fields change
+    final queueItems = ref.watch(downloadQueueProvider.select((s) => s.items));
+    final isProcessing = ref.watch(downloadQueueProvider.select((s) => s.isProcessing));
+    final isPaused = ref.watch(downloadQueueProvider.select((s) => s.isPaused));
+    final queuedCount = ref.watch(downloadQueueProvider.select((s) => s.queuedCount));
+    final completedCount = ref.watch(downloadQueueProvider.select((s) => s.completedCount));
+    final historyItems = ref.watch(downloadHistoryProvider.select((s) => s.items));
     final historyViewMode = ref.watch(settingsProvider.select((s) => s.historyViewMode));
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -100,7 +112,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
         ),
 
         // Pause/Resume controls - only show when multiple items or paused
-        if ((queueState.isProcessing || queueState.queuedCount > 0) && (queueState.items.length > 1 || queueState.isPaused))
+        if ((isProcessing || queuedCount > 0) && (queueItems.length > 1 || isPaused))
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -113,14 +125,14 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: queueState.isPaused 
+                          color: isPaused 
                               ? colorScheme.errorContainer 
                               : colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          queueState.isPaused ? Icons.pause : Icons.downloading,
-                          color: queueState.isPaused 
+                          isPaused ? Icons.pause : Icons.downloading,
+                          color: isPaused 
                               ? colorScheme.onErrorContainer 
                               : colorScheme.onPrimaryContainer,
                         ),
@@ -129,9 +141,9 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                       // Status text - simplified
                       Expanded(
                         child: Text(
-                          queueState.isPaused 
+                          isPaused 
                               ? 'Paused' 
-                              : '${queueState.completedCount}/${queueState.items.length}',
+                              : '$completedCount/${queueItems.length}',
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -140,7 +152,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                       // Pause/Resume button
                       FilledButton.tonal(
                         onPressed: () => ref.read(downloadQueueProvider.notifier).togglePause(),
-                        child: Text(queueState.isPaused ? 'Resume' : 'Pause'),
+                        child: Text(isPaused ? 'Resume' : 'Pause'),
                       ),
                     ],
                   ),
@@ -150,34 +162,40 @@ class _QueueTabState extends ConsumerState<QueueTab> {
           ),
 
         // Queue header
-        if (queueState.items.isNotEmpty)
+        if (queueItems.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Text('Downloading (${queueState.items.length})',
+              child: Text('Downloading (${queueItems.length})',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             ),
           ),
 
-        // Queue list
-        if (queueState.items.isNotEmpty)
+        // Queue list with keys for efficient updates
+        if (queueItems.isNotEmpty)
           SliverList(delegate: SliverChildBuilderDelegate(
-            (context, index) => _buildQueueItem(context, queueState.items[index], colorScheme),
-            childCount: queueState.items.length,
+            (context, index) {
+              final item = queueItems[index];
+              return KeyedSubtree(
+                key: ValueKey(item.id),
+                child: _buildQueueItem(context, item, colorScheme),
+              );
+            },
+            childCount: queueItems.length,
           )),
 
         // History section header - show count only
-        if (historyState.items.isNotEmpty && queueState.items.isEmpty)
+        if (historyItems.isNotEmpty && queueItems.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Text('${historyState.items.length} ${historyState.items.length == 1 ? 'track' : 'tracks'}',
+              child: Text('${historyItems.length} ${historyItems.length == 1 ? 'track' : 'tracks'}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
             ),
           ),
 
         // History section header when queue has items (show "Downloaded" label)
-        if (historyState.items.isNotEmpty && queueState.items.isNotEmpty)
+        if (historyItems.isNotEmpty && queueItems.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -186,8 +204,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             ),
           ),
 
-        // History - Grid or List based on setting
-        if (historyState.items.isNotEmpty)
+        // History - Grid or List based on setting (with keys)
+        if (historyItems.isNotEmpty)
           historyViewMode == 'grid'
               ? SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -199,18 +217,30 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                       childAspectRatio: 0.75,
                     ),
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildHistoryGridItem(context, historyState.items[index], colorScheme),
-                      childCount: historyState.items.length,
+                      (context, index) {
+                        final item = historyItems[index];
+                        return KeyedSubtree(
+                          key: ValueKey(item.id),
+                          child: _buildHistoryGridItem(context, item, colorScheme),
+                        );
+                      },
+                      childCount: historyItems.length,
                     ),
                   ),
                 )
               : SliverList(delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildHistoryItem(context, historyState.items[index], colorScheme),
-                  childCount: historyState.items.length,
+                  (context, index) {
+                    final item = historyItems[index];
+                    return KeyedSubtree(
+                      key: ValueKey(item.id),
+                      child: _buildHistoryItem(context, item, colorScheme),
+                    );
+                  },
+                  childCount: historyItems.length,
                 )),
 
         // Empty state when both queue and history are empty
-        if (queueState.items.isEmpty && historyState.items.isEmpty)
+        if (queueItems.isEmpty && historyItems.isEmpty)
           SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState(context, colorScheme))
         else
           const SliverToBoxAdapter(child: SizedBox(height: 16)),

@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -34,6 +35,7 @@ type SpotifyMetadataClient struct {
 	clientSecret   string
 	cachedToken    string
 	tokenExpiresAt time.Time
+	tokenMu        sync.Mutex // Protects token cache for concurrent access
 	rng            *rand.Rand
 	rngMu          sync.Mutex
 	userAgent      string
@@ -43,19 +45,23 @@ type SpotifyMetadataClient struct {
 func NewSpotifyMetadataClient() *SpotifyMetadataClient {
 	src := rand.NewSource(time.Now().UnixNano())
 
-	// Decode credentials from base64
-	clientID := ""
-	if decoded, err := base64.StdEncoding.DecodeString("NWY1NzNjOTYyMDQ5NGJhZTg3ODkwYzBmMDhhNjAyOTM="); err == nil {
-		clientID = string(decoded)
+	// Prefer environment variables for credentials (more secure), fall back to built-in
+	clientID := os.Getenv("SPOTIFY_CLIENT_ID")
+	if clientID == "" {
+		if decoded, err := base64.StdEncoding.DecodeString("NWY1NzNjOTYyMDQ5NGJhZTg3ODkwYzBmMDhhNjAyOTM="); err == nil {
+			clientID = string(decoded)
+		}
 	}
 
-	clientSecret := ""
-	if decoded, err := base64.StdEncoding.DecodeString("MjEyNDc2ZDliMGYzNDcyZWFhNzYyZDkwYjE5YjBiYTg="); err == nil {
-		clientSecret = string(decoded)
+	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
+	if clientSecret == "" {
+		if decoded, err := base64.StdEncoding.DecodeString("MjEyNDc2ZDliMGYzNDcyZWFhNzYyZDkwYjE5YjBiYTg="); err == nil {
+			clientSecret = string(decoded)
+		}
 	}
 
 	c := &SpotifyMetadataClient{
-		httpClient:   &http.Client{Timeout: 15 * time.Second},
+		httpClient:   NewHTTPClientWithTimeout(15 * time.Second), // Use shared transport for connection pooling
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		rng:          rand.New(src),

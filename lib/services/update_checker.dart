@@ -92,6 +92,12 @@ class UpdateChecker {
         final name = (asset['name'] as String? ?? '').toLowerCase();
         if (name.endsWith('.apk')) {
           final downloadUrl = asset['browser_download_url'] as String?;
+          // Only accept HTTPS URLs for security
+          final uri = downloadUrl != null ? Uri.tryParse(downloadUrl) : null;
+          if (uri == null || uri.scheme != 'https') {
+            _log.w('Skipping non-HTTPS APK URL: $downloadUrl');
+            continue;
+          }
           if (name.contains('arm64') || name.contains('v8a')) {
             arm64Url = downloadUrl;
           } else if (name.contains('arm32') || name.contains('v7a') || name.contains('armeabi')) {

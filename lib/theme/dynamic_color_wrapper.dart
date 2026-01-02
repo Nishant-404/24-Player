@@ -27,7 +27,6 @@ class DynamicColorWrapper extends ConsumerWidget {
           // Use dynamic colors from wallpaper (Android 12+)
           lightScheme = lightDynamic;
           darkScheme = darkDynamic;
-          debugPrint('Using dynamic color from wallpaper');
         } else {
           // Fallback to seed color
           final seedColor = themeSettings.seedColor;
@@ -39,7 +38,6 @@ class DynamicColorWrapper extends ConsumerWidget {
             seedColor: seedColor,
             brightness: Brightness.dark,
           );
-          debugPrint('Using fallback seed color: ${seedColor.toARGB32().toRadixString(16)}');
         }
 
         // Build themes

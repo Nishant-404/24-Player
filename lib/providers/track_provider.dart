@@ -81,12 +81,21 @@ class ArtistAlbum {
 }
 
 class TrackNotifier extends Notifier<TrackState> {
+  /// Request ID to track and cancel outdated requests
+  int _currentRequestId = 0;
+
   @override
   TrackState build() {
     return const TrackState();
   }
 
+  /// Check if request is still valid (not cancelled by newer request)
+  bool _isRequestValid(int requestId) => requestId == _currentRequestId;
+
   Future<void> fetchFromUrl(String url) async {
+    // Increment request ID to cancel any pending requests
+    final requestId = ++_currentRequestId;
+    
     // Save current state for back navigation (only if we have content or it's empty)
     final savedState = state.hasContent ? TrackState(
       tracks: state.tracks,
@@ -102,9 +111,12 @@ class TrackNotifier extends Notifier<TrackState> {
 
     try {
       final parsed = await PlatformBridge.parseSpotifyUrl(url);
+      if (!_isRequestValid(requestId)) return; // Request cancelled
+      
       final type = parsed['type'] as String;
 
       final metadata = await PlatformBridge.getSpotifyMetadata(url);
+      if (!_isRequestValid(requestId)) return; // Request cancelled
 
       if (type == 'track') {
         final trackData = metadata['track'] as Map<String, dynamic>;
@@ -152,11 +164,15 @@ class TrackNotifier extends Notifier<TrackState> {
         );
       }
     } catch (e) {
+      if (!_isRequestValid(requestId)) return; // Request cancelled
       state = TrackState(isLoading: false, error: e.toString(), previousState: savedState);
     }
   }
 
   Future<void> search(String query) async {
+    // Increment request ID to cancel any pending requests
+    final requestId = ++_currentRequestId;
+    
     // Save current state for back navigation
     final savedState = state.hasContent ? TrackState(
       tracks: state.tracks,
@@ -172,6 +188,8 @@ class TrackNotifier extends Notifier<TrackState> {
 
     try {
       final results = await PlatformBridge.searchSpotify(query, limit: 20);
+      if (!_isRequestValid(requestId)) return; // Request cancelled
+      
       final trackList = results['tracks'] as List<dynamic>? ?? [];
       final tracks = trackList.map((t) => _parseSearchTrack(t as Map<String, dynamic>)).toList();
       state = TrackState(
@@ -180,6 +198,7 @@ class TrackNotifier extends Notifier<TrackState> {
         previousState: savedState,
       );
     } catch (e) {
+      if (!_isRequestValid(requestId)) return; // Request cancelled
       state = TrackState(isLoading: false, error: e.toString(), previousState: savedState);
     }
   }
@@ -242,6 +261,9 @@ class TrackNotifier extends Notifier<TrackState> {
 
   /// Fetch album from artist view - saves current artist state for back navigation
   Future<void> fetchAlbumFromArtist(String albumId) async {
+    // Increment request ID to cancel any pending requests
+    final requestId = ++_currentRequestId;
+    
     // Save current artist state before fetching album
     final savedState = TrackState(
       artistName: state.artistName,
@@ -258,6 +280,7 @@ class TrackNotifier extends Notifier<TrackState> {
     try {
       final url = 'https://open.spotify.com/album/$albumId';
       final metadata = await PlatformBridge.getSpotifyMetadata(url);
+      if (!_isRequestValid(requestId)) return; // Request cancelled
       
       final albumInfo = metadata['album_info'] as Map<String, dynamic>;
       final trackList = metadata['track_list'] as List<dynamic>;
@@ -271,6 +294,7 @@ class TrackNotifier extends Notifier<TrackState> {
         previousState: savedState,
       );
     } catch (e) {
+      if (!_isRequestValid(requestId)) return; // Request cancelled
       state = TrackState(
         isLoading: false,
         error: e.toString(),
