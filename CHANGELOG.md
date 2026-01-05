@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.0.7-preview2] - 2026-01-06
+
+### Fixed
+- **iOS Directory Picker**: Fixed unable to select download folder on iOS
+  - iOS limitation: Empty folders cannot be selected via document picker
+  - Added "App Documents Folder" option as recommended default
+  - Shows info message explaining iOS limitation
+  - Files saved to app Documents folder are accessible via iOS Files app
+
+## [2.0.7-preview] - 2026-01-05
+
+### Changed
+- **Reduced APK Size**: Replaced FFmpeg plugin with custom AAR containing only required codecs
+  - arm64 APK: 46.6 MB (previously 51 MB)
+  - arm32 APK: 59 MB (previously 64 MB)
+  - Only includes FLAC, MP3 (LAME), and AAC codecs
+  - Removed x86/x86_64 architectures (emulator only)
+
+### Technical
+- Custom FFmpeg AAR with arm64-v8a and armeabi-v7a only
+- Native MethodChannel bridge for FFmpeg operations
+- Separate iOS build configuration with ffmpeg_kit_flutter plugin
+
 ## [2.0.6] - 2026-01-05
 
 ### Fixed

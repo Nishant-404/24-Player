@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
 import 'package:spotiflac_android/widgets/settings_group.dart';
 
@@ -113,8 +115,10 @@ class DownloadSettingsPage extends ConsumerWidget {
                 SettingsItem(
                   icon: Icons.folder_outlined,
                   title: 'Download Directory',
-                  subtitle: settings.downloadDirectory.isEmpty ? 'Music/SpotiFLAC' : settings.downloadDirectory,
-                  onTap: () => _pickDirectory(ref),
+                  subtitle: settings.downloadDirectory.isEmpty 
+                      ? (Platform.isIOS ? 'App Documents Folder' : 'Music/SpotiFLAC') 
+                      : settings.downloadDirectory,
+                  onTap: () => _pickDirectory(context, ref),
                 ),
                 SettingsItem(
                   icon: Icons.create_new_folder_outlined,
@@ -161,9 +165,90 @@ class DownloadSettingsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickDirectory(WidgetRef ref) async {
-    final result = await FilePicker.platform.getDirectoryPath();
-    if (result != null) ref.read(settingsProvider.notifier).setDownloadDirectory(result);
+  Future<void> _pickDirectory(BuildContext context, WidgetRef ref) async {
+    if (Platform.isIOS) {
+      // iOS: Show options dialog
+      _showIOSDirectoryOptions(context, ref);
+    } else {
+      // Android: Use file picker
+      final result = await FilePicker.platform.getDirectoryPath();
+      if (result != null) ref.read(settingsProvider.notifier).setDownloadDirectory(result);
+    }
+  }
+
+  void _showIOSDirectoryOptions(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text('Download Location', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                'On iOS, downloads are saved to the app\'s Documents folder which is accessible via the Files app.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.folder_special, color: colorScheme.primary),
+              title: const Text('App Documents Folder'),
+              subtitle: const Text('Recommended - accessible via Files app'),
+              trailing: Icon(Icons.check_circle, color: colorScheme.primary),
+              onTap: () async {
+                final dir = await getApplicationDocumentsDirectory();
+                ref.read(settingsProvider.notifier).setDownloadDirectory(dir.path);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.cloud, color: colorScheme.onSurfaceVariant),
+              title: const Text('Choose from Files'),
+              subtitle: const Text('Select iCloud or other location'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                // Note: iOS requires folder to have at least one file to be selectable
+                final result = await FilePicker.platform.getDirectoryPath();
+                if (result != null) {
+                  ref.read(settingsProvider.notifier).setDownloadDirectory(result);
+                }
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: colorScheme.tertiary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'iOS limitation: Empty folders cannot be selected. Create a file inside first or use App Documents.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onTertiaryContainer),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   String _getFolderOrganizationLabel(String value) {

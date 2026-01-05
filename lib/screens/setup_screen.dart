@@ -205,35 +205,117 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
-        dialogTitle: 'Select Download Folder',
-      );
-
-      if (selectedDirectory != null) {
-        setState(() => _selectedDirectory = selectedDirectory);
+      if (Platform.isIOS) {
+        // iOS: Show options dialog
+        await _showIOSDirectoryOptions();
       } else {
-        final defaultDir = await _getDefaultDirectory();
-        if (mounted) {
-          final useDefault = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Use Default Folder?'),
-              content: Text('No folder selected. Would you like to use the default Music folder?\n\n$defaultDir'),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Use Default')),
-              ],
-            ),
-          );
+        // Android: Use file picker
+        String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: 'Select Download Folder',
+        );
 
-          if (useDefault == true) {
-            setState(() => _selectedDirectory = defaultDir);
+        if (selectedDirectory != null) {
+          setState(() => _selectedDirectory = selectedDirectory);
+        } else {
+          final defaultDir = await _getDefaultDirectory();
+          if (mounted) {
+            final useDefault = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Use Default Folder?'),
+                content: Text('No folder selected. Would you like to use the default Music folder?\n\n$defaultDir'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                  TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Use Default')),
+                ],
+              ),
+            );
+
+            if (useDefault == true) {
+              setState(() => _selectedDirectory = defaultDir);
+            }
           }
         }
       }
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _showIOSDirectoryOptions() async {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text('Download Location', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                'On iOS, downloads are saved to the app\'s Documents folder which is accessible via the Files app.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.folder_special, color: colorScheme.primary),
+              title: const Text('App Documents Folder'),
+              subtitle: const Text('Recommended - accessible via Files app'),
+              trailing: Icon(Icons.check_circle, color: colorScheme.primary),
+              onTap: () async {
+                final dir = await _getDefaultDirectory();
+                setState(() => _selectedDirectory = dir);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.cloud, color: colorScheme.onSurfaceVariant),
+              title: const Text('Choose from Files'),
+              subtitle: const Text('Select iCloud or other location'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                // Note: iOS requires folder to have at least one file to be selectable
+                final result = await FilePicker.platform.getDirectoryPath();
+                if (result != null) {
+                  setState(() => _selectedDirectory = result);
+                }
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: colorScheme.tertiary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'iOS limitation: Empty folders cannot be selected. Create a file inside first or use App Documents.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onTertiaryContainer),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<String> _getDefaultDirectory() async {
