@@ -85,7 +85,19 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       - name: Install Android SDK & NDK
-        uses: android-actions/setup-android@v3
+        run: |
+          # Use pre-installed Android SDK on GitHub runners
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          
+          # Accept licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # Install NDK (required for gomobile)
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;25.2.9519653" "platforms;android-34" "build-tools;34.0.0"
+          
+          # Set NDK path
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
 
       - name: Install gomobile
         run: |
