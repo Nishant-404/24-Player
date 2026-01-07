@@ -6,7 +6,7 @@ import 'package:spotiflac_android/services/platform_bridge.dart';
 
 const _settingsKey = 'app_settings';
 const _migrationVersionKey = 'settings_migration_version';
-const _currentMigrationVersion = 1; // Increment this when adding new migrations
+const _currentMigrationVersion = 1;
 
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
@@ -35,9 +35,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     
     if (lastMigration < 1) {
       // Migration 1: Set metadataSource to 'deezer' for existing users
-      // This ensures users updating from older versions get Deezer as default
-      state = state.copyWith(metadataSource: 'deezer');
-      await _saveSettings();
+      // Only apply if user hasn't enabled custom Spotify credentials
+      // (users with custom credentials likely prefer Spotify)
+      if (!state.useCustomSpotifyCredentials) {
+        state = state.copyWith(metadataSource: 'deezer');
+        await _saveSettings();
+      }
     }
     
     // Save current migration version
