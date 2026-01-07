@@ -746,30 +746,63 @@ func (t *TidalDownloader) DownloadFile(downloadURL, outputPath, itemID string) e
 		return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 	}
 
+	expectedSize := resp.ContentLength
 	// Set total bytes if available
-	if resp.ContentLength > 0 && itemID != "" {
-		SetItemBytesTotal(itemID, resp.ContentLength)
+	if expectedSize > 0 && itemID != "" {
+		SetItemBytesTotal(itemID, expectedSize)
 	}
 
-	out, err := os.Create(outputPath)
+	// Use temp file to avoid incomplete downloads
+	tempPath := outputPath + ".tmp"
+	out, err := os.Create(tempPath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
 	// Use buffered writer for better performance (256KB buffer)
 	bufWriter := bufio.NewWriterSize(out, 256*1024)
-	defer bufWriter.Flush()
 
 	// Use item progress writer with buffered output
+	var written int64
 	if itemID != "" {
 		progressWriter := NewItemProgressWriter(bufWriter, itemID)
-		_, err = io.Copy(progressWriter, resp.Body)
+		written, err = io.Copy(progressWriter, resp.Body)
 	} else {
 		// Fallback: direct copy without progress tracking
-		_, err = io.Copy(bufWriter, resp.Body)
+		written, err = io.Copy(bufWriter, resp.Body)
 	}
-	return err
+
+	// Flush buffer before checking for errors
+	flushErr := bufWriter.Flush()
+	closeErr := out.Close()
+
+	// Check for any errors
+	if err != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("download interrupted: %w", err)
+	}
+	if flushErr != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("failed to flush buffer: %w", flushErr)
+	}
+	if closeErr != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("failed to close file: %w", closeErr)
+	}
+
+	// Verify file size if Content-Length was provided
+	if expectedSize > 0 && written != expectedSize {
+		os.Remove(tempPath)
+		return fmt.Errorf("incomplete download: expected %d bytes, got %d bytes", expectedSize, written)
+	}
+
+	// Rename temp file to final path
+	if err := os.Rename(tempPath, outputPath); err != nil {
+		os.Remove(tempPath)
+		return fmt.Errorf("failed to rename temp file: %w", err)
+	}
+
+	return nil
 }
 
 func (t *TidalDownloader) downloadFromManifest(manifestB64, outputPath, itemID string) error {
@@ -805,26 +838,52 @@ func (t *TidalDownloader) downloadFromManifest(manifestB64, outputPath, itemID s
 			return fmt.Errorf("download failed with status %d", resp.StatusCode)
 		}
 
+		expectedSize := resp.ContentLength
 		// Set total bytes for progress tracking
-		if resp.ContentLength > 0 && itemID != "" {
-			SetItemBytesTotal(itemID, resp.ContentLength)
+		if expectedSize > 0 && itemID != "" {
+			SetItemBytesTotal(itemID, expectedSize)
 		}
 
-		out, err := os.Create(outputPath)
+		// Use temp file to avoid incomplete downloads
+		tempPath := outputPath + ".tmp"
+		out, err := os.Create(tempPath)
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
-		defer out.Close()
 
 		// Use item progress writer
+		var written int64
 		if itemID != "" {
 			progressWriter := NewItemProgressWriter(out, itemID)
-			_, err = io.Copy(progressWriter, resp.Body)
+			written, err = io.Copy(progressWriter, resp.Body)
 		} else {
-			// Fallback: direct copy without progress tracking
-			_, err = io.Copy(out, resp.Body)
+			written, err = io.Copy(out, resp.Body)
 		}
-		return err
+
+		closeErr := out.Close()
+
+		if err != nil {
+			os.Remove(tempPath)
+			return fmt.Errorf("download interrupted: %w", err)
+		}
+		if closeErr != nil {
+			os.Remove(tempPath)
+			return fmt.Errorf("failed to close file: %w", closeErr)
+		}
+
+		// Verify file size if Content-Length was provided
+		if expectedSize > 0 && written != expectedSize {
+			os.Remove(tempPath)
+			return fmt.Errorf("incomplete download: expected %d bytes, got %d bytes", expectedSize, written)
+		}
+
+		// Rename temp file to final path
+		if err := os.Rename(tempPath, outputPath); err != nil {
+			os.Remove(tempPath)
+			return fmt.Errorf("failed to rename temp file: %w", err)
+		}
+
+		return nil
 	}
 
 	// DASH format - download segments to temporary file

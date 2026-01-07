@@ -195,39 +195,38 @@ func getDownloadDir() string {
 }
 
 // ItemProgressWriter wraps io.Writer to track download progress for a specific item
-// Uses buffered writing for better performance
 type ItemProgressWriter struct {
-	writer  interface{ Write([]byte) (int, error) }
-	itemID  string
-	current int64
-	buffer  []byte
-	bufPos  int
+	writer       interface{ Write([]byte) (int, error) }
+	itemID       string
+	current      int64
+	lastReported int64 // Track last reported bytes for threshold-based updates
 }
 
-const progressWriterBufferSize = 256 * 1024 // 256KB buffer for faster writes
+const progressUpdateThreshold = 64 * 1024 // Update progress every 64KB
 
 // NewItemProgressWriter creates a new progress writer for a specific item
 func NewItemProgressWriter(w interface{ Write([]byte) (int, error) }, itemID string) *ItemProgressWriter {
 	return &ItemProgressWriter{
-		writer:  w,
-		itemID:  itemID,
-		current: 0,
-		buffer:  make([]byte, progressWriterBufferSize),
-		bufPos:  0,
+		writer:       w,
+		itemID:       itemID,
+		current:      0,
+		lastReported: 0,
 	}
 }
 
-// Write implements io.Writer with buffering
+// Write implements io.Writer with threshold-based progress updates
 func (pw *ItemProgressWriter) Write(p []byte) (int, error) {
 	n, err := pw.writer.Write(p)
 	if err != nil {
 		return n, err
 	}
 	pw.current += int64(n)
-	
-	// Update progress less frequently (every 64KB) to reduce lock contention
-	if pw.current%(64*1024) == 0 || pw.current == 0 {
+
+	// Update progress when we've received at least 64KB since last update
+	// Also update on first write to show download has started
+	if pw.lastReported == 0 || pw.current-pw.lastReported >= progressUpdateThreshold {
 		SetItemBytesReceived(pw.itemID, pw.current)
+		pw.lastReported = pw.current
 	}
 	return n, nil
 }

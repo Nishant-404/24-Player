@@ -5,6 +5,8 @@ import 'package:spotiflac_android/models/settings.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
 
 const _settingsKey = 'app_settings';
+const _migrationVersionKey = 'settings_migration_version';
+const _currentMigrationVersion = 1; // Increment this when adding new migrations
 
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
@@ -18,8 +20,29 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final json = prefs.getString(_settingsKey);
     if (json != null) {
       state = AppSettings.fromJson(jsonDecode(json));
+      
+      // Run migrations if needed
+      await _runMigrations(prefs);
+      
       // Apply Spotify credentials to Go backend on load
       _applySpotifyCredentials();
+    }
+  }
+
+  /// Run one-time migrations for settings
+  Future<void> _runMigrations(SharedPreferences prefs) async {
+    final lastMigration = prefs.getInt(_migrationVersionKey) ?? 0;
+    
+    if (lastMigration < 1) {
+      // Migration 1: Set metadataSource to 'deezer' for existing users
+      // This ensures users updating from older versions get Deezer as default
+      state = state.copyWith(metadataSource: 'deezer');
+      await _saveSettings();
+    }
+    
+    // Save current migration version
+    if (lastMigration < _currentMigrationVersion) {
+      await prefs.setInt(_migrationVersionKey, _currentMigrationVersion);
     }
   }
 
