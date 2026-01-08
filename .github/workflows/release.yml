@@ -297,7 +297,8 @@ jobs:
           cd ios/build/Runner.xcarchive/Products/Applications
           mkdir Payload
           cp -r Runner.app Payload/
-          zip -r ../../../../ipa/SpotiFLAC-${VERSION}-ios-unsigned.ipa Payload
+          # Use absolute path to avoid relative path issues
+          zip -r $GITHUB_WORKSPACE/build/ios/ipa/SpotiFLAC-${VERSION}-ios-unsigned.ipa Payload
           rm -rf Payload
           
       - name: Verify IPA created
