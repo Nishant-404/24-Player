@@ -1,5 +1,50 @@
 # Changelog
 
+## [3.0.0-alpha.2] - 2026-01-12
+
+### Added
+
+- **Full HTTP Method Support**: New shortcut methods for all common HTTP verbs
+  - `http.put(url, body, headers)` - PUT requests
+  - `http.delete(url, headers)` - DELETE requests  
+  - `http.patch(url, body, headers)` - PATCH requests
+  - `http.clearCookies()` - Clear all cookies for the extension
+- **Persistent Cookie Jar**: Each extension now has its own cookie jar
+  - Cookies automatically stored from `Set-Cookie` headers
+  - Cookies automatically sent with subsequent requests to same domain
+  - Useful for APIs requiring session cookies (YouTube, etc.)
+- **Multi-Value Header Support**: Response headers now return arrays for multi-value headers
+  - `Set-Cookie` and other headers with multiple values returned as arrays
+  - Single-value headers still returned as strings for convenience
+- **Generic HTTP Request Method**: New `http.request()` for full HTTP control
+  - Supports all HTTP methods (GET, POST, PUT, DELETE, PATCH, etc.)
+  - Single options object for cleaner API: `http.request(url, { method, body, headers })`
+- **Response Helper Properties**: HTTP responses now include convenience properties
+  - `response.ok` - true if status code is 2xx
+  - `response.status` - alias for `statusCode`
+
+### Fixed
+
+- **User-Agent Header Respect**: Custom `User-Agent` headers are now respected
+  - Previously, extension-provided User-Agent was overwritten
+  - Now only sets default User-Agent if extension doesn't provide one
+- **HTTP POST Body Auto-Stringify**: `http.post()` now automatically stringifies objects to JSON
+  - Previously, passing an object as body resulted in `[object Object]`
+  - Now objects and arrays are automatically JSON.stringify'd
+  - String bodies still work as before (no double-encoding)
+
+### Documentation
+
+- Updated `docs/EXTENSION_DEVELOPMENT.md`:
+  - Added complete HTTP API documentation with all methods
+  - Added Cookie Jar documentation
+  - Added `http.put()`, `http.delete()`, `http.patch()`, `http.clearCookies()` docs
+  - Added YouTube Music / Innertube API example with custom User-Agent
+  - Added common domain lists for YouTube, SoundCloud, Bandcamp
+  - Improved HTTP API documentation with response properties
+
+---
+
 ## [3.0.0-alpha.1] - 2026-01-11
 
 #### Extension System
