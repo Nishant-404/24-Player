@@ -33,8 +33,8 @@ var (
 func GetLogBuffer() *LogBuffer {
 	logBufferOnce.Do(func() {
 		globalLogBuffer = &LogBuffer{
-			entries:        make([]LogEntry, 0, 500),
-			maxSize:        500,
+			entries:        make([]LogEntry, 0, 1000),
+			maxSize:        1000,
 			loggingEnabled: false, // Default: disabled for performance (user can enable in settings)
 		}
 	})
