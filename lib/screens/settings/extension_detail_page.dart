@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spotiflac_android/providers/extension_provider.dart';
+import 'package:spotiflac_android/providers/store_provider.dart';
 import 'package:spotiflac_android/widgets/settings_group.dart';
 
 class ExtensionDetailPage extends ConsumerStatefulWidget {
@@ -390,6 +391,8 @@ class _ExtensionDetailPageState extends ConsumerState<ExtensionDetailPage> {
           .read(extensionProvider.notifier)
           .removeExtension(widget.extensionId);
       if (success && mounted) {
+        // Refresh store to update isInstalled status
+        ref.read(storeProvider.notifier).refresh();
         Navigator.pop(this.context);
       }
     }
