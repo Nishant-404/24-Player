@@ -498,7 +498,7 @@ func EmbedM4AMetadata(filePath string, metadata Metadata, coverData []byte) erro
 	}
 
 	// Find udta atom inside moov, or create one
-	moovSize := int(data[moovPos]<<24 | data[moovPos+1]<<16 | data[moovPos+2]<<8 | data[moovPos+3])
+	moovSize := int(uint32(data[moovPos])<<24 | uint32(data[moovPos+1])<<16 | uint32(data[moovPos+2])<<8 | uint32(data[moovPos+3]))
 	udtaPos := findAtom(data, "udta", moovPos+8)
 
 	// Build new metadata atoms
@@ -507,12 +507,12 @@ func EmbedM4AMetadata(filePath string, metadata Metadata, coverData []byte) erro
 	var newData []byte
 	if udtaPos >= 0 && udtaPos < moovPos+moovSize {
 		// udta exists, find meta inside it or replace
-		udtaSize := int(data[udtaPos]<<24 | data[udtaPos+1]<<16 | data[udtaPos+2]<<8 | data[udtaPos+3])
+		udtaSize := int(uint32(data[udtaPos])<<24 | uint32(data[udtaPos+1])<<16 | uint32(data[udtaPos+2])<<8 | uint32(data[udtaPos+3]))
 		metaPos := findAtom(data, "meta", udtaPos+8)
 
 		if metaPos >= 0 && metaPos < udtaPos+udtaSize {
 			// Replace existing meta atom
-			metaSize := int(data[metaPos]<<24 | data[metaPos+1]<<16 | data[metaPos+2]<<8 | data[metaPos+3])
+			metaSize := int(uint32(data[metaPos])<<24 | uint32(data[metaPos+1])<<16 | uint32(data[metaPos+2])<<8 | uint32(data[metaPos+3]))
 			newData = append(newData, data[:metaPos]...)
 			newData = append(newData, metaAtom...)
 			newData = append(newData, data[metaPos+metaSize:]...)
@@ -570,7 +570,7 @@ func EmbedM4AMetadata(filePath string, metadata Metadata, coverData []byte) erro
 // findAtom finds an atom by name starting from offset
 func findAtom(data []byte, name string, offset int) int {
 	for i := offset; i < len(data)-8; {
-		size := int(data[i]<<24 | data[i+1]<<16 | data[i+2]<<8 | data[i+3])
+		size := int(uint32(data[i])<<24 | uint32(data[i+1])<<16 | uint32(data[i+2])<<8 | uint32(data[i+3]))
 		if size < 8 {
 			break
 		}
