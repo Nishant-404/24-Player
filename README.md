@@ -1,5 +1,5 @@
 [![GitHub All Releases](https://img.shields.io/github/downloads/zarzet/SpotiFLAC-Mobile/total?style=for-the-badge)](https://github.com/zarzet/SpotiFLAC-Mobile/releases)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-Safe-brightgreen?style=for-the-badge&logo=virustotal)](https://www.virustotal.com/gui/file/09c6260e9ebaf2ff0d15f30deda939642f41887f11aad602ac697cb37fa0308c/)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-Safe-brightgreen?style=for-the-badge&logo=virustotal)](https://www.virustotal.com/gui/file/e1c527eacb6f5ce527af214a75aab8da060c2afc629825fff24af858439e7e6b)
 
 <div align="center">
 
@@ -23,22 +23,14 @@ Get Spotify tracks in true FLAC from Tidal, Qobuz & Amazon Music — no account 
   <img src="assets/images/4.jpg?v=2" width="200" />
 </p>
 
-## Metadata Source
+## Search Source
 
-SpotiFLAC supports two metadata sources for searching tracks:
+SpotiFLAC supports two search sources:
 
-| Source | Pros | Cons |
-|--------|------|------|
-| **Deezer** (Default) | No developer account needed, rate limit per user IP | Slightly less comprehensive catalog |
-| **Spotify** | More comprehensive catalog, better search results | Requires developer API credentials to avoid rate limiting |
-
-### Using Spotify
-To use Spotify as your search source without hitting rate limits:
-1. Create a Spotify Developer account at [developer.spotify.com](https://developer.spotify.com)
-2. Create an app to get your Client ID and Client Secret
-3. Go to **Settings > Options > Spotify API > Change from Deezer to Spotify > Input Custom Credentials**
-4. Enter your Client ID and Secret
-5. Change **Search Source** to Spotify
+| Source | Setup |
+|--------|-------|
+| **Deezer** (Default) | No setup required |
+| **Spotify** | Install **Spotify Web** extension from the Store, or use your own [Spotify Developer](https://developer.spotify.com) Client ID & Secret in Settings |
 
 ## Extensions
 
@@ -58,6 +50,26 @@ Want to create your own extension? Check out the [Extension Development Guide](h
 
 ### [SpotiFLAC (Desktop)](https://github.com/afkarxyz/SpotiFLAC)
 Get Spotify tracks in true FLAC from Tidal, Qobuz & Amazon Music for Windows, macOS & Linux
+
+## FAQ
+
+**Q: Why is my download failing with "Song not found"?**  
+A: The track may not be available on Tidal, Qobuz, or Amazon Music. Try enabling more download services in Settings > Download > Provider Priority, or install additional extensions from the Store.
+
+**Q: Why are some tracks downloading in lower quality?**  
+A: Quality depends on what's available from the streaming service. Tidal offers up to 24-bit/192kHz, Qobuz up to 24-bit/192kHz, and Amazon up to 24-bit/48kHz. The app automatically selects the best available quality.
+
+**Q: Can I download my Spotify playlists?**  
+A: Yes! Just paste the Spotify playlist URL in the search bar. The app will fetch all tracks and queue them for download.
+
+**Q: Why do I need to grant storage permission?**  
+A: The app needs permission to save downloaded files to your device. On Android 13+, you may need to grant "All files access" in Settings > Apps > SpotiFLAC > Permissions.
+
+**Q: How do I download Daily Mix or Discover Weekly?**  
+A: Install the **Spotify Web** extension from the Store. This extension can access personalized playlists that aren't available through the public API.
+
+**Q: Is this app safe?**  
+A: Yes, the app is open source and you can verify the code yourself. Each release is scanned with VirusTotal (see badge at top of README).
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Me-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/zarzet)
 
