@@ -124,6 +124,7 @@ type ParallelDownloadResult struct {
 
 // FetchCoverAndLyricsParallel downloads cover and fetches lyrics in parallel
 // This runs while the main audio download is happening
+// durationMs: track duration in milliseconds for lyrics matching
 func FetchCoverAndLyricsParallel(
 	coverURL string,
 	maxQualityCover bool,
@@ -131,6 +132,7 @@ func FetchCoverAndLyricsParallel(
 	trackName string,
 	artistName string,
 	embedLyrics bool,
+	durationMs int64,
 ) *ParallelDownloadResult {
 	result := &ParallelDownloadResult{}
 	var wg sync.WaitGroup
@@ -158,7 +160,8 @@ func FetchCoverAndLyricsParallel(
 			defer wg.Done()
 			fmt.Println("[Parallel] Starting lyrics fetch...")
 			client := NewLyricsClient()
-			lyrics, err := client.FetchLyricsAllSources(spotifyID, trackName, artistName)
+			durationSec := float64(durationMs) / 1000.0
+			lyrics, err := client.FetchLyricsAllSources(spotifyID, trackName, artistName, durationSec)
 			if err != nil {
 				result.LyricsErr = err
 				fmt.Printf("[Parallel] Lyrics fetch failed: %v\n", err)

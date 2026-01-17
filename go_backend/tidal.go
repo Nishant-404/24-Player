@@ -1,8 +1,8 @@
 package gobackend
 
 import (
-	"context"
 	"bufio"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
@@ -1666,6 +1666,7 @@ func downloadFromTidal(req DownloadRequest) (TidalDownloadResult, error) {
 			req.TrackName,
 			req.ArtistName,
 			req.EmbedLyrics,
+			int64(req.DurationMS),
 		)
 	}()
 

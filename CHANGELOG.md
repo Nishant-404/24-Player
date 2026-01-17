@@ -1,6 +1,56 @@
 # Changelog
 
-## [3.1.0] - 2026-01-19
+## [3.1.1] - 2026-01-17
+
+### Added
+
+- **Lyrics Caching**: Lyrics are now cached for 24 hours to reduce API calls and improve performance
+  - Thread-safe cache with automatic expiration
+  - Cache key based on artist, track, and duration
+  - Log indicator shows "(cached)" when lyrics are served from cache
+
+- **Lyrics Duration Matching**: Improved lyrics accuracy with duration-based matching
+  - Compares track duration with lrclib.net results
+  - 10-second tolerance to handle version differences (radio edit, remaster, etc.)
+  - Prioritizes synced lyrics over plain text when duration matches
+  - Falls back gracefully if no duration match found
+
+- **Deezer Cover Art Upgrade**: Cover art from Deezer CDN now automatically upgraded to maximum quality
+  - Detects Deezer CDN URLs (`cdn-images.dzcdn.net`)
+  - Upgrades cover resolution to 1800x1800 (max available)
+  - Works alongside existing cover upgrade
+
+- **Live Search for Extensions**: Search-as-you-type functionality for extension search
+  - 800ms debounce delay to prevent excessive API calls
+  - Minimum 3 characters required before searching
+  - Concurrency control to prevent race conditions in extension runtime
+  - Queues pending searches if a search is already in progress
+
+- **Russian Language Support**: Added Russian (Русский) translation - 99% complete
+  - Translated via Crowdin community contributions
+  - Covers all UI elements, settings, and error messages
+
+### Fixed
+
+- **ISRC Index Race Condition**: Fixed repeated index rebuilding during parallel downloads
+  - Added per-directory build lock using `sync.Map` and `sync.Mutex`
+  - Double-check locking pattern ensures index is built only once
+  - Significantly improves performance during CSV import with many tracks
+
+- **Queue Tab Scroll Exception**: Fixed Flutter rendering exception with NestedScrollView
+  - Disabled Material 3 stretch overscroll indicator that caused `_StretchController` assertion
+  - Wrapped NestedScrollView with ScrollConfiguration to prevent `setState during build` errors
+  - Issue was especially noticeable during rapid queue updates (CSV import)
+
+- **CSV Import**: Fixed CSV export not being parsed correctly
+  - Added support for `Artist Name(s)` header (with parentheses)
+  - Added support for `Track URI` header for track IDs
+  - Added `artists` and `track_id` as alternative header names
+  - Now correctly parses "Liked Songs" and playlist exports
+
+---
+
+## [3.1.0] - 2026-01-16
 
 ### Added
 
@@ -105,17 +155,17 @@
   - YT Music extension `getArtist()` now returns `top_tracks` array with up to 10 popular songs
   - Go backend `GetArtistWithExtensionJSON` now forwards `top_tracks`, `header_image`, and `listeners` to Flutter
   - `ExtensionArtistScreen` now parses and passes top tracks to `ArtistScreen`
-  - `ArtistScreen` with `extensionId` skips Spotify/Deezer fetch, uses extension data only (fixes "Rate Limited" errors)
+  - `ArtistScreen` with `extensionId` skips metadata fetch, uses extension data only (fixes "Rate Limited" errors)
 - **Search Bar Unfocus**: Fixed search bar not unfocusing when tapping outside - now properly dismisses keyboard and unfocus when tapping anywhere outside the search field
 - **Keyboard Appearing on Settings Navigation**: Fixed keyboard randomly appearing when returning from Settings sub-pages (e.g., Appearance) - now uses `FocusManager.instance.primaryFocus?.unfocus()` for more aggressive unfocus
-- **Recent Access Artist Navigation**: Fixed opening artist from recent access using wrong screen - now correctly uses `ExtensionArtistScreen` for extension artists (YT Music, Spotify Web) instead of trying to fetch from Spotify API
+- **Recent Access Artist Navigation**: Fixed opening artist from recent access using wrong screen - now correctly uses `ExtensionArtistScreen` for extension artists (YT Music, etc.) instead of trying to fetch from API
 
 ### Extensions
 
 - **YouTube Music Extension**: Updated to v1.5.0
   - `getArtist()` now returns `top_tracks` array with popular songs
   - Added `header_image` and `listeners` to artist response
-- **Spotify Web Extension**: Updated to v1.6.0
+- **Web Extension**: Updated to v1.6.0
 
 ### Localization
 
@@ -148,12 +198,12 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 - One-tap install, update, and uninstall
 - Offline cache for browsing without internet
 
-#### Spotify Web Extension
+#### Web Extension
 
 - Available in Extension Store - install and enable in Settings > Extensions
-- Metadata provider using Spotify's internal web player API
+- Metadata provider using web player API
 - Download tracks from Daily Mix, Discover Weekly, and other personalized playlists
-- Useful when official Spotify API is rate-limited or unavailable
+- Useful when official API is rate-limited or unavailable
 
 #### Extension Capabilities
 
@@ -188,7 +238,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 
 - **Separate Singles Folder**: Organize downloads into Albums/ and Singles/ folders
 
-  - Based on `album_type` from Spotify/Deezer metadata
+  - Based on `album_type` from metadata
   - Toggle in Settings > Download > Separate Singles Folder
 
 - **Year in Album Folder Name**: New album folder structure options with release year
@@ -226,7 +276,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 
 - **Fixed Keyboard Appearing on Tab Switch**: Keyboard now auto-dismisses when swiping between tabs
 
-- **Removed Search Source Badges**: Removed "Free" and "API Key" labels from Deezer/Spotify selector in Options
+- **Removed Search Source Badges**: Removed "Free" and "API Key" labels from provider selector in Options
 
 - **Back Gesture Freeze on Android 13+**: Fixed app freeze when using back gesture in settings
 
@@ -261,7 +311,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 
 - **Duplicate History Entries**: Fixed duplicate entries when re-downloading same track
 
-  - Detects existing entries by Spotify ID, Deezer ID, or ISRC
+  - Detects existing entries by track ID, Deezer ID, or ISRC
 
 - **Permission Error Message**: Fixed download showing "Song not found" when actually permission error
 
@@ -330,7 +380,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 - **Extension Disabled Search Fallback**: Fixed error when extension is disabled but still called
 
   - `_performSearch` now checks if extension is still enabled before calling custom search
-  - Automatically falls back to Deezer/Spotify search if extension was disabled
+  - Automatically falls back to Deezer search if extension was disabled
   - Clears `searchProvider` setting if extension no longer available
 
 - **Store Tab Unmount Crash**: Fixed "Using ref when widget is unmounted" error
@@ -450,7 +500,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 
 ### Extensions
 
-- **Spotify Web Extension** (example): New extension for Spotify metadata via web API
+- **Web Extension** (example): New extension for metadata via web API
   - Supports personalized playlists (Daily Mix, Discover Weekly, Release Radar, etc.)
   - Search, album, playlist, track, and artist fetching
   - Available in Extension Store (3.0.0-alpha.4)
@@ -462,7 +512,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 ### Added
 
 - **Separate Singles Folder**: Option to organize downloads into Albums/ and Singles/ folders
-  - Based on `album_type` from Spotify/Deezer metadata
+  - Based on `album_type` from metadata
   - Toggle in Settings > Download > Separate Singles Folder
   - Singles saved to `{output}/Singles/`, albums to `{output}/Albums/`
 - **Browser-like Polyfills**: New global APIs for easier library porting
@@ -482,7 +532,7 @@ SpotiFLAC 3.0 introduces a powerful extension system that allows third-party int
 ### Fixed
 
 - **Duplicate History Entries**: Fixed duplicate entries when re-downloading same track
-  - Detects existing entries by Spotify ID, Deezer ID, or ISRC
+  - Detects existing entries by track ID, Deezer ID, or ISRC
   - Replaces existing entry and moves to top of list
   - Auto-deduplicates existing history on app load
 - **Extension Search Fallback**: Fixed error when extension is disabled but still called for search

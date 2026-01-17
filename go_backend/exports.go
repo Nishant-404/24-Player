@@ -649,9 +649,11 @@ func SanitizeFilename(filename string) string {
 
 // FetchLyrics fetches lyrics for a track from LRCLIB
 // Returns JSON with lyrics data
-func FetchLyrics(spotifyID, trackName, artistName string) (string, error) {
+// durationMs: track duration in milliseconds for matching, use 0 to skip duration matching
+func FetchLyrics(spotifyID, trackName, artistName string, durationMs int64) (string, error) {
 	client := NewLyricsClient()
-	lyrics, err := client.FetchLyricsAllSources(spotifyID, trackName, artistName)
+	durationSec := float64(durationMs) / 1000.0
+	lyrics, err := client.FetchLyricsAllSources(spotifyID, trackName, artistName, durationSec)
 	if err != nil {
 		return "", err
 	}
@@ -673,7 +675,8 @@ func FetchLyrics(spotifyID, trackName, artistName string) (string, error) {
 
 // GetLyricsLRC fetches lyrics and converts to LRC format string with metadata headers
 // First tries to extract from file, then falls back to fetching from internet
-func GetLyricsLRC(spotifyID, trackName, artistName string, filePath string) (string, error) {
+// durationMs: track duration in milliseconds for matching, use 0 to skip duration matching
+func GetLyricsLRC(spotifyID, trackName, artistName string, filePath string, durationMs int64) (string, error) {
 	if filePath != "" {
 		lyrics, err := ExtractLyrics(filePath)
 		if err == nil && lyrics != "" {
@@ -682,7 +685,8 @@ func GetLyricsLRC(spotifyID, trackName, artistName string, filePath string) (str
 	}
 
 	client := NewLyricsClient()
-	lyricsData, err := client.FetchLyricsAllSources(spotifyID, trackName, artistName)
+	durationSec := float64(durationMs) / 1000.0
+	lyricsData, err := client.FetchLyricsAllSources(spotifyID, trackName, artistName, durationSec)
 	if err != nil {
 		return "", err
 	}

@@ -158,8 +158,9 @@ class MainActivity: FlutterActivity() {
                             val spotifyId = call.argument<String>("spotify_id") ?: ""
                             val trackName = call.argument<String>("track_name") ?: ""
                             val artistName = call.argument<String>("artist_name") ?: ""
+                            val durationMs = call.argument<Int>("duration_ms")?.toLong() ?: 0L
                             val response = withContext(Dispatchers.IO) {
-                                Gobackend.fetchLyrics(spotifyId, trackName, artistName)
+                                Gobackend.fetchLyrics(spotifyId, trackName, artistName, durationMs)
                             }
                             result.success(response)
                         }
@@ -168,8 +169,9 @@ class MainActivity: FlutterActivity() {
                             val trackName = call.argument<String>("track_name") ?: ""
                             val artistName = call.argument<String>("artist_name") ?: ""
                             val filePath = call.argument<String>("file_path") ?: ""
+                            val durationMs = call.argument<Int>("duration_ms")?.toLong() ?: 0L
                             val response = withContext(Dispatchers.IO) {
-                                Gobackend.getLyricsLRC(spotifyId, trackName, artistName, filePath)
+                                Gobackend.getLyricsLRC(spotifyId, trackName, artistName, filePath, durationMs)
                             }
                             result.success(response)
                         }

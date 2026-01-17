@@ -32,6 +32,21 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
   final FocusNode _searchFocusNode = FocusNode();
   String? _lastSearchQuery;
   
+  /// Debounce timer for live search (extension-only feature)
+  Timer? _liveSearchDebounce;
+  
+  /// Flag to prevent concurrent live search calls (prevents race conditions in extensions)
+  bool _isLiveSearchInProgress = false;
+  
+  /// Pending query to execute after current search completes
+  String? _pendingLiveSearchQuery;
+  
+  /// Minimum characters required to trigger live search
+  static const int _minLiveSearchChars = 3;
+  
+  /// Debounce duration for live search
+  static const Duration _liveSearchDelay = Duration(milliseconds: 800);
+  
   @override
   bool get wantKeepAlive => true;
   
@@ -44,6 +59,7 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
   
   @override
   void dispose() {
+    _liveSearchDebounce?.cancel();
     _urlController.removeListener(_onSearchChanged);
     _searchFocusNode.removeListener(_onSearchFocusChanged);
     _urlController.dispose();
@@ -68,7 +84,22 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
       _urlController.clear();
       setState(() => _isTyping = false);
     }
-  }  void _onSearchChanged() {
+  }
+  
+  /// Check if live search is available (extension is set as search provider)
+  bool _isLiveSearchEnabled() {
+    final settings = ref.read(settingsProvider);
+    final extState = ref.read(extensionProvider);
+    final searchProvider = settings.searchProvider;
+    
+    if (searchProvider == null || searchProvider.isEmpty) return false;
+    
+    // Check if the extension is enabled and has search capability
+    final extension = extState.extensions.where((e) => e.id == searchProvider && e.enabled).firstOrNull;
+    return extension != null;
+  }
+  
+  void _onSearchChanged() {
     final text = _urlController.text.trim();
     
     ref.read(trackProvider.notifier).setSearchText(text.isNotEmpty);
@@ -77,9 +108,59 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
       setState(() => _isTyping = true);
     } else if (text.isEmpty && _isTyping) {
       setState(() => _isTyping = false);
+      _liveSearchDebounce?.cancel();
       // Don't clear provider here - it causes focus issues
       // Provider will be cleared when user explicitly clears or navigates away
       return;
+    }
+    
+    // Live search - only for extensions
+    if (_isLiveSearchEnabled() && text.length >= _minLiveSearchChars) {
+      // Skip if it's a URL (let user press enter for URLs)
+      if (text.startsWith('http') || text.startsWith('spotify:')) return;
+      
+      _liveSearchDebounce?.cancel();
+      _liveSearchDebounce = Timer(_liveSearchDelay, () {
+        if (mounted && _urlController.text.trim() == text) {
+          _executeLiveSearch(text);
+        }
+      });
+    }
+  }
+  
+  /// Execute live search with concurrency protection
+  /// Prevents race conditions in extensions by ensuring only one search runs at a time
+  Future<void> _executeLiveSearch(String query) async {
+    // If a search is already in progress, queue this one
+    if (_isLiveSearchInProgress) {
+      _pendingLiveSearchQuery = query;
+      return;
+    }
+    
+    _isLiveSearchInProgress = true;
+    _pendingLiveSearchQuery = null;
+    
+    try {
+      await _performSearch(query);
+    } finally {
+      _isLiveSearchInProgress = false;
+      
+      // Check if there's a pending query that was queued while we were searching
+      final pending = _pendingLiveSearchQuery;
+      _pendingLiveSearchQuery = null;
+      
+      // Execute pending query if it's different from what we just searched
+      // and still matches current text field content
+      if (pending != null && 
+          pending != query && 
+          mounted && 
+          _urlController.text.trim() == pending) {
+        // Small delay to let extension's state settle
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (mounted && _urlController.text.trim() == pending) {
+          _executeLiveSearch(pending);
+        }
+      }
     }
   }
 
@@ -119,6 +200,8 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
   }
 
   Future<void> _clearAndRefresh() async {
+    _liveSearchDebounce?.cancel();
+    _pendingLiveSearchQuery = null;
     _urlController.clear();
     _searchFocusNode.unfocus();
     _lastSearchQuery = null;
@@ -1260,6 +1343,10 @@ class _HomeTabState extends ConsumerState<HomeTab> with AutomaticKeepAliveClient
 
   /// Handle Enter key press - search or fetch URL
   void _onSearchSubmitted() {
+    // Cancel any pending live search since user explicitly pressed enter
+    _liveSearchDebounce?.cancel();
+    _pendingLiveSearchQuery = null;
+    
     final text = _urlController.text.trim();
     if (text.isEmpty) return;
     

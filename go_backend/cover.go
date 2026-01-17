@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -13,6 +14,9 @@ const (
 	spotifySize640 = "ab67616d0000b273" // 640x640 (medium)
 	spotifySizeMax = "ab67616d000082c1" // Max resolution (~2000x2000)
 )
+
+// Deezer CDN supports these sizes: 56, 250, 500, 1000, 1400, 1800
+var deezerSizeRegex = regexp.MustCompile(`/(\d+)x(\d+)-\d+-\d+-\d+-\d+\.jpg$`)
 
 // convertSmallToMedium upgrades 300x300 cover URL to 640x640
 // Same logic as PC version for consistency
@@ -41,9 +45,10 @@ func downloadCoverToMemory(coverURL string, maxQuality bool) ([]byte, error) {
 		maxURL := upgradeToMaxQuality(downloadURL)
 		if maxURL != downloadURL {
 			downloadURL = maxURL
-			GoLog("[Cover] Upgraded to max resolution (~2000x2000)")
-		} else {
-			GoLog("[Cover] Max resolution not available, using 640x640")
+			// Log already printed by upgradeToMaxQuality for Deezer
+			if strings.Contains(coverURL, "scdn.co") || strings.Contains(coverURL, "spotifycdn") {
+				GoLog("[Cover] Spotify: upgraded to max resolution (~2000x2000)")
+			}
 		}
 	}
 
@@ -85,16 +90,36 @@ func downloadCoverToMemory(coverURL string, maxQuality bool) ([]byte, error) {
 	return data, nil
 }
 
-// upgradeToMaxQuality upgrades Spotify cover URL to maximum quality
-// Same logic as PC version - directly replaces 640x640 size code with max resolution
-// No HEAD verification needed - Spotify CDN always serves max resolution if available
+// upgradeToMaxQuality upgrades cover URL to maximum quality
+// Supports both Spotify and Deezer CDNs
 func upgradeToMaxQuality(coverURL string) string {
-
+	// Spotify CDN upgrade
 	if strings.Contains(coverURL, spotifySize640) {
 		return strings.Replace(coverURL, spotifySize640, spotifySizeMax, 1)
 	}
 
+	// Deezer CDN upgrade
+	if strings.Contains(coverURL, "cdn-images.dzcdn.net") {
+		return upgradeDeezerCover(coverURL)
+	}
+
 	return coverURL
+}
+
+// upgradeDeezerCover upgrades Deezer cover URL to maximum quality (1800x1800)
+// Deezer CDN format: https://cdn-images.dzcdn.net/images/cover/{hash}/{size}x{size}-000000-80-0-0.jpg
+// Available sizes: 56, 250, 500, 1000, 1400, 1800
+func upgradeDeezerCover(coverURL string) string {
+	if !strings.Contains(coverURL, "cdn-images.dzcdn.net") {
+		return coverURL
+	}
+
+	// Replace any size pattern with 1800x1800
+	upgraded := deezerSizeRegex.ReplaceAllString(coverURL, "/1800x1800-000000-80-0-0.jpg")
+	if upgraded != coverURL {
+		GoLog("[Cover] Deezer: upgraded to 1800x1800")
+	}
+	return upgraded
 }
 
 // GetCoverFromSpotify gets cover URL from Spotify metadata

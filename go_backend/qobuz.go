@@ -1,8 +1,8 @@
 package gobackend
 
 import (
-	"context"
 	"bufio"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -1085,6 +1085,7 @@ func downloadFromQobuz(req DownloadRequest) (QobuzDownloadResult, error) {
 			req.TrackName,
 			req.ArtistName,
 			req.EmbedLyrics,
+			int64(req.DurationMS),
 		)
 	}()
 

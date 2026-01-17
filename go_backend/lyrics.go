@@ -3,13 +3,99 @@ package gobackend
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+// ========================================
+// Lyrics Cache with TTL
+// ========================================
+
+const (
+	lyricsCacheTTL       = 24 * time.Hour // Cache lyrics for 24 hours
+	durationToleranceSec = 10.0           // Duration matching tolerance in seconds
+)
+
+type lyricsCacheEntry struct {
+	response  *LyricsResponse
+	expiresAt time.Time
+}
+
+type lyricsCache struct {
+	mu    sync.RWMutex
+	cache map[string]*lyricsCacheEntry
+}
+
+var globalLyricsCache = &lyricsCache{
+	cache: make(map[string]*lyricsCacheEntry),
+}
+
+func (c *lyricsCache) generateKey(artist, track string, durationSec float64) string {
+	// Normalize key: lowercase, trim spaces
+	normalizedArtist := strings.ToLower(strings.TrimSpace(artist))
+	normalizedTrack := strings.ToLower(strings.TrimSpace(track))
+	// Round duration to nearest 10 seconds for cache key
+	roundedDuration := math.Round(durationSec/10) * 10
+	return fmt.Sprintf("%s|%s|%.0f", normalizedArtist, normalizedTrack, roundedDuration)
+}
+
+func (c *lyricsCache) Get(artist, track string, durationSec float64) (*LyricsResponse, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	key := c.generateKey(artist, track, durationSec)
+	entry, exists := c.cache[key]
+	if !exists {
+		return nil, false
+	}
+
+	// Check if expired
+	if time.Now().After(entry.expiresAt) {
+		return nil, false
+	}
+
+	return entry.response, true
+}
+
+func (c *lyricsCache) Set(artist, track string, durationSec float64, response *LyricsResponse) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	key := c.generateKey(artist, track, durationSec)
+	c.cache[key] = &lyricsCacheEntry{
+		response:  response,
+		expiresAt: time.Now().Add(lyricsCacheTTL),
+	}
+}
+
+// CleanExpired removes expired entries from cache
+func (c *lyricsCache) CleanExpired() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	now := time.Now()
+	cleaned := 0
+	for key, entry := range c.cache {
+		if now.After(entry.expiresAt) {
+			delete(c.cache, key)
+			cleaned++
+		}
+	}
+	return cleaned
+}
+
+// Size returns current cache size
+func (c *lyricsCache) Size() int {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return len(c.cache)
+}
 
 type LRCLibResponse struct {
 	ID           int     `json:"id"`
@@ -86,7 +172,9 @@ func (c *LyricsClient) FetchLyricsWithMetadata(artist, track string) (*LyricsRes
 	return c.parseLRCLibResponse(&lrcResp), nil
 }
 
-func (c *LyricsClient) FetchLyricsFromLRCLibSearch(query string) (*LyricsResponse, error) {
+// FetchLyricsFromLRCLibSearch searches lyrics with optional duration matching
+// durationSec: track duration in seconds, use 0 to skip duration matching
+func (c *LyricsClient) FetchLyricsFromLRCLibSearch(query string, durationSec float64) (*LyricsResponse, error) {
 	baseURL := "https://lrclib.net/api/search"
 	params := url.Values{}
 	params.Set("q", query)
@@ -118,6 +206,13 @@ func (c *LyricsClient) FetchLyricsFromLRCLibSearch(query string) (*LyricsRespons
 		return nil, fmt.Errorf("no lyrics found")
 	}
 
+	// Filter and score results based on duration matching and synced lyrics
+	bestMatch := c.findBestMatch(results, durationSec)
+	if bestMatch != nil {
+		return c.parseLRCLibResponse(bestMatch), nil
+	}
+
+	// Fallback: return first result with synced lyrics
 	for _, result := range results {
 		if result.SyncedLyrics != "" {
 			return c.parseLRCLibResponse(&result), nil
@@ -127,34 +222,89 @@ func (c *LyricsClient) FetchLyricsFromLRCLibSearch(query string) (*LyricsRespons
 	return c.parseLRCLibResponse(&results[0]), nil
 }
 
-func (c *LyricsClient) FetchLyricsAllSources(spotifyID, trackName, artistName string) (*LyricsResponse, error) {
-	lyrics, err := c.FetchLyricsWithMetadata(artistName, trackName)
+// findBestMatch finds the best matching lyrics based on duration and sync status
+func (c *LyricsClient) findBestMatch(results []LRCLibResponse, targetDurationSec float64) *LRCLibResponse {
+	var bestSynced *LRCLibResponse
+	var bestPlain *LRCLibResponse
+
+	for i := range results {
+		result := &results[i]
+
+		// Check duration match if target duration is provided
+		durationMatches := targetDurationSec == 0 || c.durationMatches(result.Duration, targetDurationSec)
+
+		if durationMatches {
+			// Prefer synced lyrics over plain
+			if result.SyncedLyrics != "" && bestSynced == nil {
+				bestSynced = result
+			} else if result.PlainLyrics != "" && bestPlain == nil {
+				bestPlain = result
+			}
+		}
+	}
+
+	// Return synced first, then plain
+	if bestSynced != nil {
+		return bestSynced
+	}
+	return bestPlain
+}
+
+// durationMatches checks if two durations are within tolerance
+func (c *LyricsClient) durationMatches(lrcDuration, targetDuration float64) bool {
+	diff := math.Abs(lrcDuration - targetDuration)
+	return diff <= durationToleranceSec
+}
+
+// FetchLyricsAllSources fetches lyrics from multiple sources with caching and duration matching
+// durationSec: track duration in seconds for matching, use 0 to skip duration matching
+func (c *LyricsClient) FetchLyricsAllSources(spotifyID, trackName, artistName string, durationSec float64) (*LyricsResponse, error) {
+	// Check cache first
+	if cached, found := globalLyricsCache.Get(artistName, trackName, durationSec); found {
+		fmt.Printf("[Lyrics] Cache hit for: %s - %s\n", artistName, trackName)
+		cachedCopy := *cached
+		cachedCopy.Source = cached.Source + " (cached)"
+		return &cachedCopy, nil
+	}
+
+	var lyrics *LyricsResponse
+	var err error
+
+	// Try exact match first
+	lyrics, err = c.FetchLyricsWithMetadata(artistName, trackName)
 	if err == nil && lyrics != nil && len(lyrics.Lines) > 0 {
 		lyrics.Source = "LRCLIB"
+		globalLyricsCache.Set(artistName, trackName, durationSec, lyrics)
 		return lyrics, nil
 	}
 
+	// Try with simplified track name
 	simplifiedTrack := simplifyTrackName(trackName)
 	if simplifiedTrack != trackName {
 		lyrics, err = c.FetchLyricsWithMetadata(artistName, simplifiedTrack)
 		if err == nil && lyrics != nil && len(lyrics.Lines) > 0 {
 			lyrics.Source = "LRCLIB (simplified)"
+			globalLyricsCache.Set(artistName, trackName, durationSec, lyrics)
 			return lyrics, nil
 		}
 	}
 
+	// Search with duration matching
 	query := artistName + " " + trackName
-	lyrics, err = c.FetchLyricsFromLRCLibSearch(query)
+	lyrics, err = c.FetchLyricsFromLRCLibSearch(query, durationSec)
 	if err == nil && lyrics != nil && len(lyrics.Lines) > 0 {
 		lyrics.Source = "LRCLIB Search"
+		globalLyricsCache.Set(artistName, trackName, durationSec, lyrics)
 		return lyrics, nil
 	}
 
+	// Search with simplified name and duration matching
 	if simplifiedTrack != trackName {
 		query = artistName + " " + simplifiedTrack
-		lyrics, err = c.FetchLyricsFromLRCLibSearch(query)
+		lyrics, err = c.FetchLyricsFromLRCLibSearch(query, durationSec)
 		if err == nil && lyrics != nil && len(lyrics.Lines) > 0 {
 			lyrics.Source = "LRCLIB Search (simplified)"
+			globalLyricsCache.Set(artistName, trackName, durationSec, lyrics)
 			return lyrics, nil
 		}
 	}

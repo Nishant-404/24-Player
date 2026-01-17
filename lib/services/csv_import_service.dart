@@ -156,10 +156,10 @@ class CsvImportService {
       }
 
       String? trackName = getVal(['track name', 'track', 'name', 'title']);
-      String? artistName = getVal(['artist name', 'artist']);
+      String? artistName = getVal(['artist name(s)', 'artist name', 'artist', 'artists']);
       String? albumName = getVal(['album name', 'album']);
       String? isrc = getVal(['isrc']);
-      String? spotifyId = getVal(['spotify - id', 'spotify id', 'id', 'uri']);
+      String? spotifyId = getVal(['track uri', 'spotify - id', 'spotify id', 'spotify_id', 'id', 'uri']);
 
       if (spotifyId != null && spotifyId.startsWith('spotify:track:')) {
         spotifyId = spotifyId.replaceAll('spotify:track:', '');

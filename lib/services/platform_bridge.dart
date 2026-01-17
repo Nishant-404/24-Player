@@ -236,32 +236,38 @@ class PlatformBridge {
   }
 
   /// Fetch lyrics for a track
+  /// [durationMs] is the track duration in milliseconds for better matching
   static Future<Map<String, dynamic>> fetchLyrics(
     String spotifyId,
     String trackName,
-    String artistName,
-  ) async {
+    String artistName, {
+    int durationMs = 0,
+  }) async {
     final result = await _channel.invokeMethod('fetchLyrics', {
       'spotify_id': spotifyId,
       'track_name': trackName,
       'artist_name': artistName,
+      'duration_ms': durationMs,
     });
     return jsonDecode(result as String) as Map<String, dynamic>;
   }
 
   /// Get lyrics in LRC format
   /// First tries to extract from embedded file, then falls back to internet
+  /// [durationMs] is the track duration in milliseconds for better matching
   static Future<String> getLyricsLRC(
     String spotifyId,
     String trackName,
     String artistName, {
     String? filePath,
+    int durationMs = 0,
   }) async {
     final result = await _channel.invokeMethod('getLyricsLRC', {
       'spotify_id': spotifyId,
       'track_name': trackName,
       'artist_name': artistName,
       'file_path': filePath ?? '',
+      'duration_ms': durationMs,
     });
     return result as String;
   }

@@ -6,6 +6,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.iml
+.cursorignore
+.cursorrules
 
 # Kiro specs (development only)
 .kiro/

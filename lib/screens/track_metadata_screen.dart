@@ -766,12 +766,16 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
     });
 
     try {
+      // Convert duration from seconds to milliseconds
+      final durationMs = (item.duration ?? 0) * 1000;
+      
       // Add timeout to prevent infinite loading
       final result = await PlatformBridge.getLyricsLRC(
         item.spotifyId ?? '',
         item.trackName,
         item.artistName,
         filePath: _fileExists ? cleanFilePath : null, // Try embedded lyrics first
+        durationMs: durationMs,
       ).timeout(
         const Duration(seconds: 20),
         onTimeout: () => '', // Return empty string on timeout

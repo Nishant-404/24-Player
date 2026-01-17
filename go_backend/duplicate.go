@@ -21,13 +21,32 @@ type ISRCIndex struct {
 var (
 	isrcIndexCache   = make(map[string]*ISRCIndex)
 	isrcIndexCacheMu sync.RWMutex
+	isrcBuildingMu   sync.Map // Per-directory build lock to prevent concurrent builds
 	isrcIndexTTL     = 5 * time.Minute
 )
 
 // GetISRCIndex returns or builds an ISRC index for the given directory
+// Uses per-directory mutex to prevent concurrent builds (race condition fix)
 func GetISRCIndex(outputDir string) *ISRCIndex {
+	// Fast path: check cache first
 	isrcIndexCacheMu.RLock()
 	idx, exists := isrcIndexCache[outputDir]
+	isrcIndexCacheMu.RUnlock()
+
+	if exists && time.Since(idx.buildTime) < isrcIndexTTL {
+		return idx
+	}
+
+	// Slow path: need to build index
+	// Use per-directory mutex to prevent multiple goroutines from building simultaneously
+	buildLock, _ := isrcBuildingMu.LoadOrStore(outputDir, &sync.Mutex{})
+	mu := buildLock.(*sync.Mutex)
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Double-check cache after acquiring lock (another goroutine may have built it)
+	isrcIndexCacheMu.RLock()
+	idx, exists = isrcIndexCache[outputDir]
 	isrcIndexCacheMu.RUnlock()
 
 	if exists && time.Since(idx.buildTime) < isrcIndexTTL {

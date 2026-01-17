@@ -452,8 +452,14 @@ class _QueueTabState extends ConsumerState<QueueTab> {
       },
       child: Stack(
         children: [
-          NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          // ScrollConfiguration disables stretch overscroll to fix _StretchController exception
+          // This is a known Flutter issue with NestedScrollView + Material 3 stretch indicator
+          ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              overscroll: false,
+            ),
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
               SliverAppBar(
                 expandedHeight: 120 + topPadding,
                 collapsedHeight: kToolbarHeight,
@@ -696,6 +702,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
               ),
             ),
           ),
+          ), // ScrollConfiguration
 
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),

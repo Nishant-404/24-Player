@@ -1084,11 +1084,15 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       _log.d('Metadata map content: $metadata');
 
       try {
+        // Convert duration from seconds to milliseconds for better lyrics matching
+        final durationMs = track.duration * 1000;
+        
         final lrcContent = await PlatformBridge.getLyricsLRC(
           track.id, // spotifyID
           track.name,
           track.artistName,
           filePath: '', // No local file path yet (processed in memory)
+          durationMs: durationMs,
         );
 
         if (lrcContent.isNotEmpty) {
