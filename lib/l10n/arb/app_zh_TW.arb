@@ -51,7 +51,7 @@
   "@homeSupports": {
     "description": "Info text about supported URL types"
   },
-  "homeRecent": "Recent",
+  "homeRecent": "最新的",
   "@homeRecent": {
     "description": "Section header for recent searches"
   },
