@@ -694,20 +694,23 @@ class _LanguageSelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const _allLanguages = [
+static const _allLanguages = [
     ('system', 'System Default', Icons.phone_android),
     ('en', 'English', Icons.language),
     ('id', 'Bahasa Indonesia', Icons.language),
     ('de', 'Deutsch', Icons.language),
     ('es', 'Español', Icons.language),
+    ('es_ES', 'Español (España)', Icons.language),
     ('fr', 'Français', Icons.language),
     ('hi', 'हिन्दी', Icons.language),
     ('ja', '日本語', Icons.language),
     ('ko', '한국어', Icons.language),
     ('nl', 'Nederlands', Icons.language),
     ('pt', 'Português', Icons.language),
+    ('pt_PT', 'Português (Portugal)', Icons.language),
     ('ru', 'Русский', Icons.language),
     ('zh', '简体中文', Icons.language),
+    ('zh_CN', '简体中文 (中国)', Icons.language),
     ('zh_TW', '繁體中文', Icons.language),
   ];
 
