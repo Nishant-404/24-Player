@@ -65,6 +65,10 @@
   - Passes `genre`, `label`, `copyright` parameters to `_embedMetadataAndCover()`
   - Tags correctly embedded during FFmpeg conversion
 
+- **Extended Metadata for MP3 Conversion**: Genre, label, and copyright now embedded in MP3 files when converting from FLAC
+  - Added `genre`, `label`, `copyright` parameters to `_embedMetadataToMp3()`
+  - Tags embedded as ID3v2: `GENRE`, `ORGANIZATION` (label), `COPYRIGHT`
+
 ### Extensions
 
 - **spotify-web Extension**: Updated to v1.7.0
@@ -92,11 +96,24 @@
   - File stat uses a single syscall and only triggers state updates on change
   - Static regex/month table avoids repeated allocations
   - Cover precached before opening metadata from history/queue/recents
+- **Flutter Provider Optimizations**:
+  - Cache `SharedPreferences` instance in `DownloadHistoryNotifier` and `DownloadQueueNotifier` to avoid repeated `getInstance()` calls
+  - Precompile regex for folder name sanitization and year extraction (top-level `final`)
+  - Use `indexWhere` instead of `firstWhere` with placeholder object to reduce allocations in queue processing
+- **Flutter UI Optimizations**:
+  - Selective `ref.watch()` for `downloadQueueProvider` (watch only `queuedCount` or `items` instead of entire state)
+  - Pass `Track` directly to `_buildTrackTile()` instead of index lookup inside builder
+  - Pass `historyItems` as parameter to `_buildRecentAccess()` to avoid `ref.read()` inside method
+- **M4A Metadata Embedding**: Streaming implementation reduces memory usage for large files
+  - Uses `os.Open()` + `ReadAt` instead of `os.ReadFile()` (no full file load into memory)
+  - Atomic file replacement via temp file + rename for safer writes
+  - New helper functions: `findAtomInRange()`, `readAtomHeaderAt()`, `copyRange()`
 
 ### Backend
 
 - **Deezer ISRC Fetching**: Uses ISRCs already present in payloads and caches them, cutting extra API calls
 - **SearchAll Allocation**: Preallocated slices to reduce allocations during Deezer search
+- **HTTP Client Helper**: Refactored HTTP client creation to use `NewHTTPClientWithTimeout()` helper function across `lyrics.go`, `qobuz.go`, `tidal.go`
 
 ### Technical
 

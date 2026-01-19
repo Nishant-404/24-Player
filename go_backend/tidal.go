@@ -600,9 +600,7 @@ func getDownloadURLParallel(apis []string, trackID int64, quality string) (strin
 		go func(api string) {
 			reqStart := time.Now()
 
-			client := &http.Client{
-				Timeout: 15 * time.Second,
-			}
+			client := NewHTTPClientWithTimeout(15 * time.Second)
 
 			reqURL := fmt.Sprintf("%s/track/?id=%d&quality=%s", api, trackID, quality)
 
@@ -901,9 +899,7 @@ func (t *TidalDownloader) downloadFromManifest(ctx context.Context, manifestB64,
 	GoLog("[Tidal] Manifest parsed - directURL: %v, initURL: %v, mediaURLs count: %d\n",
 		directURL != "", initURL != "", len(mediaURLs))
 
-	client := &http.Client{
-		Timeout: 120 * time.Second,
-	}
+	client := NewHTTPClientWithTimeout(120 * time.Second)
 
 	if directURL != "" {
 		GoLog("[Tidal] BTS format - downloading from direct URL: %s...\n", directURL[:min(80, len(directURL))])

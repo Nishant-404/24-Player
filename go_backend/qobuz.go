@@ -716,9 +716,7 @@ func getQobuzDownloadURLParallel(apis []string, trackID int64, quality string) (
 		go func(api string) {
 			reqStart := time.Now()
 
-			client := &http.Client{
-				Timeout: 15 * time.Second,
-			}
+			client := NewHTTPClientWithTimeout(15 * time.Second)
 
 			reqURL := fmt.Sprintf("%s%d&quality=%s", api, trackID, quality)
 
