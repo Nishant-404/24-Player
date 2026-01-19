@@ -848,6 +848,9 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 					ActualBitDepth:   result.BitDepth,
 					ActualSampleRate: result.SampleRate,
 					Service:          req.Source,
+					Genre:            req.Genre,
+					Label:            req.Label,
+					Copyright:        req.Copyright,
 				}
 
 				// Embed genre and label if provided (from Deezer metadata)
@@ -1010,6 +1013,9 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 					ActualBitDepth:   result.BitDepth,
 					ActualSampleRate: result.SampleRate,
 					Service:          providerID,
+					Genre:            req.Genre,
+					Label:            req.Label,
+					Copyright:        req.Copyright,
 				}
 
 				// Embed genre and label if provided (from Deezer metadata)
@@ -1169,6 +1175,9 @@ func tryBuiltInProvider(providerID string, req DownloadRequest) (*DownloadRespon
 		TrackNumber:      result.TrackNumber,
 		DiscNumber:       result.DiscNumber,
 		ISRC:             result.ISRC,
+		Genre:            req.Genre,
+		Label:            req.Label,
+		Copyright:        req.Copyright,
 	}, nil
 }
 
