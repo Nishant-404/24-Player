@@ -1,23 +1,23 @@
 {
   "@@locale": "hi",
   "@@last_modified": "2026-01-16",
-  "appName": "SpotiFLAC",
+  "appName": "SpotiFlac",
   "@appName": {
     "description": "App name - DO NOT TRANSLATE"
   },
-  "appDescription": "Download Spotify tracks in lossless quality from Tidal, Qobuz, and Amazon Music.",
+  "appDescription": "स्पॉटीफाई ट्रैक डाउनलोड करें टाइडल, क्वाबज एवं एवं अमेजन म्यूजिक से उच्चतम क्वालिटी में।",
   "@appDescription": {
     "description": "App description shown in about page"
   },
-  "navHome": "Home",
+  "navHome": "होम",
   "@navHome": {
     "description": "Bottom navigation - Home tab"
   },
-  "navHistory": "History",
+  "navHistory": "इतिहास",
   "@navHistory": {
     "description": "Bottom navigation - History tab"
   },
-  "navSettings": "Settings",
+  "navSettings": "विकल्प",
   "@navSettings": {
     "description": "Bottom navigation - Settings tab"
   },
@@ -127,6 +127,10 @@
   "@historyNoSinglesSubtitle": {
     "description": "Empty state subtitle for singles filter"
   },
+  "historySearchHint": "Search history...",
+  "@historySearchHint": {
+    "description": "Search bar placeholder in history"
+  },
   "settingsTitle": "Settings",
   "@settingsTitle": {
     "description": "Settings screen title"
@@ -219,7 +223,7 @@
   "@quality128": {
     "description": "Audio quality option - 128kbps MP3"
   },
-  "appearanceTitle": "Appearance",
+  "appearanceTitle": "दिखावट",
   "@appearanceTitle": {
     "description": "Appearance settings page title"
   },
@@ -239,11 +243,11 @@
   "@appearanceThemeDark": {
     "description": "Dark theme"
   },
-  "appearanceDynamicColor": "Dynamic Color",
+  "appearanceDynamicColor": "डायनेमिक रंग",
   "@appearanceDynamicColor": {
     "description": "Material You dynamic colors"
   },
-  "appearanceDynamicColorSubtitle": "Use colors from your wallpaper",
+  "appearanceDynamicColorSubtitle": "वॉलपेपर से रंग इस्तेमाल करें",
   "@appearanceDynamicColorSubtitle": {
     "description": "Subtitle for dynamic color"
   },
@@ -547,6 +551,26 @@
   "aboutFeatureRequestSubtitle": "Suggest new features for the app",
   "@aboutFeatureRequestSubtitle": {
     "description": "Subtitle for feature request"
+  },
+  "aboutTelegramChannel": "Telegram Channel",
+  "@aboutTelegramChannel": {
+    "description": "Link to Telegram channel"
+  },
+  "aboutTelegramChannelSubtitle": "Announcements and updates",
+  "@aboutTelegramChannelSubtitle": {
+    "description": "Subtitle for Telegram channel"
+  },
+  "aboutTelegramChat": "Telegram Community",
+  "@aboutTelegramChat": {
+    "description": "Link to Telegram chat group"
+  },
+  "aboutTelegramChatSubtitle": "Chat with other users",
+  "@aboutTelegramChatSubtitle": {
+    "description": "Subtitle for Telegram chat"
+  },
+  "aboutSocial": "Social",
+  "@aboutSocial": {
+    "description": "Section for social links"
   },
   "aboutSupport": "Support",
   "@aboutSupport": {
@@ -1126,6 +1150,15 @@
     "description": "Dialog title - import CSV playlist"
   },
   "dialogImportPlaylistMessage": "Found {count} tracks in CSV. Add them to download queue?",
+  "csvImportTracks": "{count} tracks from CSV",
+  "@csvImportTracks": {
+    "description": "Label shown in quality picker for CSV import",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@dialogImportPlaylistMessage": {
     "description": "Dialog message - import playlist confirmation",
     "placeholders": {
@@ -1855,6 +1888,42 @@
   "@sectionFileSettings": {
     "description": "Settings section header"
   },
+  "sectionLyrics": "Lyrics",
+  "@sectionLyrics": {
+    "description": "Settings section header"
+  },
+  "lyricsMode": "Lyrics Mode",
+  "@lyricsMode": {
+    "description": "Setting - how to save lyrics"
+  },
+  "lyricsModeDescription": "Choose how lyrics are saved with your downloads",
+  "@lyricsModeDescription": {
+    "description": "Lyrics mode picker description"
+  },
+  "lyricsModeEmbed": "Embed in file",
+  "@lyricsModeEmbed": {
+    "description": "Lyrics mode option - embed in audio file"
+  },
+  "lyricsModeEmbedSubtitle": "Lyrics stored inside FLAC metadata",
+  "@lyricsModeEmbedSubtitle": {
+    "description": "Subtitle for embed option"
+  },
+  "lyricsModeExternal": "External .lrc file",
+  "@lyricsModeExternal": {
+    "description": "Lyrics mode option - separate LRC file"
+  },
+  "lyricsModeExternalSubtitle": "Separate .lrc file for players like Samsung Music",
+  "@lyricsModeExternalSubtitle": {
+    "description": "Subtitle for external option"
+  },
+  "lyricsModeBoth": "Both",
+  "@lyricsModeBoth": {
+    "description": "Lyrics mode option - embed and external"
+  },
+  "lyricsModeBothSubtitle": "Embed and save .lrc file",
+  "@lyricsModeBothSubtitle": {
+    "description": "Subtitle for both option"
+  },
   "sectionColor": "Color",
   "@sectionColor": {
     "description": "Settings section header"
@@ -2000,6 +2069,18 @@
   "trackReleaseDate": "Release date",
   "@trackReleaseDate": {
     "description": "Metadata label - release date"
+  },
+  "trackGenre": "Genre",
+  "@trackGenre": {
+    "description": "Metadata label - music genre"
+  },
+  "trackLabel": "Label",
+  "@trackLabel": {
+    "description": "Metadata label - record label"
+  },
+  "trackCopyright": "Copyright",
+  "@trackCopyright": {
+    "description": "Metadata label - copyright information"
   },
   "trackDownloaded": "Downloaded",
   "@trackDownloaded": {
