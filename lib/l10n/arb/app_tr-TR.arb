@@ -1241,7 +1241,7 @@
       }
     }
   },
-  "snackbarUrlCopied": "{platform} URL copied to clipboard",
+  "snackbarUrlCopied": "{platform} Bağlantı panoya kopyalandı",
   "@snackbarUrlCopied": {
     "description": "Snackbar - URL copied",
     "placeholders": {
@@ -1251,11 +1251,11 @@
       }
     }
   },
-  "snackbarFileNotFound": "File not found",
+  "snackbarFileNotFound": "Dosya bulunamadı",
   "@snackbarFileNotFound": {
     "description": "Snackbar - file doesn't exist"
   },
-  "snackbarSelectExtFile": "Please select a .spotiflac-ext file",
+  "snackbarSelectExtFile": "Lütfen .spotiflac-ext dosyasını seçin",
   "@snackbarSelectExtFile": {
     "description": "Snackbar - wrong file type selected"
   },
@@ -1267,7 +1267,7 @@
   "@snackbarMetadataProviderSaved": {
     "description": "Snackbar - metadata provider order saved"
   },
-  "snackbarExtensionInstalled": "{extensionName} installed.",
+  "snackbarExtensionInstalled": "{extensionName} yüklendi.",
   "@snackbarExtensionInstalled": {
     "description": "Snackbar - extension installed successfully",
     "placeholders": {
@@ -1276,7 +1276,7 @@
       }
     }
   },
-  "snackbarExtensionUpdated": "{extensionName} updated.",
+  "snackbarExtensionUpdated": "{extensionName} güncellendi.",
   "@snackbarExtensionUpdated": {
     "description": "Snackbar - extension updated successfully",
     "placeholders": {
@@ -1285,23 +1285,23 @@
       }
     }
   },
-  "snackbarFailedToInstall": "Failed to install extension",
+  "snackbarFailedToInstall": "Eklenti yüklenirken hata oluştu",
   "@snackbarFailedToInstall": {
     "description": "Snackbar - extension install error"
   },
-  "snackbarFailedToUpdate": "Failed to update extension",
+  "snackbarFailedToUpdate": "Eklenti güncellenirken hata oluştu",
   "@snackbarFailedToUpdate": {
     "description": "Snackbar - extension update error"
   },
-  "errorRateLimited": "Rate Limited",
+  "errorRateLimited": "Aşırı istek gönderildi",
   "@errorRateLimited": {
     "description": "Error title - too many requests"
   },
-  "errorRateLimitedMessage": "Too many requests. Please wait a moment before searching again.",
+  "errorRateLimitedMessage": "Çok fazla istek. Lütfen arama yapmadan önce biraz bekleyin.",
   "@errorRateLimitedMessage": {
     "description": "Error message - rate limit explanation"
   },
-  "errorFailedToLoad": "Failed to load {item}",
+  "errorFailedToLoad": "{item} yüklenirken hata oluştu",
   "@errorFailedToLoad": {
     "description": "Error message - loading failed",
     "placeholders": {
@@ -1311,11 +1311,11 @@
       }
     }
   },
-  "errorNoTracksFound": "No tracks found",
+  "errorNoTracksFound": "Parça bulunamadı",
   "@errorNoTracksFound": {
     "description": "Error - search returned no results"
   },
-  "errorMissingExtensionSource": "Cannot load {item}: missing extension source",
+  "errorMissingExtensionSource": "{item} yüklenemedi: Eksik eklenti kaynağı",
   "@errorMissingExtensionSource": {
     "description": "Error - extension source not available",
     "placeholders": {
@@ -1324,79 +1324,79 @@
       }
     }
   },
-  "statusQueued": "Queued",
+  "statusQueued": "Sıraya alındı",
   "@statusQueued": {
     "description": "Download status - waiting in queue"
   },
-  "statusDownloading": "Downloading",
+  "statusDownloading": "İndiriliyor",
   "@statusDownloading": {
     "description": "Download status - in progress"
   },
-  "statusFinalizing": "Finalizing",
+  "statusFinalizing": "Tamamlanıyor",
   "@statusFinalizing": {
     "description": "Download status - writing metadata"
   },
-  "statusCompleted": "Completed",
+  "statusCompleted": "Tamamlandı",
   "@statusCompleted": {
     "description": "Download status - finished"
   },
-  "statusFailed": "Failed",
+  "statusFailed": "Başarısız",
   "@statusFailed": {
     "description": "Download status - error occurred"
   },
-  "statusSkipped": "Skipped",
+  "statusSkipped": "Atlandı",
   "@statusSkipped": {
     "description": "Download status - already exists"
   },
-  "statusPaused": "Paused",
+  "statusPaused": "Durduruldu",
   "@statusPaused": {
     "description": "Download status - paused"
   },
-  "actionPause": "Pause",
+  "actionPause": "Duraklat",
   "@actionPause": {
     "description": "Action button - pause download"
   },
-  "actionResume": "Resume",
+  "actionResume": "Devam et",
   "@actionResume": {
     "description": "Action button - resume download"
   },
-  "actionCancel": "Cancel",
+  "actionCancel": "Vazgeç",
   "@actionCancel": {
     "description": "Action button - cancel operation"
   },
-  "actionStop": "Stop",
+  "actionStop": "Durdur",
   "@actionStop": {
     "description": "Action button - stop operation"
   },
-  "actionSelect": "Select",
+  "actionSelect": "Seç",
   "@actionSelect": {
     "description": "Action button - enter selection mode"
   },
-  "actionSelectAll": "Select All",
+  "actionSelectAll": "Tümünü Seç",
   "@actionSelectAll": {
     "description": "Action button - select all items"
   },
-  "actionDeselect": "Deselect",
+  "actionDeselect": "Seçimi kaldır",
   "@actionDeselect": {
     "description": "Action button - deselect all"
   },
-  "actionPaste": "Paste",
+  "actionPaste": "Yapıştır",
   "@actionPaste": {
     "description": "Action button - paste from clipboard"
   },
-  "actionImportCsv": "Import CSV",
+  "actionImportCsv": "CSV İçe Aktar",
   "@actionImportCsv": {
     "description": "Action button - import CSV file"
   },
-  "actionRemoveCredentials": "Remove Credentials",
+  "actionRemoveCredentials": "Özellikleri kaldır",
   "@actionRemoveCredentials": {
     "description": "Action button - delete Spotify credentials"
   },
-  "actionSaveCredentials": "Save Credentials",
+  "actionSaveCredentials": "Özellikleri kaydet",
   "@actionSaveCredentials": {
     "description": "Action button - save Spotify credentials"
   },
-  "selectionSelected": "{count} selected",
+  "selectionSelected": "{count} seçildi",
   "@selectionSelected": {
     "description": "Selection count indicator",
     "placeholders": {
@@ -1405,11 +1405,11 @@
       }
     }
   },
-  "selectionAllSelected": "All tracks selected",
+  "selectionAllSelected": "Tüm parçalar seçildi",
   "@selectionAllSelected": {
     "description": "Status - all items selected"
   },
-  "selectionTapToSelect": "Tap tracks to select",
+  "selectionTapToSelect": "Seçmek için parçalara dokunun",
   "@selectionTapToSelect": {
     "description": "Hint - how to select items"
   },
@@ -1422,11 +1422,11 @@
       }
     }
   },
-  "selectionSelectToDelete": "Select tracks to delete",
+  "selectionSelectToDelete": "Silinecek parçaları seçin",
   "@selectionSelectToDelete": {
     "description": "Placeholder when nothing selected"
   },
-  "progressFetchingMetadata": "Fetching metadata... {current}/{total}",
+  "progressFetchingMetadata": "Meta verileri alınıyor... {current}/{total}",
   "@progressFetchingMetadata": {
     "description": "Progress indicator - loading track info",
     "placeholders": {
@@ -1438,43 +1438,43 @@
       }
     }
   },
-  "progressReadingCsv": "Reading CSV...",
+  "progressReadingCsv": "CSV okunuyor...",
   "@progressReadingCsv": {
     "description": "Progress indicator - parsing CSV file"
   },
-  "searchSongs": "Songs",
+  "searchSongs": "Şarkılar",
   "@searchSongs": {
     "description": "Search result category - songs"
   },
-  "searchArtists": "Artists",
+  "searchArtists": "Sanatçılar",
   "@searchArtists": {
     "description": "Search result category - artists"
   },
-  "searchAlbums": "Albums",
+  "searchAlbums": "Albümler",
   "@searchAlbums": {
     "description": "Search result category - albums"
   },
-  "searchPlaylists": "Playlists",
+  "searchPlaylists": "Çalma Listeleri",
   "@searchPlaylists": {
     "description": "Search result category - playlists"
   },
-  "tooltipPlay": "Play",
+  "tooltipPlay": "Oynat",
   "@tooltipPlay": {
     "description": "Tooltip - play button"
   },
-  "tooltipCancel": "Cancel",
+  "tooltipCancel": "Vazgeç",
   "@tooltipCancel": {
     "description": "Tooltip - cancel button"
   },
-  "tooltipStop": "Stop",
+  "tooltipStop": "Durdur",
   "@tooltipStop": {
     "description": "Tooltip - stop button"
   },
-  "tooltipRetry": "Retry",
+  "tooltipRetry": "Yeniden dene",
   "@tooltipRetry": {
     "description": "Tooltip - retry button"
   },
-  "tooltipRemove": "Remove",
+  "tooltipRemove": "Kaldır",
   "@tooltipRemove": {
     "description": "Tooltip - remove button"
   },
@@ -1668,7 +1668,7 @@
   "@metadataMayRateLimit": {
     "description": "Spotify provider description"
   },
-  "logTitle": "Logs",
+  "logTitle": "Kayıtlar",
   "@logTitle": {
     "description": "Logs screen title"
   },
@@ -1676,47 +1676,47 @@
   "@logCopy": {
     "description": "Action - copy logs to clipboard"
   },
-  "logClear": "Clear Logs",
+  "logClear": "Kayıtları temizle",
   "@logClear": {
     "description": "Action - delete all logs"
   },
-  "logShare": "Share Logs",
+  "logShare": "Kayıtları Paylaş",
   "@logShare": {
     "description": "Action - share logs file"
   },
-  "logEmpty": "No logs yet",
+  "logEmpty": "Henüz kayıt yok",
   "@logEmpty": {
     "description": "Empty state title"
   },
-  "logCopied": "Logs copied to clipboard",
+  "logCopied": "Kayıtlar panoya kopyalandı",
   "@logCopied": {
     "description": "Snackbar - logs copied"
   },
-  "logSearchHint": "Search logs...",
+  "logSearchHint": "Kayıtları Ara...",
   "@logSearchHint": {
     "description": "Log search placeholder"
   },
-  "logFilterLevel": "Level",
+  "logFilterLevel": "Seviye",
   "@logFilterLevel": {
     "description": "Filter by log level"
   },
-  "logFilterSection": "Filter",
+  "logFilterSection": "Filtre",
   "@logFilterSection": {
     "description": "Filter section title"
   },
-  "logShareLogs": "Share logs",
+  "logShareLogs": "Kayıtları paylaş",
   "@logShareLogs": {
     "description": "Share button tooltip"
   },
-  "logClearLogs": "Clear logs",
+  "logClearLogs": "Kayıtları temizle",
   "@logClearLogs": {
     "description": "Clear button tooltip"
   },
-  "logClearLogsTitle": "Clear Logs",
+  "logClearLogsTitle": "Kayıtları temizle",
   "@logClearLogsTitle": {
     "description": "Clear logs dialog title"
   },
-  "logClearLogsMessage": "Are you sure you want to clear all logs?",
+  "logClearLogsMessage": "Tüm kayıtları temizlemek istediğinize emin misiniz?",
   "@logClearLogsMessage": {
     "description": "Clear logs confirmation message"
   },
@@ -2726,5 +2726,123 @@
         "description": "Error message"
       }
     }
+  },
+  "discographyDownload": "Download Discography",
+  "@discographyDownload": {
+    "description": "Button - download artist discography"
+  },
+  "discographyDownloadAll": "Download All",
+  "@discographyDownloadAll": {
+    "description": "Option - download entire discography"
+  },
+  "discographyDownloadAllSubtitle": "{count} tracks from {albumCount} releases",
+  "@discographyDownloadAllSubtitle": {
+    "description": "Subtitle showing total tracks and albums",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      }
+    }
+  },
+  "discographyAlbumsOnly": "Albums Only",
+  "@discographyAlbumsOnly": {
+    "description": "Option - download only albums"
+  },
+  "discographyAlbumsOnlySubtitle": "{count} tracks from {albumCount} albums",
+  "@discographyAlbumsOnlySubtitle": {
+    "description": "Subtitle showing album tracks count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      }
+    }
+  },
+  "discographySinglesOnly": "Singles & EPs Only",
+  "@discographySinglesOnly": {
+    "description": "Option - download only singles"
+  },
+  "discographySinglesOnlySubtitle": "{count} tracks from {albumCount} singles",
+  "@discographySinglesOnlySubtitle": {
+    "description": "Subtitle showing singles tracks count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      }
+    }
+  },
+  "discographySelectAlbums": "Select Albums...",
+  "@discographySelectAlbums": {
+    "description": "Option - manually select albums to download"
+  },
+  "discographySelectAlbumsSubtitle": "Choose specific albums or singles",
+  "@discographySelectAlbumsSubtitle": {
+    "description": "Subtitle for select albums option"
+  },
+  "discographyFetchingTracks": "Fetching tracks...",
+  "@discographyFetchingTracks": {
+    "description": "Progress - fetching album tracks"
+  },
+  "discographyFetchingAlbum": "Fetching {current} of {total}...",
+  "@discographyFetchingAlbum": {
+    "description": "Progress - fetching specific album",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "discographySelectedCount": "{count} selected",
+  "@discographySelectedCount": {
+    "description": "Selection count badge",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discographyDownloadSelected": "Download Selected",
+  "@discographyDownloadSelected": {
+    "description": "Button - download selected albums"
+  },
+  "discographyAddedToQueue": "Added {count} tracks to queue",
+  "@discographyAddedToQueue": {
+    "description": "Snackbar - tracks added from discography",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discographySkippedDownloaded": "{added} added, {skipped} already downloaded",
+  "@discographySkippedDownloaded": {
+    "description": "Snackbar - with skipped tracks count",
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "discographyNoAlbums": "No albums available",
+  "@discographyNoAlbums": {
+    "description": "Error - no albums found for artist"
+  },
+  "discographyFailedToFetch": "Failed to fetch some albums",
+  "@discographyFailedToFetch": {
+    "description": "Error - some albums failed to load"
   }
 }
