@@ -185,7 +185,7 @@ _AboutSettingsItem(
                   icon: Icons.forum_outlined,
                   title: context.l10n.aboutTelegramChat,
                   subtitle: context.l10n.aboutTelegramChatSubtitle,
-                  onTap: () => _launchUrl('https://t.me/spotiflacchat'),
+                  onTap: () => _launchUrl('https://t.me/spotiflac_chat'),
                   showDivider: false,
                 ),
               ],
