@@ -72,3 +72,4 @@ flutter_*.log
 
 # Development tools
 tool/
+.claude/settings.local.json
