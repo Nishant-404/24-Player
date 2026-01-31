@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Clear All Queue Button**: Added "Clear All" button next to Pause/Resume in the Downloading section header ([#96](https://github.com/zarzet/SpotiFLAC-Mobile/issues/96))
+  - Quickly cancel all queued downloads with one tap
+  - Confirmation dialog prevents accidental clears
+  - Useful when downloading large playlists
 - **IDHS Fallback**: Added I Don't Have Spotify (IDHS) as fallback link resolver when SongLink fails
   - Automatically tries IDHS when SongLink returns errors or rate limits
   - Supports both Spotify→other platforms and Deezer→other platforms lookups

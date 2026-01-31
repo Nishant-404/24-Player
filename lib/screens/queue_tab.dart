@@ -793,6 +793,8 @@ final queueItems = ref.watch(downloadQueueProvider.select((s) => s.items));
                         ),
                         const Spacer(),
                         _buildPauseResumeButton(context, ref, colorScheme),
+                        const SizedBox(width: 4),
+                        _buildClearAllButton(context, ref, colorScheme),
                       ],
                     ),
                   ),
@@ -1175,6 +1177,53 @@ if (queueItems.isEmpty &&
         foregroundColor: isPaused ? colorScheme.primary : colorScheme.onSurfaceVariant,
       ),
     );
+  }
+
+  Widget _buildClearAllButton(
+    BuildContext context,
+    WidgetRef ref,
+    ColorScheme colorScheme,
+  ) {
+    return TextButton.icon(
+      onPressed: () => _showClearAllDialog(context, ref, colorScheme),
+      icon: const Icon(Icons.clear_all, size: 18),
+      label: Text(context.l10n.queueClearAll),
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        foregroundColor: colorScheme.error,
+      ),
+    );
+  }
+
+  Future<void> _showClearAllDialog(
+    BuildContext context,
+    WidgetRef ref,
+    ColorScheme colorScheme,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.queueClearAll),
+        content: Text(context.l10n.queueClearAllMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.dialogCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.error,
+            ),
+            child: Text(context.l10n.dialogClear),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      ref.read(downloadQueueProvider.notifier).clearAll();
+    }
   }
 
   Widget _buildEmptyState(
