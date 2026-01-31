@@ -194,7 +194,7 @@ jobs:
         working-directory: go_backend
         run: |
           mkdir -p ../ios/Frameworks
-          gomobile bind -target=ios -o ../ios/Frameworks/Gobackend.xcframework .
+          gomobile bind -target=ios -tags ios -o ../ios/Frameworks/Gobackend.xcframework .
         env:
           CGO_ENABLED: 1
 
