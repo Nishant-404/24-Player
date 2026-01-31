@@ -517,16 +517,27 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
   }
 
   Widget _buildMetadataGrid(BuildContext context, ColorScheme colorScheme) {
-    // Determine audio quality string based on file type
+    // Determine audio quality string - prefer stored quality from download
     String? audioQualityStr;
     final fileName = item.filePath.split('/').last;
     final fileExt = fileName.contains('.') ? fileName.split('.').last.toUpperCase() : '';
     
-    if (fileExt == 'MP3') {
-      audioQualityStr = '320kbps';
+    // Use stored quality from download history if available
+    if (item.quality != null && item.quality!.isNotEmpty) {
+      audioQualityStr = item.quality;
     } else if (bitDepth != null && sampleRate != null) {
+      // Fallback for FLAC files without stored quality
       final sampleRateKHz = (sampleRate! / 1000).toStringAsFixed(1);
       audioQualityStr = '$bitDepth-bit/${sampleRateKHz}kHz';
+    } else {
+      // Fallback based on file extension for legacy items
+      if (fileExt == 'MP3') {
+        audioQualityStr = 'MP3';
+      } else if (fileExt == 'OPUS' || fileExt == 'OGG') {
+        audioQualityStr = 'Opus';
+      } else if (fileExt == 'M4A' || fileExt == 'AAC') {
+        audioQualityStr = 'AAC';
+      }
     }
     
     final items = <_MetadataItem>[
