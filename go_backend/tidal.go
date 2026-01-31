@@ -122,14 +122,16 @@ func NewTidalDownloader() *TidalDownloader {
 // GetAvailableAPIs returns list of available Tidal APIs
 func (t *TidalDownloader) GetAvailableAPIs() []string {
 	encodedAPIs := []string{
-		"dGlkYWwua2lub3BsdXMub25saW5l",
-		"dGlkYWwtYXBpLmJpbmltdW0ub3Jn",
-		"dHJpdG9uLnNxdWlkLnd0Zg==",
-		"dm9nZWwucXFkbC5zaXRl",
-		"bWF1cy5xcWRsLnNpdGU=",
-		"aHVuZC5xcWRsLnNpdGU=",
-		"a2F0emUucXFkbC5zaXRl",
-		"d29sZi5xcWRsLnNpdGU=",
+		"dGlkYWwua2lub3BsdXMub25saW5l",     // tidal.kinoplus.online
+		"dGlkYWwtYXBpLmJpbmltdW0ub3Jn",     // tidal-api.binimum.org
+		"dHJpdG9uLnNxdWlkLnd0Zg==",         // triton.squid.wtf
+		"aGlmaS1vbmUuc3BvdGlzYXZlci5uZXQ=", // hifi-one.spotisaver.net
+		"aGlmaS10d28uc3BvdGlzYXZlci5uZXQ=", // hifi-two.spotisaver.net
+		"dm9nZWwucXFkbC5zaXRl",             // vogel.qqdl.site
+		"bWF1cy5xcWRsLnNpdGU=",             // maus.qqdl.site
+		"aHVuZC5xcWRsLnNpdGU=",             // hund.qqdl.site
+		"a2F0emUucXFkbC5zaXRl",             // katze.qqdl.site
+		"d29sZi5xcWRsLnNpdGU=",             // wolf.qqdl.site
 	}
 
 	var apis []string
@@ -442,13 +444,13 @@ func (t *TidalDownloader) SearchTrackByMetadataWithISRC(trackName, artistName, s
 								durationDiff = -durationDiff
 							}
 							if durationDiff <= 3 {
-								GoLog("[Tidal] ✓ ISRC match: '%s' (duration verified)\n", track.Title)
+								GoLog("[Tidal] ISRC match: '%s' (duration verified)\n", track.Title)
 								return track, nil
 							}
 							GoLog("[Tidal] ISRC match but duration mismatch (expected %ds, got %ds), continuing...\n",
 								expectedDuration, track.Duration)
 						} else {
-							GoLog("[Tidal] ✓ ISRC match: '%s'\n", track.Title)
+							GoLog("[Tidal] ISRC match: '%s'\n", track.Title)
 							return track, nil
 						}
 					}
@@ -487,7 +489,7 @@ func (t *TidalDownloader) SearchTrackByMetadataWithISRC(trackName, artistName, s
 				}
 
 				if len(durationVerifiedMatches) > 0 {
-					GoLog("[Tidal] ✓ ISRC match with duration verification: '%s' (expected %ds, found %ds)\n",
+					GoLog("[Tidal] ISRC match with duration verification: '%s' (expected %ds, found %ds)\n",
 						durationVerifiedMatches[0].Title, expectedDuration, durationVerifiedMatches[0].Duration)
 					return durationVerifiedMatches[0], nil
 				}
@@ -498,11 +500,11 @@ func (t *TidalDownloader) SearchTrackByMetadataWithISRC(trackName, artistName, s
 					expectedDuration, isrcMatches[0].Duration)
 			}
 
-			GoLog("[Tidal] ✓ ISRC match (no duration verification): '%s'\n", isrcMatches[0].Title)
+			GoLog("[Tidal] ISRC match (no duration verification): '%s'\n", isrcMatches[0].Title)
 			return isrcMatches[0], nil
 		}
 
-		GoLog("[Tidal] ✗ No ISRC match found for: %s\n", spotifyISRC)
+		GoLog("[Tidal] No ISRC match found for: %s\n", spotifyISRC)
 		return nil, fmt.Errorf("ISRC mismatch: no track found with ISRC %s on Tidal", spotifyISRC)
 	}
 
@@ -669,7 +671,7 @@ func getDownloadURLParallel(apis []string, trackID int64, quality string) (strin
 	for i := 0; i < len(apis); i++ {
 		result := <-resultChan
 		if result.err == nil {
-			GoLog("[Tidal] [Parallel] ✓ Got response from %s (%d-bit/%dHz) in %v\n",
+			GoLog("[Tidal] [Parallel] Got response from %s (%d-bit/%dHz) in %v\n",
 				result.apiURL, result.info.BitDepth, result.info.SampleRate, result.duration)
 
 			go func(remaining int) {

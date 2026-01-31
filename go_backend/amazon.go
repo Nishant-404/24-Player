@@ -405,7 +405,7 @@ func downloadFromAmazon(req DownloadRequest) (AmazonDownloadResult, error) {
 		GoLog("[Amazon] No lyrics available from parallel fetch\n")
 	}
 
-	GoLog("[Amazon] ✓ Downloaded successfully from Amazon Music\n")
+	GoLog("[Amazon] Downloaded successfully from Amazon Music\n")
 
 	quality, err := GetAudioQuality(outputPath)
 	if err != nil {

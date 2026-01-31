@@ -752,12 +752,12 @@ func (q *QobuzDownloader) SearchTrackByMetadataWithDuration(trackName, artistNam
 		if len(durationMatches) > 0 {
 			for _, track := range durationMatches {
 				if track.MaximumBitDepth >= 24 {
-					GoLog("[Qobuz] ✓ Match found: '%s' by '%s' (title+duration verified, hi-res)\n",
+					GoLog("[Qobuz] Match found: '%s' by '%s' (title+duration verified, hi-res)\n",
 						track.Title, track.Performer.Name)
 					return track, nil
 				}
 			}
-			GoLog("[Qobuz] ✓ Match found: '%s' by '%s' (title+duration verified)\n",
+			GoLog("[Qobuz] Match found: '%s' by '%s' (title+duration verified)\n",
 				durationMatches[0].Title, durationMatches[0].Performer.Name)
 			return durationMatches[0], nil
 		}
@@ -768,14 +768,14 @@ func (q *QobuzDownloader) SearchTrackByMetadataWithDuration(trackName, artistNam
 	// No duration verification, return best quality from title matches
 	for _, track := range tracksToCheck {
 		if track.MaximumBitDepth >= 24 {
-			GoLog("[Qobuz] ✓ Match found: '%s' by '%s' (title verified, hi-res)\n",
+			GoLog("[Qobuz] Match found: '%s' by '%s' (title verified, hi-res)\n",
 				track.Title, track.Performer.Name)
 			return track, nil
 		}
 	}
 
 	if len(tracksToCheck) > 0 {
-		GoLog("[Qobuz] ✓ Match found: '%s' by '%s' (title verified)\n",
+		GoLog("[Qobuz] Match found: '%s' by '%s' (title verified)\n",
 			tracksToCheck[0].Title, tracksToCheck[0].Performer.Name)
 		return tracksToCheck[0], nil
 	}
@@ -872,7 +872,7 @@ func getQobuzDownloadURLParallel(apis []string, trackID int64, quality string) (
 	for i := 0; i < len(apis); i++ {
 		result := <-resultChan
 		if result.err == nil {
-			GoLog("[Qobuz] [Parallel] ✓ Got response from %s in %v\n", result.apiURL, result.duration)
+			GoLog("[Qobuz] [Parallel] Got response from %s in %v\n", result.apiURL, result.duration)
 
 			// Drain remaining results to avoid goroutine leaks
 			go func(remaining int) {

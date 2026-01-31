@@ -150,11 +150,11 @@ func GoLog(format string, args ...interface{}) {
 
 	// Determine level from message content
 	msgLower := strings.ToLower(message)
-	if strings.Contains(msgLower, "error") || strings.Contains(msgLower, "failed") || strings.HasPrefix(message, "✗") {
+	if strings.Contains(msgLower, "error") || strings.Contains(msgLower, "failed") {
 		level = "ERROR"
 	} else if strings.Contains(msgLower, "warning") || strings.Contains(msgLower, "warn") {
 		level = "WARN"
-	} else if strings.HasPrefix(message, "✓") || strings.Contains(msgLower, "success") || strings.Contains(msgLower, "match found") {
+	} else if strings.Contains(msgLower, "success") || strings.Contains(msgLower, "match found") {
 		level = "INFO"
 	} else if strings.Contains(msgLower, "searching") || strings.Contains(msgLower, "trying") || strings.Contains(msgLower, "found") {
 		level = "DEBUG"
