@@ -52,8 +52,6 @@ Want to create your own extension? Check out the [Extension Development Guide](h
 ### [SpotiFLAC (Desktop)](https://github.com/afkarxyz/SpotiFLAC)
 Download music in true lossless FLAC from Tidal, Qobuz & Amazon Music for Windows, macOS & Linux
 
-> **Note:** Currently unavailable because the GitHub account is suspended. Alternatively, use [SpotiFLAC-Next](https://github.com/spotiverse/SpotiFLAC-Next) until the original is restored.
-
 ## Telegram
 
 <p align="center">
