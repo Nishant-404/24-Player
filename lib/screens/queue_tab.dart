@@ -366,6 +366,21 @@ final albumKey =
     });
   }
 
+  /// Get short badge text for quality display
+  String _getQualityBadgeText(String quality) {
+    // For lossless: "24-bit/96kHz" -> "24-bit"
+    if (quality.contains('bit')) {
+      return quality.split('/').first;
+    }
+    // For lossy: "OPUS 128kbps" -> "128k", "MP3 320kbps" -> "320k"
+    final bitrateMatch = RegExp(r'(\d+)kbps').firstMatch(quality);
+    if (bitrateMatch != null) {
+      return '${bitrateMatch.group(1)}k';
+    }
+    // Fallback: return format name
+    return quality.split(' ').first;
+  }
+
   Future<void> _deleteSelected() async {
     final count = _selectedIds.length;
     final confirmed = await showDialog<bool>(
@@ -1772,7 +1787,7 @@ child: CachedNetworkImage(
                             ),
                     ),
                   ),
-                  if (item.quality != null && item.quality!.contains('bit'))
+                  if (item.quality != null && item.quality!.isNotEmpty)
                     Positioned(
                       left: 4,
                       top: 4,
@@ -1788,7 +1803,7 @@ child: CachedNetworkImage(
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          item.quality!.split('/').first,
+                          _getQualityBadgeText(item.quality!),
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: item.quality!.startsWith('24')
@@ -2023,7 +2038,7 @@ child: CachedNetworkImage(
                               ),
                         ),
                         if (item.quality != null &&
-                            item.quality!.contains('bit')) ...[
+                            item.quality!.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
