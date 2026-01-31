@@ -8,6 +8,10 @@
   - New "Enable Lossy Option" toggle in Settings > Download > Audio Quality
   - Choose between MP3 (320kbps) or Opus (128kbps) format
   - Downloads FLAC first, then converts using FFmpeg
+- **Search Filters**: Filter search results by type (Tracks, Artists, Albums, Playlists)
+  - Works with both default Deezer search and extension search providers
+  - Filter chips appear below search bar when results are shown
+- **Album/Playlist Search**: Deezer default search now includes albums and playlists
 - **New Languages**: Turkish and Japanese translations
 - **Japanese Translator**: Re*Index.(ot_inc)
 - **Turkish Translators**: Kaan, BedirhanGltkn
@@ -18,12 +22,17 @@
   - Unified FFmpeg implementation for both Android and iOS
   - Removed custom FFmpeg MethodChannel from MainActivity
   - Simplified build process (no more custom AAR in android/app/libs/)
+- **Amazon Download API**: Switched to AfkarXYZ API for improved reliability
+- **Qobuz Download API**: Added Jumo API as fallback with quality fallback support
+- **Search Results**: Reduced artist limit from 5 to 2 for cleaner results
 
 ### Fixed
 
 - **MP3/Lossy Download 403 Error**: Fixed 403 Forbidden when selecting lossy quality
   - Now downloads FLAC first, then converts to selected lossy format
   - Tidal/Qobuz APIs don't support direct MP3 quality parameter
+- **Opus Cover Art**: Fixed cover art not being embedded in Opus files
+- **Deezer Pagination**: Fixed albums/playlists with >25 tracks only showing first 25
 
 ---
 
