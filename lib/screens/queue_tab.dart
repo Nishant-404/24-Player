@@ -282,6 +282,12 @@ class _QueueTabState extends ConsumerState<QueueTab> {
   List<LocalLibraryItem> _filteredLocalItemsCache = const [];
   final Map<String, _UnifiedCacheEntry> _unifiedItemsCache = {};
 
+  // Advanced filters
+  String? _filterSource; // null = all, 'downloaded', 'local'
+  String? _filterQuality; // null = all, 'hires', 'cd', 'lossy'
+  String? _filterFormat; // null = all, 'flac', 'mp3', 'm4a', 'opus', 'ogg'
+  String? _filterDateRange; // null = all, 'today', 'week', 'month', 'year'
+
 
 
   @override
@@ -719,6 +725,323 @@ class _QueueTabState extends ConsumerState<QueueTab> {
       _fileExistsUpdateScheduled = false;
       setState(() {});
     });
+  }
+
+  /// Count of active advanced filters
+  int get _activeFilterCount {
+    int count = 0;
+    if (_filterSource != null) count++;
+    if (_filterQuality != null) count++;
+    if (_filterFormat != null) count++;
+    if (_filterDateRange != null) count++;
+    return count;
+  }
+
+  /// Reset all advanced filters
+  void _resetFilters() {
+    setState(() {
+      _filterSource = null;
+      _filterQuality = null;
+      _filterFormat = null;
+      _filterDateRange = null;
+      _unifiedItemsCache.clear();
+    });
+  }
+
+  /// Apply advanced filters to unified items
+  List<UnifiedLibraryItem> _applyAdvancedFilters(List<UnifiedLibraryItem> items) {
+    if (_activeFilterCount == 0) return items;
+
+    return items.where((item) {
+      // Source filter
+      if (_filterSource != null) {
+        if (_filterSource == 'downloaded' && item.source != LibraryItemSource.downloaded) {
+          return false;
+        }
+        if (_filterSource == 'local' && item.source != LibraryItemSource.local) {
+          return false;
+        }
+      }
+
+      // Quality filter
+      if (_filterQuality != null && item.quality != null) {
+        final quality = item.quality!.toLowerCase();
+        switch (_filterQuality) {
+          case 'hires':
+            if (!quality.startsWith('24')) return false;
+          case 'cd':
+            if (!quality.startsWith('16')) return false;
+          case 'lossy':
+            // Lossy formats typically don't have bit depth or are labeled differently
+            if (quality.startsWith('24') || quality.startsWith('16')) return false;
+        }
+      } else if (_filterQuality != null && item.quality == null) {
+        // If quality filter is set but item has no quality info, include only for 'lossy'
+        if (_filterQuality != 'lossy') return false;
+      }
+
+      // Format filter
+      if (_filterFormat != null) {
+        final ext = item.filePath.split('.').last.toLowerCase();
+        if (ext != _filterFormat) return false;
+      }
+
+      // Date filter
+      if (_filterDateRange != null) {
+        final now = DateTime.now();
+        final itemDate = item.addedAt;
+        switch (_filterDateRange) {
+          case 'today':
+            if (itemDate.year != now.year || itemDate.month != now.month || itemDate.day != now.day) {
+              return false;
+            }
+          case 'week':
+            final weekAgo = now.subtract(const Duration(days: 7));
+            if (itemDate.isBefore(weekAgo)) return false;
+          case 'month':
+            final monthAgo = DateTime(now.year, now.month - 1, now.day);
+            if (itemDate.isBefore(monthAgo)) return false;
+          case 'year':
+            if (itemDate.year != now.year) return false;
+        }
+      }
+
+      return true;
+    }).toList(growable: false);
+  }
+
+  /// Get available formats from current items
+  Set<String> _getAvailableFormats(List<UnifiedLibraryItem> items) {
+    final formats = <String>{};
+    for (final item in items) {
+      final ext = item.filePath.split('.').last.toLowerCase();
+      if (['flac', 'mp3', 'm4a', 'opus', 'ogg', 'wav', 'aiff'].contains(ext)) {
+        formats.add(ext);
+      }
+    }
+    return formats;
+  }
+
+  /// Show filter bottom sheet
+  void _showFilterSheet(BuildContext context, List<UnifiedLibraryItem> allItems) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final availableFormats = _getAvailableFormats(allItems);
+    
+    // Temporary filter state for the sheet
+    String? tempSource = _filterSource;
+    String? tempQuality = _filterQuality;
+    String? tempFormat = _filterFormat;
+    String? tempDateRange = _filterDateRange;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 32,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  
+                  // Title row
+                  Row(
+                    children: [
+                      Text(
+                        context.l10n.libraryFilterTitle,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          setSheetState(() {
+                            tempSource = null;
+                            tempQuality = null;
+                            tempFormat = null;
+                            tempDateRange = null;
+                          });
+                        },
+                        child: Text(context.l10n.libraryFilterReset),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Source filter
+                  Text(
+                    context.l10n.libraryFilterSource,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterAll),
+                        selected: tempSource == null,
+                        onSelected: (_) => setSheetState(() => tempSource = null),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterDownloaded),
+                        selected: tempSource == 'downloaded',
+                        onSelected: (_) => setSheetState(() => tempSource = 'downloaded'),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterLocal),
+                        selected: tempSource == 'local',
+                        onSelected: (_) => setSheetState(() => tempSource = 'local'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Quality filter
+                  Text(
+                    context.l10n.libraryFilterQuality,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterAll),
+                        selected: tempQuality == null,
+                        onSelected: (_) => setSheetState(() => tempQuality = null),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterQualityHiRes),
+                        selected: tempQuality == 'hires',
+                        onSelected: (_) => setSheetState(() => tempQuality = 'hires'),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterQualityCD),
+                        selected: tempQuality == 'cd',
+                        onSelected: (_) => setSheetState(() => tempQuality = 'cd'),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterQualityLossy),
+                        selected: tempQuality == 'lossy',
+                        onSelected: (_) => setSheetState(() => tempQuality = 'lossy'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Format filter
+                  Text(
+                    context.l10n.libraryFilterFormat,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterAll),
+                        selected: tempFormat == null,
+                        onSelected: (_) => setSheetState(() => tempFormat = null),
+                      ),
+                      for (final format in availableFormats.toList()..sort())
+                        FilterChip(
+                          label: Text(format.toUpperCase()),
+                          selected: tempFormat == format,
+                          onSelected: (_) => setSheetState(() => tempFormat = format),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Date filter
+                  Text(
+                    context.l10n.libraryFilterDate,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterAll),
+                        selected: tempDateRange == null,
+                        onSelected: (_) => setSheetState(() => tempDateRange = null),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterDateToday),
+                        selected: tempDateRange == 'today',
+                        onSelected: (_) => setSheetState(() => tempDateRange = 'today'),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterDateWeek),
+                        selected: tempDateRange == 'week',
+                        onSelected: (_) => setSheetState(() => tempDateRange = 'week'),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterDateMonth),
+                        selected: tempDateRange == 'month',
+                        onSelected: (_) => setSheetState(() => tempDateRange = 'month'),
+                      ),
+                      FilterChip(
+                        label: Text(context.l10n.libraryFilterDateYear),
+                        selected: tempDateRange == 'year',
+                        onSelected: (_) => setSheetState(() => tempDateRange = 'year'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Apply button
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        setState(() {
+                          _filterSource = tempSource;
+                          _filterQuality = tempQuality;
+                          _filterFormat = tempFormat;
+                          _filterDateRange = tempDateRange;
+                          _unifiedItemsCache.clear();
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Text(context.l10n.libraryFilterApply),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _openFile(String filePath) async {
@@ -1318,12 +1641,15 @@ child: _buildSelectionBottomBar(
       albumCounts: albumCounts,
     );
 
-    return _getUnifiedItems(
+    final unifiedItems = _getUnifiedItems(
       filterMode: filterMode,
       historyItems: historyItems,
       localLibraryItems: localLibraryItems,
       localAlbumCounts: localAlbumCounts,
     );
+
+    // Apply advanced filters to match what's displayed
+    return _applyAdvancedFilters(unifiedItems);
   }
 
   List<UnifiedLibraryItem> _getUnifiedItems({
@@ -1427,8 +1753,11 @@ child: _buildSelectionBottomBar(
       localAlbumCounts: localAlbumCounts,
     );
 
+    // Apply advanced filters
+    final filteredUnifiedItems = _applyAdvancedFilters(unifiedItems);
+
     // Total count for display
-    final totalTrackCount = unifiedItems.length;
+    final totalTrackCount = filteredUnifiedItems.length;
 
     return CustomScrollView(
       slivers: [
@@ -1446,9 +1775,26 @@ child: _buildSelectionBottomBar(
                         ?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                   const Spacer(),
-                  if (!_isSelectionMode && unifiedItems.isNotEmpty)
+                  // Filter button with long-press to reset
+                  if (!_isSelectionMode)
+                    GestureDetector(
+                      onLongPress: _activeFilterCount > 0 ? _resetFilters : null,
+                      child: TextButton.icon(
+                        onPressed: () => _showFilterSheet(context, unifiedItems),
+                        icon: Badge(
+                          isLabelVisible: _activeFilterCount > 0,
+                          label: Text('$_activeFilterCount'),
+                          child: const Icon(Icons.filter_list, size: 18),
+                        ),
+                        label: Text(context.l10n.libraryFilterTitle),
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ),
+                  if (!_isSelectionMode && filteredUnifiedItems.isNotEmpty)
                     TextButton.icon(
-                      onPressed: () => _enterSelectionMode(unifiedItems.first.id),
+                      onPressed: () => _enterSelectionMode(filteredUnifiedItems.first.id),
                       icon: const Icon(Icons.checklist, size: 18),
                       label: Text(context.l10n.actionSelect),
                       style: TextButton.styleFrom(
@@ -1547,7 +1893,7 @@ child: _buildSelectionBottomBar(
           ),
 
         // Unified list for 'all' filter (merged downloaded + local)
-        if (unifiedItems.isNotEmpty && filterMode == 'all')
+        if (filteredUnifiedItems.isNotEmpty && filterMode == 'all')
           historyViewMode == 'grid'
               ? SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1563,7 +1909,7 @@ child: _buildSelectionBottomBar(
                       context,
                       index,
                     ) {
-                      final item = unifiedItems[index];
+                      final item = filteredUnifiedItems[index];
                       return KeyedSubtree(
                         key: ValueKey(item.id),
                         child: _buildUnifiedGridItem(
@@ -1572,12 +1918,12 @@ child: _buildSelectionBottomBar(
                           colorScheme,
                         ),
                       );
-                    }, childCount: unifiedItems.length),
+                    }, childCount: filteredUnifiedItems.length),
                   ),
                 )
               : SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = unifiedItems[index];
+                    final item = filteredUnifiedItems[index];
                     return KeyedSubtree(
                       key: ValueKey(item.id),
                       child: _buildUnifiedLibraryItem(
@@ -1586,11 +1932,11 @@ child: _buildSelectionBottomBar(
                         colorScheme,
                       ),
                     );
-                  }, childCount: unifiedItems.length),
+                  }, childCount: filteredUnifiedItems.length),
                 ),
 
         // Singles filter - show unified items (downloaded + local singles)
-        if (unifiedItems.isNotEmpty && filterMode == 'singles')
+        if (filteredUnifiedItems.isNotEmpty && filterMode == 'singles')
           historyViewMode == 'grid'
               ? SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1606,7 +1952,7 @@ child: _buildSelectionBottomBar(
                       context,
                       index,
                     ) {
-                      final item = unifiedItems[index];
+                      final item = filteredUnifiedItems[index];
                       return KeyedSubtree(
                         key: ValueKey(item.id),
                         child: _buildUnifiedGridItem(
@@ -1615,12 +1961,12 @@ child: _buildSelectionBottomBar(
                           colorScheme,
                         ),
                       );
-                    }, childCount: unifiedItems.length),
+                    }, childCount: filteredUnifiedItems.length),
                   ),
                 )
               : SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = unifiedItems[index];
+                    final item = filteredUnifiedItems[index];
                     return KeyedSubtree(
                       key: ValueKey(item.id),
                       child: _buildUnifiedLibraryItem(
@@ -1629,7 +1975,7 @@ child: _buildSelectionBottomBar(
                         colorScheme,
                       ),
                     );
-                  }, childCount: unifiedItems.length),
+                  }, childCount: filteredUnifiedItems.length),
                 ),
 
         if (queueItems.isEmpty &&

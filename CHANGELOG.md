@@ -36,6 +36,13 @@
   - Shows tracks from albums with only 1 track (both downloaded and local)
   - Search filter works across both sources
   - Local items show "Local" badge
+- **Advanced Library Filters**: Filter library items by multiple criteria
+  - **Source filter**: Show all, downloaded only, or local library only
+  - **Quality filter**: Hi-Res (24bit), CD (16bit), or Lossy
+  - **Format filter**: FLAC, MP3, M4A, Opus, OGG, etc.
+  - **Date filter**: Today, This Week, This Month, This Year
+  - Filter button with badge showing active filter count
+  - Filters apply to both All and Singles tabs
 - **Cover Art Extraction for Local Library**: Embedded cover art is extracted and cached during scan
   - Supports FLAC (PICTURE block), MP3 (APIC frames), Opus/Ogg (METADATA_BLOCK_PICTURE)
   - Cover cached to app's cache directory with hash-based filenames

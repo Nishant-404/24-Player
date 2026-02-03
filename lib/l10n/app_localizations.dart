@@ -4582,6 +4582,96 @@ abstract class AppLocalizations {
   /// **'Local'**
   String get libraryFilterLocal;
 
+  /// Filter bottom sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get libraryFilterTitle;
+
+  /// Reset all filters button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get libraryFilterReset;
+
+  /// Apply filters button
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get libraryFilterApply;
+
+  /// Filter section - source type
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get libraryFilterSource;
+
+  /// Filter section - audio quality
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get libraryFilterQuality;
+
+  /// Filter option - high resolution audio
+  ///
+  /// In en, this message translates to:
+  /// **'Hi-Res (24bit)'**
+  String get libraryFilterQualityHiRes;
+
+  /// Filter option - CD quality audio
+  ///
+  /// In en, this message translates to:
+  /// **'CD (16bit)'**
+  String get libraryFilterQualityCD;
+
+  /// Filter option - lossy compressed audio
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy'**
+  String get libraryFilterQualityLossy;
+
+  /// Filter section - file format
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get libraryFilterFormat;
+
+  /// Filter section - date range
+  ///
+  /// In en, this message translates to:
+  /// **'Date Added'**
+  String get libraryFilterDate;
+
+  /// Filter option - today only
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get libraryFilterDateToday;
+
+  /// Filter option - this week
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get libraryFilterDateWeek;
+
+  /// Filter option - this month
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get libraryFilterDateMonth;
+
+  /// Filter option - this year
+  ///
+  /// In en, this message translates to:
+  /// **'This Year'**
+  String get libraryFilterDateYear;
+
+  /// Badge showing number of active filters
+  ///
+  /// In en, this message translates to:
+  /// **'{count} filter(s) active'**
+  String libraryFilterActive(int count);
+
   /// Relative time - less than a minute ago
   ///
   /// In en, this message translates to:
@@ -4701,6 +4791,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get uploadStatusFailed;
+
+  /// Status when cloud save is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Save Off'**
+  String get cloudStatusDisabled;
+
+  /// Subtitle when cloud save is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Enable to auto-upload tracks'**
+  String get cloudStatusDisabledSubtitle;
+
+  /// Status when no provider selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select Provider'**
+  String get cloudStatusNoProvider;
+
+  /// Subtitle when no provider selected
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a cloud service'**
+  String get cloudStatusNoProviderSubtitle;
+
+  /// Status when settings missing
+  ///
+  /// In en, this message translates to:
+  /// **'Setup Required'**
+  String get cloudStatusNotConfigured;
+
+  /// Subtitle when settings missing
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your server details'**
+  String get cloudStatusNotConfiguredSubtitle;
+
+  /// Status when cloud save is active
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get cloudStatusActive;
 }
 
 class _AppLocalizationsDelegate

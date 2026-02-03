@@ -2589,6 +2589,53 @@ class AppLocalizationsRu extends AppLocalizations {
   String get libraryFilterLocal => 'Local';
 
   @override
+  String get libraryFilterTitle => 'Filters';
+
+  @override
+  String get libraryFilterReset => 'Reset';
+
+  @override
+  String get libraryFilterApply => 'Apply';
+
+  @override
+  String get libraryFilterSource => 'Source';
+
+  @override
+  String get libraryFilterQuality => 'Quality';
+
+  @override
+  String get libraryFilterQualityHiRes => 'Hi-Res (24bit)';
+
+  @override
+  String get libraryFilterQualityCD => 'CD (16bit)';
+
+  @override
+  String get libraryFilterQualityLossy => 'Lossy';
+
+  @override
+  String get libraryFilterFormat => 'Format';
+
+  @override
+  String get libraryFilterDate => 'Date Added';
+
+  @override
+  String get libraryFilterDateToday => 'Today';
+
+  @override
+  String get libraryFilterDateWeek => 'This Week';
+
+  @override
+  String get libraryFilterDateMonth => 'This Month';
+
+  @override
+  String get libraryFilterDateYear => 'This Year';
+
+  @override
+  String libraryFilterActive(int count) {
+    return '$count filter(s) active';
+  }
+
+  @override
   String get timeJustNow => 'Just now';
 
   @override
@@ -2667,4 +2714,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get uploadStatusFailed => 'Failed';
+
+  @override
+  String get cloudStatusDisabled => 'Cloud Save Off';
+
+  @override
+  String get cloudStatusDisabledSubtitle => 'Enable to auto-upload tracks';
+
+  @override
+  String get cloudStatusNoProvider => 'Select Provider';
+
+  @override
+  String get cloudStatusNoProviderSubtitle => 'Choose a cloud service';
+
+  @override
+  String get cloudStatusNotConfigured => 'Setup Required';
+
+  @override
+  String get cloudStatusNotConfiguredSubtitle =>
+      'Configure your server details';
+
+  @override
+  String get cloudStatusActive => 'Connected';
 }
