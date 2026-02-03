@@ -1,8 +1,11 @@
 package gobackend
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -104,7 +107,16 @@ func NewExtensionRuntime(ext *LoadedExtension) *ExtensionRuntime {
 		Jar:     jar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			// Validate redirect target domain against allowed domains
+			if req.URL.Scheme != "https" {
+				GoLog("[Extension:%s] Redirect blocked: non-https scheme '%s'\n", ext.ID, req.URL.Scheme)
+				return fmt.Errorf("redirect blocked: only https is allowed")
+			}
+
 			domain := req.URL.Hostname()
+			if domain == "" {
+				GoLog("[Extension:%s] Redirect blocked: missing hostname\n", ext.ID)
+				return fmt.Errorf("redirect blocked: hostname is required")
+			}
 			if !ext.Manifest.IsDomainAllowed(domain) {
 				GoLog("[Extension:%s] Redirect blocked: domain '%s' not in allowed list\n", ext.ID, domain)
 				return &RedirectBlockedError{Domain: domain}
@@ -139,35 +151,48 @@ func (e *RedirectBlockedError) Error() string {
 
 // isPrivateIP checks if a hostname resolves to a private/local IP address
 func isPrivateIP(host string) bool {
-	// Block common private network patterns
-	// This is a simple check - for production, consider DNS resolution
-	privatePatterns := []string{
-		"localhost",
-		"127.",
-		"10.",
-		"172.16.", "172.17.", "172.18.", "172.19.",
-		"172.20.", "172.21.", "172.22.", "172.23.",
-		"172.24.", "172.25.", "172.26.", "172.27.",
-		"172.28.", "172.29.", "172.30.", "172.31.",
-		"192.168.",
-		"169.254.",
-		"::1",
-		"fc00:",
-		"fe80:",
+	hostLower := strings.ToLower(strings.TrimSpace(host))
+	if hostLower == "" {
+		return false
 	}
 
-	hostLower := host
-	for _, pattern := range privatePatterns {
-		if hostLower == pattern || len(hostLower) > len(pattern) && hostLower[:len(pattern)] == pattern {
+	if hostLower == "localhost" || strings.HasSuffix(hostLower, ".local") {
+		return true
+	}
+
+	if ip := net.ParseIP(hostLower); ip != nil {
+		return isPrivateIPAddr(ip)
+	}
+
+	ips, err := net.LookupIP(hostLower)
+	if err != nil {
+		return false
+	}
+
+	for _, ip := range ips {
+		if isPrivateIPAddr(ip) {
 			return true
 		}
 	}
 
-	// Also block .local domains
-	if len(host) > 6 && host[len(host)-6:] == ".local" {
+	return false
+}
+
+func isPrivateIPAddr(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	if ip.IsLoopback() ||
+		ip.IsPrivate() ||
+		ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() ||
+		ip.IsMulticast() ||
+		ip.IsUnspecified() {
 		return true
 	}
-
+	if !ip.IsGlobalUnicast() {
+		return true
+	}
 	return false
 }
 

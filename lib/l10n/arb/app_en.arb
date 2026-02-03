@@ -9,8 +9,10 @@
 
   "navHome": "Home",
   "@navHome": {"description": "Bottom navigation - Home tab"},
+  "navLibrary": "Library",
+  "@navLibrary": {"description": "Bottom navigation - Library tab"},
   "navHistory": "History",
-  "@navHistory": {"description": "Bottom navigation - History tab"},
+  "@navHistory": {"description": "Bottom navigation - History tab (legacy)"},
   "navSettings": "Settings",
   "@navSettings": {"description": "Bottom navigation - Settings tab"},
   "navStore": "Store",
@@ -1549,6 +1551,36 @@
   "@cloudSettingsResetAllSftpHostKeysCleared": {"description": "Snackbar after clearing all SFTP host keys", "placeholders": {"count": {}}},
   "cloudSettingsResetAllSftpHostKeysNone": "No stored SFTP host keys found.",
   "@cloudSettingsResetAllSftpHostKeysNone": {"description": "Snackbar when no SFTP host keys exist"},
+  "cloudSettingsAllowHttpTitle": "Allow HTTP (Insecure)",
+  "@cloudSettingsAllowHttpTitle": {"description": "Toggle/title for allowing insecure HTTP WebDAV connections"},
+  "cloudSettingsAllowHttpSubtitle": "Sends credentials without TLS. Not recommended.",
+  "@cloudSettingsAllowHttpSubtitle": {"description": "Subtitle warning for allowing insecure HTTP"},
+  "cloudSettingsAllowHttpMessage": "HTTP does not encrypt your credentials. Only enable if you trust the network.",
+  "@cloudSettingsAllowHttpMessage": {"description": "Dialog warning message for enabling insecure HTTP"},
+  "cloudSettingsAllowHttpConfirm": "Allow HTTP",
+  "@cloudSettingsAllowHttpConfirm": {"description": "Dialog confirm button for enabling insecure HTTP"},
+  "webdavErrorInvalidScheme": "Invalid URL: scheme is required",
+  "@webdavErrorInvalidScheme": {"description": "WebDAV error when URL scheme is missing"},
+  "webdavErrorHttpsRequired": "WebDAV URL must use https",
+  "@webdavErrorHttpsRequired": {"description": "WebDAV error when HTTPS is required"},
+  "webdavErrorInvalidHost": "Invalid URL: hostname is required",
+  "@webdavErrorInvalidHost": {"description": "WebDAV error when hostname is missing"},
+  "webdavErrorAuthFailed": "Authentication failed. Check username and password.",
+  "@webdavErrorAuthFailed": {"description": "WebDAV error when authentication fails"},
+  "webdavErrorForbidden": "Access denied. Check permissions on the server.",
+  "@webdavErrorForbidden": {"description": "WebDAV error when access is forbidden"},
+  "webdavErrorNotFound": "Server path not found. Check the URL.",
+  "@webdavErrorNotFound": {"description": "WebDAV error when path is not found"},
+  "webdavErrorConnectionFailed": "Cannot connect to server. Check URL and network.",
+  "@webdavErrorConnectionFailed": {"description": "WebDAV error when connection fails"},
+  "webdavErrorTlsError": "SSL/TLS error. Server certificate may be invalid.",
+  "@webdavErrorTlsError": {"description": "WebDAV error for TLS issues"},
+  "webdavErrorTimeout": "Connection timed out. Server may be unreachable.",
+  "@webdavErrorTimeout": {"description": "WebDAV error when connection times out"},
+  "webdavErrorInsufficientStorage": "Insufficient storage on server.",
+  "@webdavErrorInsufficientStorage": {"description": "WebDAV error when server storage is full"},
+  "webdavErrorUnknown": "Upload failed. Please try again.",
+  "@webdavErrorUnknown": {"description": "WebDAV fallback error message"},
 
   "queueEmpty": "No downloads in queue",
   "@queueEmpty": {"description": "Empty queue state title"},
@@ -1839,5 +1871,75 @@
   "libraryStorageAccessMessage": "SpotiFLAC needs storage access to scan your music library. Please grant permission in settings.",
   "@libraryStorageAccessMessage": {"description": "Dialog message for storage permission"},
   "libraryFolderNotExist": "Selected folder does not exist",
-  "@libraryFolderNotExist": {"description": "Error when folder doesn't exist"}
+  "@libraryFolderNotExist": {"description": "Error when folder doesn't exist"},
+  "librarySourceDownloaded": "Downloaded",
+  "@librarySourceDownloaded": {"description": "Badge for tracks downloaded via SpotiFLAC"},
+  "librarySourceLocal": "Local",
+  "@librarySourceLocal": {"description": "Badge for tracks from local library scan"},
+  "libraryFilterAll": "All",
+  "@libraryFilterAll": {"description": "Filter chip - show all library items"},
+  "libraryFilterDownloaded": "Downloaded",
+  "@libraryFilterDownloaded": {"description": "Filter chip - show only downloaded items"},
+  "libraryFilterLocal": "Local",
+  "@libraryFilterLocal": {"description": "Filter chip - show only local library items"},
+
+  "timeJustNow": "Just now",
+  "@timeJustNow": {"description": "Relative time - less than a minute ago"},
+  "timeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@timeMinutesAgo": {
+    "description": "Relative time - minutes ago",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@timeHoursAgo": {
+    "description": "Relative time - hours ago",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "cloudProviderWebdav": "WebDAV (Synology, Nextcloud, QNAP)",
+  "@cloudProviderWebdav": {"description": "WebDAV provider option with examples"},
+  "cloudProviderSftp": "SFTP (SSH File Transfer)",
+  "@cloudProviderSftp": {"description": "SFTP provider option"},
+  "cloudProviderNotConfigured": "Not Configured",
+  "@cloudProviderNotConfigured": {"description": "No cloud provider selected"},
+  "cloudProviderWebdavTitle": "WebDAV",
+  "@cloudProviderWebdavTitle": {"description": "WebDAV provider title in picker"},
+  "cloudProviderWebdavSubtitle": "Synology, Nextcloud, QNAP, ownCloud",
+  "@cloudProviderWebdavSubtitle": {"description": "WebDAV provider subtitle in picker"},
+  "cloudProviderSftpTitle": "SFTP",
+  "@cloudProviderSftpTitle": {"description": "SFTP provider title in picker"},
+  "cloudProviderSftpSubtitle": "SSH File Transfer Protocol",
+  "@cloudProviderSftpSubtitle": {"description": "SFTP provider subtitle in picker"},
+
+  "cloudTestErrorServerUrlRequired": "Server URL is required",
+  "@cloudTestErrorServerUrlRequired": {"description": "Error when testing connection without server URL"},
+  "cloudTestErrorCredentialsRequired": "Username and password are required",
+  "@cloudTestErrorCredentialsRequired": {"description": "Error when testing connection without credentials"},
+  "cloudTestSuccessWebdav": "Connected to WebDAV server",
+  "@cloudTestSuccessWebdav": {"description": "Success message for WebDAV connection test"},
+  "cloudTestSuccessSftp": "Connected to SFTP server",
+  "@cloudTestSuccessSftp": {"description": "Success message for SFTP connection test"},
+  "cloudTestErrorNoProvider": "No provider selected",
+  "@cloudTestErrorNoProvider": {"description": "Error when testing connection without provider"},
+
+  "connectionTestSuccess": "Success: {message}",
+  "@connectionTestSuccess": {
+    "description": "Connection test success message",
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "uploadStatusPending": "Pending",
+  "@uploadStatusPending": {"description": "Upload queue status - waiting"},
+  "uploadStatusUploading": "Uploading",
+  "@uploadStatusUploading": {"description": "Upload queue status - in progress"},
+  "uploadStatusDone": "Done",
+  "@uploadStatusDone": {"description": "Upload queue status - completed"},
+  "uploadStatusFailed": "Failed",
+  "@uploadStatusFailed": {"description": "Upload queue status - error"}
 }

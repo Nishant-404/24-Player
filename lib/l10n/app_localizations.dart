@@ -142,7 +142,13 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get navHome;
 
-  /// Bottom navigation - History tab
+  /// Bottom navigation - Library tab
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// Bottom navigation - History tab (legacy)
   ///
   /// In en, this message translates to:
   /// **'History'**
@@ -3898,6 +3904,96 @@ abstract class AppLocalizations {
   /// **'No stored SFTP host keys found.'**
   String get cloudSettingsResetAllSftpHostKeysNone;
 
+  /// Toggle/title for allowing insecure HTTP WebDAV connections
+  ///
+  /// In en, this message translates to:
+  /// **'Allow HTTP (Insecure)'**
+  String get cloudSettingsAllowHttpTitle;
+
+  /// Subtitle warning for allowing insecure HTTP
+  ///
+  /// In en, this message translates to:
+  /// **'Sends credentials without TLS. Not recommended.'**
+  String get cloudSettingsAllowHttpSubtitle;
+
+  /// Dialog warning message for enabling insecure HTTP
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP does not encrypt your credentials. Only enable if you trust the network.'**
+  String get cloudSettingsAllowHttpMessage;
+
+  /// Dialog confirm button for enabling insecure HTTP
+  ///
+  /// In en, this message translates to:
+  /// **'Allow HTTP'**
+  String get cloudSettingsAllowHttpConfirm;
+
+  /// WebDAV error when URL scheme is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid URL: scheme is required'**
+  String get webdavErrorInvalidScheme;
+
+  /// WebDAV error when HTTPS is required
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV URL must use https'**
+  String get webdavErrorHttpsRequired;
+
+  /// WebDAV error when hostname is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid URL: hostname is required'**
+  String get webdavErrorInvalidHost;
+
+  /// WebDAV error when authentication fails
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Check username and password.'**
+  String get webdavErrorAuthFailed;
+
+  /// WebDAV error when access is forbidden
+  ///
+  /// In en, this message translates to:
+  /// **'Access denied. Check permissions on the server.'**
+  String get webdavErrorForbidden;
+
+  /// WebDAV error when path is not found
+  ///
+  /// In en, this message translates to:
+  /// **'Server path not found. Check the URL.'**
+  String get webdavErrorNotFound;
+
+  /// WebDAV error when connection fails
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot connect to server. Check URL and network.'**
+  String get webdavErrorConnectionFailed;
+
+  /// WebDAV error for TLS issues
+  ///
+  /// In en, this message translates to:
+  /// **'SSL/TLS error. Server certificate may be invalid.'**
+  String get webdavErrorTlsError;
+
+  /// WebDAV error when connection times out
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out. Server may be unreachable.'**
+  String get webdavErrorTimeout;
+
+  /// WebDAV error when server storage is full
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient storage on server.'**
+  String get webdavErrorInsufficientStorage;
+
+  /// WebDAV fallback error message
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed. Please try again.'**
+  String get webdavErrorUnknown;
+
   /// Empty queue state title
   ///
   /// In en, this message translates to:
@@ -4455,6 +4551,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Selected folder does not exist'**
   String get libraryFolderNotExist;
+
+  /// Badge for tracks downloaded via SpotiFLAC
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get librarySourceDownloaded;
+
+  /// Badge for tracks from local library scan
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get librarySourceLocal;
+
+  /// Filter chip - show all library items
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryFilterAll;
+
+  /// Filter chip - show only downloaded items
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get libraryFilterDownloaded;
+
+  /// Filter chip - show only local library items
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get libraryFilterLocal;
+
+  /// Relative time - less than a minute ago
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get timeJustNow;
+
+  /// Relative time - minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute ago} other{{count} minutes ago}}'**
+  String timeMinutesAgo(int count);
+
+  /// Relative time - hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour ago} other{{count} hours ago}}'**
+  String timeHoursAgo(int count);
+
+  /// WebDAV provider option with examples
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV (Synology, Nextcloud, QNAP)'**
+  String get cloudProviderWebdav;
+
+  /// SFTP provider option
+  ///
+  /// In en, this message translates to:
+  /// **'SFTP (SSH File Transfer)'**
+  String get cloudProviderSftp;
+
+  /// No cloud provider selected
+  ///
+  /// In en, this message translates to:
+  /// **'Not Configured'**
+  String get cloudProviderNotConfigured;
+
+  /// WebDAV provider title in picker
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV'**
+  String get cloudProviderWebdavTitle;
+
+  /// WebDAV provider subtitle in picker
+  ///
+  /// In en, this message translates to:
+  /// **'Synology, Nextcloud, QNAP, ownCloud'**
+  String get cloudProviderWebdavSubtitle;
+
+  /// SFTP provider title in picker
+  ///
+  /// In en, this message translates to:
+  /// **'SFTP'**
+  String get cloudProviderSftpTitle;
+
+  /// SFTP provider subtitle in picker
+  ///
+  /// In en, this message translates to:
+  /// **'SSH File Transfer Protocol'**
+  String get cloudProviderSftpSubtitle;
+
+  /// Error when testing connection without server URL
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL is required'**
+  String get cloudTestErrorServerUrlRequired;
+
+  /// Error when testing connection without credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Username and password are required'**
+  String get cloudTestErrorCredentialsRequired;
+
+  /// Success message for WebDAV connection test
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to WebDAV server'**
+  String get cloudTestSuccessWebdav;
+
+  /// Success message for SFTP connection test
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to SFTP server'**
+  String get cloudTestSuccessSftp;
+
+  /// Error when testing connection without provider
+  ///
+  /// In en, this message translates to:
+  /// **'No provider selected'**
+  String get cloudTestErrorNoProvider;
+
+  /// Connection test success message
+  ///
+  /// In en, this message translates to:
+  /// **'Success: {message}'**
+  String connectionTestSuccess(String message);
+
+  /// Upload queue status - waiting
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get uploadStatusPending;
+
+  /// Upload queue status - in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get uploadStatusUploading;
+
+  /// Upload queue status - completed
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get uploadStatusDone;
+
+  /// Upload queue status - error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get uploadStatusFailed;
 }
 
 class _AppLocalizationsDelegate

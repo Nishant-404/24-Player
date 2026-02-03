@@ -204,6 +204,21 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
                     ],
                   ),
                 ),
+                if (settings.cloudProvider == 'webdav')
+                  SliverToBoxAdapter(
+                    child: SettingsGroup(
+                      children: [
+                        SettingsSwitchItem(
+                          icon: Icons.warning_amber_outlined,
+                          title: context.l10n.cloudSettingsAllowHttpTitle,
+                          subtitle: context.l10n.cloudSettingsAllowHttpSubtitle,
+                          value: settings.cloudAllowInsecureHttp,
+                          onChanged: _handleAllowHttpChanged,
+                          showDivider: false,
+                        ),
+                      ],
+                    ),
+                  ),
 
                 // Test Connection Button
                 SliverToBoxAdapter(
@@ -347,11 +362,11 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
   String _getProviderName(String provider) {
     switch (provider) {
       case 'webdav':
-        return 'WebDAV (Synology, Nextcloud, QNAP)';
+        return context.l10n.cloudProviderWebdav;
       case 'sftp':
-        return 'SFTP (SSH File Transfer)';
+        return context.l10n.cloudProviderSftp;
       default:
-        return 'Not Configured';
+        return context.l10n.cloudProviderNotConfigured;
     }
   }
 
@@ -388,8 +403,8 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
             ),
             ListTile(
               leading: const Icon(Icons.web),
-              title: const Text('WebDAV'),
-              subtitle: const Text('Synology, Nextcloud, QNAP, ownCloud'),
+              title: Text(context.l10n.cloudProviderWebdavTitle),
+              subtitle: Text(context.l10n.cloudProviderWebdavSubtitle),
               trailing: current == 'webdav' ? Icon(Icons.check, color: colorScheme.primary) : null,
               onTap: () {
                 ref.read(settingsProvider.notifier).setCloudProvider('webdav');
@@ -398,8 +413,8 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
             ),
             ListTile(
               leading: const Icon(Icons.terminal),
-              title: const Text('SFTP'),
-              subtitle: const Text('SSH File Transfer Protocol'),
+              title: Text(context.l10n.cloudProviderSftpTitle),
+              subtitle: Text(context.l10n.cloudProviderSftpSubtitle),
               trailing: current == 'sftp' ? Icon(Icons.check, color: colorScheme.primary) : null,
               onTap: () {
                 ref.read(settingsProvider.notifier).setCloudProvider('sftp');
@@ -424,7 +439,7 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
     if (settings.cloudServerUrl.isEmpty) {
       setState(() {
         _isTestingConnection = false;
-        _connectionTestResult = 'Error: Server URL is required';
+        _connectionTestResult = context.l10n.errorGeneric(context.l10n.cloudTestErrorServerUrlRequired);
       });
       return;
     }
@@ -432,7 +447,7 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
     if (settings.cloudUsername.isEmpty || settings.cloudPassword.isEmpty) {
       setState(() {
         _isTestingConnection = false;
-        _connectionTestResult = 'Error: Username and password are required';
+        _connectionTestResult = context.l10n.errorGeneric(context.l10n.cloudTestErrorCredentialsRequired);
       });
       return;
     }
@@ -442,13 +457,14 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
         serverUrl: settings.cloudServerUrl,
         username: settings.cloudUsername,
         password: settings.cloudPassword,
+        allowInsecureHttp: settings.cloudAllowInsecureHttp,
       );
 
       setState(() {
         _isTestingConnection = false;
         _connectionTestResult = result.success
-            ? 'Success: Connected to WebDAV server'
-            : 'Error: ${result.error}';
+            ? context.l10n.connectionTestSuccess(context.l10n.cloudTestSuccessWebdav)
+            : context.l10n.errorGeneric(_localizeWebDavError(context, result));
       });
     } else if (settings.cloudProvider == 'sftp') {
       final result = await CloudUploadService.instance.testSFTPConnection(
@@ -460,14 +476,77 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
       setState(() {
         _isTestingConnection = false;
         _connectionTestResult = result.success
-            ? 'Success: Connected to SFTP server'
-            : 'Error: ${result.error}';
+            ? context.l10n.connectionTestSuccess(context.l10n.cloudTestSuccessSftp)
+            : context.l10n.errorGeneric(result.error ?? '');
       });
     } else {
       setState(() {
         _isTestingConnection = false;
-        _connectionTestResult = 'Error: No provider selected';
+        _connectionTestResult = context.l10n.errorGeneric(context.l10n.cloudTestErrorNoProvider);
       });
+    }
+  }
+
+  Future<void> _handleAllowHttpChanged(bool value) async {
+    if (!value) {
+      ref.read(settingsProvider.notifier).setCloudAllowInsecureHttp(false);
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.cloudSettingsAllowHttpTitle),
+          content: Text(context.l10n.cloudSettingsAllowHttpMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(context.l10n.dialogCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(context.l10n.cloudSettingsAllowHttpConfirm),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      ref.read(settingsProvider.notifier).setCloudAllowInsecureHttp(true);
+    }
+  }
+
+  String _localizeWebDavError(
+    BuildContext context,
+    CloudUploadResult result,
+  ) {
+    switch (result.errorCode) {
+      case 'webdav_invalid_scheme':
+        return context.l10n.webdavErrorInvalidScheme;
+      case 'webdav_https_required':
+        return context.l10n.webdavErrorHttpsRequired;
+      case 'webdav_invalid_host':
+        return context.l10n.webdavErrorInvalidHost;
+      case 'webdav_auth_failed':
+        return context.l10n.webdavErrorAuthFailed;
+      case 'webdav_forbidden':
+        return context.l10n.webdavErrorForbidden;
+      case 'webdav_not_found':
+        return context.l10n.webdavErrorNotFound;
+      case 'webdav_connection_failed':
+        return context.l10n.webdavErrorConnectionFailed;
+      case 'webdav_tls_error':
+        return context.l10n.webdavErrorTlsError;
+      case 'webdav_timeout':
+        return context.l10n.webdavErrorTimeout;
+      case 'webdav_insufficient_storage':
+        return context.l10n.webdavErrorInsufficientStorage;
+      case 'webdav_unknown':
+        return result.error ?? context.l10n.webdavErrorUnknown;
+      default:
+        return result.error ?? context.l10n.webdavErrorUnknown;
     }
   }
 
@@ -586,28 +665,28 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
                     context,
                     Icons.hourglass_empty,
                     uploadState.pendingCount.toString(),
-                    'Pending',
+                    context.l10n.uploadStatusPending,
                     colorScheme.tertiary,
                   ),
                   _buildStatItem(
                     context,
                     Icons.cloud_upload,
                     uploadState.uploadingCount.toString(),
-                    'Uploading',
+                    context.l10n.uploadStatusUploading,
                     colorScheme.primary,
                   ),
                   _buildStatItem(
                     context,
                     Icons.check_circle,
                     uploadState.completedCount.toString(),
-                    'Done',
+                    context.l10n.uploadStatusDone,
                     Colors.green,
                   ),
                   _buildStatItem(
                     context,
                     Icons.error,
                     uploadState.failedCount.toString(),
-                    'Failed',
+                    context.l10n.uploadStatusFailed,
                     colorScheme.error,
                   ),
                 ],
@@ -729,7 +808,7 @@ class _CloudSettingsPageState extends ConsumerState<CloudSettingsPage> {
           onPressed: () {
             ref.read(uploadQueueProvider.notifier).retryFailed(item.id);
           },
-          tooltip: 'Retry',
+          tooltip: context.l10n.dialogRetry,
         );
         break;
     }

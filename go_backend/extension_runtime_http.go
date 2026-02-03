@@ -34,6 +34,9 @@ func (r *ExtensionRuntime) validateDomain(urlStr string) error {
 	}
 
 	domain := parsed.Hostname()
+	if domain == "" {
+		return fmt.Errorf("invalid URL: hostname is required")
+	}
 
 	// Block private/local network access (SSRF protection)
 	if isPrivateIP(domain) {

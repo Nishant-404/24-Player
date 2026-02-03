@@ -410,9 +410,9 @@ class _LibraryStatusCard extends StatelessWidget {
     final now = DateTime.now();
     final diff = now.difference(lastScannedAt!);
     
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes} minutes ago';
-    if (diff.inDays < 1) return '${diff.inHours} hours ago';
+    if (diff.inMinutes < 1) return context.l10n.timeJustNow;
+    if (diff.inHours < 1) return context.l10n.timeMinutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return context.l10n.timeHoursAgo(diff.inHours);
     if (diff.inDays < 7) return context.l10n.dateDaysAgo(diff.inDays);
     
     return '${lastScannedAt!.day}/${lastScannedAt!.month}/${lastScannedAt!.year}';

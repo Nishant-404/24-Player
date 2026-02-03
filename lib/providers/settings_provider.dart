@@ -10,6 +10,7 @@ const _settingsKey = 'app_settings';
 const _migrationVersionKey = 'settings_migration_version';
 const _currentMigrationVersion = 1;
 const _cloudPasswordKey = 'cloud_password';
+const _spotifyClientSecretKey = 'spotify_client_secret';
 
 class SettingsNotifier extends Notifier<AppSettings> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -31,6 +32,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
     }
 
     await _loadCloudPassword(prefs);
+    await _loadSpotifyClientSecret(prefs);
 
     _applySpotifyCredentials();
     
@@ -54,7 +56,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> _saveSettings() async {
     final prefs = await _prefs;
-    final settingsToSave = state.copyWith(cloudPassword: '');
+    final settingsToSave = state.copyWith(
+      cloudPassword: '',
+      spotifyClientSecret: '',
+    );
     await prefs.setString(_settingsKey, jsonEncode(settingsToSave.toJson()));
   }
 
@@ -85,6 +90,36 @@ class SettingsNotifier extends Notifier<AppSettings> {
       await _secureStorage.delete(key: _cloudPasswordKey);
     } else {
       await _secureStorage.write(key: _cloudPasswordKey, value: password);
+    }
+  }
+
+  Future<void> _loadSpotifyClientSecret(SharedPreferences prefs) async {
+    final storedSecret = await _secureStorage.read(key: _spotifyClientSecretKey);
+    final prefsSecret = state.spotifyClientSecret;
+
+    if ((storedSecret == null || storedSecret.isEmpty) &&
+        prefsSecret.isNotEmpty) {
+      await _secureStorage.write(key: _spotifyClientSecretKey, value: prefsSecret);
+    }
+
+    final effectiveSecret = (storedSecret != null && storedSecret.isNotEmpty)
+        ? storedSecret
+        : (prefsSecret.isNotEmpty ? prefsSecret : '');
+
+    if (effectiveSecret != state.spotifyClientSecret) {
+      state = state.copyWith(spotifyClientSecret: effectiveSecret);
+    }
+
+    if (prefsSecret.isNotEmpty) {
+      await _saveSettings();
+    }
+  }
+
+  Future<void> _storeSpotifyClientSecret(String secret) async {
+    if (secret.isEmpty) {
+      await _secureStorage.delete(key: _spotifyClientSecretKey);
+    } else {
+      await _secureStorage.write(key: _spotifyClientSecretKey, value: secret);
     }
   }
 
@@ -193,25 +228,28 @@ class SettingsNotifier extends Notifier<AppSettings> {
     _saveSettings();
   }
 
-  void setSpotifyClientSecret(String clientSecret) {
+  Future<void> setSpotifyClientSecret(String clientSecret) async {
     state = state.copyWith(spotifyClientSecret: clientSecret);
+    await _storeSpotifyClientSecret(clientSecret);
     _saveSettings();
   }
 
-  void setSpotifyCredentials(String clientId, String clientSecret) {
+  Future<void> setSpotifyCredentials(String clientId, String clientSecret) async {
     state = state.copyWith(
       spotifyClientId: clientId,
       spotifyClientSecret: clientSecret,
     );
+    await _storeSpotifyClientSecret(clientSecret);
     _saveSettings();
     _applySpotifyCredentials();
   }
 
-  void clearSpotifyCredentials() {
+  Future<void> clearSpotifyCredentials() async {
     state = state.copyWith(
       spotifyClientId: '',
       spotifyClientSecret: '',
     );
+    await _storeSpotifyClientSecret('');
     _saveSettings();
     _applySpotifyCredentials();
   }
@@ -319,6 +357,11 @@ void setUseAllFilesAccess(bool enabled) {
     _saveSettings();
   }
 
+  void setCloudAllowInsecureHttp(bool allowed) {
+    state = state.copyWith(cloudAllowInsecureHttp: allowed);
+    _saveSettings();
+  }
+
   Future<void> setCloudSettings({
     bool? enabled,
     String? provider,
@@ -326,6 +369,7 @@ void setUseAllFilesAccess(bool enabled) {
     String? username,
     String? password,
     String? remotePath,
+    bool? allowInsecureHttp,
   }) async {
     final nextPassword = password ?? state.cloudPassword;
     state = state.copyWith(
@@ -335,6 +379,8 @@ void setUseAllFilesAccess(bool enabled) {
       cloudUsername: username ?? state.cloudUsername,
       cloudPassword: nextPassword,
       cloudRemotePath: remotePath ?? state.cloudRemotePath,
+      cloudAllowInsecureHttp:
+          allowInsecureHttp ?? state.cloudAllowInsecureHttp,
     );
     if (password != null) {
       await _storeCloudPassword(nextPassword);

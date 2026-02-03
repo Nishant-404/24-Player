@@ -14,6 +14,10 @@
 - **Duplicate Detection in Search Results**: "In Library" badge shows on tracks that exist in your local library
   - Matches by ISRC (exact match) or track name + artist (fuzzy match)
   - Toggle indicator visibility in Settings > Local Library
+- **Unified Library Tab**: History tab renamed to Library, now shows both Downloaded and Local Library tracks
+  - Source badge on each item (Downloaded/Local) to identify the source
+  - Local Library items shown in a separate section when enabled
+  - Play button to open local library tracks directly
 - **Cloud Upload with WebDAV & SFTP**: Automatically upload downloaded files to your NAS or cloud storage
   - Full WebDAV support (Synology DSM, Nextcloud, QNAP, ownCloud)
   - Full SFTP support (any SSH server with SFTP enabled)
@@ -33,6 +37,11 @@
 ### Changed
 
 - Cloud upload passwords are now stored in secure storage instead of SharedPreferences
+- Spotify client secrets are now stored in secure storage instead of SharedPreferences
+- Extension HTTP sandbox now enforces HTTPS and blocks private IPs resolved via DNS
+- Extension file sandbox now validates paths using boundary-safe checks
+- WebDAV now defaults to HTTPS; insecure HTTP requires explicit opt-in
+- WebDAV error messages are now localized in the UI
 
 ---
 

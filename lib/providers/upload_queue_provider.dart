@@ -170,6 +170,7 @@ class UploadQueueNotifier extends Notifier<UploadQueueState> {
           serverUrl: settings.cloudServerUrl,
           username: settings.cloudUsername,
           password: settings.cloudPassword,
+          allowInsecureHttp: settings.cloudAllowInsecureHttp,
           onProgress: (sent, total) {
             if (total > 0) {
               final progress = sent / total;

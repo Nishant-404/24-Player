@@ -12,8 +12,81 @@ import 'package:spotiflac_android/utils/mime_utils.dart';
 import 'package:spotiflac_android/models/download_item.dart';
 import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
+import 'package:spotiflac_android/providers/local_library_provider.dart';
+import 'package:spotiflac_android/services/library_database.dart';
 import 'package:spotiflac_android/screens/track_metadata_screen.dart';
 import 'package:spotiflac_android/screens/downloaded_album_screen.dart';
+
+/// Represents the source of a library item
+enum LibraryItemSource { downloaded, local }
+
+/// Unified library item that can come from download history or local library
+class UnifiedLibraryItem {
+  final String id;
+  final String trackName;
+  final String artistName;
+  final String albumName;
+  final String? coverUrl;
+  final String filePath;
+  final String? quality;
+  final DateTime addedAt;
+  final LibraryItemSource source;
+  
+  // Original items for navigation
+  final DownloadHistoryItem? historyItem;
+  final LocalLibraryItem? localItem;
+
+  UnifiedLibraryItem({
+    required this.id,
+    required this.trackName,
+    required this.artistName,
+    required this.albumName,
+    this.coverUrl,
+    required this.filePath,
+    this.quality,
+    required this.addedAt,
+    required this.source,
+    this.historyItem,
+    this.localItem,
+  });
+
+  factory UnifiedLibraryItem.fromDownloadHistory(DownloadHistoryItem item) {
+    return UnifiedLibraryItem(
+      id: 'dl_${item.id}',
+      trackName: item.trackName,
+      artistName: item.artistName,
+      albumName: item.albumName,
+      coverUrl: item.coverUrl,
+      filePath: item.filePath,
+      quality: item.quality,
+      addedAt: item.downloadedAt,
+      source: LibraryItemSource.downloaded,
+      historyItem: item,
+    );
+  }
+
+  factory UnifiedLibraryItem.fromLocalLibrary(LocalLibraryItem item) {
+    String? quality;
+    if (item.bitDepth != null && item.sampleRate != null) {
+      quality = '${item.bitDepth}bit/${(item.sampleRate! / 1000).toStringAsFixed(1)}kHz';
+    }
+    return UnifiedLibraryItem(
+      id: 'local_${item.id}',
+      trackName: item.trackName,
+      artistName: item.artistName,
+      albumName: item.albumName,
+      coverUrl: null, // Local library doesn't have cover URLs
+      filePath: item.filePath,
+      quality: quality,
+      addedAt: item.scannedAt,
+      source: LibraryItemSource.local,
+      localItem: item,
+    );
+  }
+
+  String get searchKey => '${trackName.toLowerCase()}|${artistName.toLowerCase()}|${albumName.toLowerCase()}';
+  String get albumKey => '$albumName|$artistName';
+}
 
 class _GroupedAlbum {
   final String albumName;
@@ -664,6 +737,12 @@ final queueItems = ref.watch(downloadQueueProvider.select((s) => s.items));
     final allHistoryItems = ref.watch(
       downloadHistoryProvider.select((s) => s.items),
     );
+    // Watch local library items
+    final localLibraryEnabled = ref.watch(settingsProvider.select((s) => s.localLibraryEnabled));
+    final localLibraryItems = localLibraryEnabled 
+        ? ref.watch(localLibraryProvider.select((s) => s.items))
+        : <LocalLibraryItem>[];
+    
     _ensureHistoryCaches(allHistoryItems);
     final historyViewMode = ref.watch(
       settingsProvider.select((s) => s.historyViewMode),
@@ -720,7 +799,7 @@ final queueItems = ref.watch(downloadQueueProvider.select((s) => s.items));
                       expandedTitleScale: 1.0,
                       titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
                       title: Text(
-                        context.l10n.historyTitle,
+                        context.l10n.navLibrary,
                         style: TextStyle(
                           fontSize: 20 + (14 * expandRatio),
                           fontWeight: FontWeight.bold,
@@ -945,6 +1024,7 @@ const Spacer(),
                     queueItems: queueItems,
                     groupedAlbums: groupedAlbums,
                     albumCounts: historyStats.albumCounts,
+                    localLibraryItems: localLibraryItems,
                   );
                 },
               ),
@@ -982,7 +1062,8 @@ child: _buildSelectionBottomBar(
     required String historyViewMode,
     required List<DownloadItem> queueItems,
     required List<_GroupedAlbum> groupedAlbums,
-required Map<String, int> albumCounts,
+    required Map<String, int> albumCounts,
+    required List<LocalLibraryItem> localLibraryItems,
   }) {
 final historyItems = _resolveHistoryItems(
       filterMode: filterMode,
@@ -1151,8 +1232,57 @@ if (filterMode == 'albums' && filteredGroupedAlbums.isNotEmpty)
                   }, childCount: historyItems.length                ),
               ),
 
+        // Local Library Section
+        if (localLibraryItems.isNotEmpty && filterMode == 'all')
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  Text(
+                    context.l10n.libraryFilterLocal,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${localLibraryItems.length}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        if (localLibraryItems.isNotEmpty && filterMode == 'all')
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final item = localLibraryItems[index];
+              return KeyedSubtree(
+                key: ValueKey('local_${item.id}'),
+                child: _buildLocalLibraryItem(
+                  context,
+                  item,
+                  colorScheme,
+                ),
+              );
+            }, childCount: localLibraryItems.length),
+          ),
+
 if (queueItems.isEmpty &&
             historyItems.isEmpty &&
+            localLibraryItems.isEmpty &&
             (filterMode != 'albums' || filteredGroupedAlbums.isEmpty) &&
             !showFilteringIndicator)
           SliverFillRemaining(
@@ -2084,6 +2214,27 @@ child: CachedNetworkImage(
                     const SizedBox(height: 2),
                     Row(
                       children: [
+                        // Source badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            context.l10n.librarySourceDownloaded,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: colorScheme.onPrimaryContainer,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           dateStr,
                           style: Theme.of(context).textTheme.labelSmall
@@ -2151,6 +2302,141 @@ child: CachedNetworkImage(
                         size: 20,
                       ),
                   ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocalLibraryItem(
+    BuildContext context,
+    LocalLibraryItem item,
+    ColorScheme colorScheme,
+  ) {
+    final fileExists = _checkFileExists(item.filePath);
+    
+    // Format quality info
+    String? qualityStr;
+    if (item.bitDepth != null && item.sampleRate != null) {
+      qualityStr = '${item.bitDepth}bit/${(item.sampleRate! / 1000).toStringAsFixed(1)}kHz';
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: InkWell(
+        onTap: () => _openFile(item.filePath),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Placeholder for cover (local library doesn't have cover URLs)
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.folder_outlined,
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.trackName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.artistName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        // Source badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            context.l10n.librarySourceLocal,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: colorScheme.onSecondaryContainer,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                        if (qualityStr != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: qualityStr.startsWith('24')
+                                  ? colorScheme.tertiaryContainer
+                                  : colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              qualityStr,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: qualityStr.startsWith('24')
+                                        ? colorScheme.onTertiaryContainer
+                                        : colorScheme.onSurfaceVariant,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              if (fileExists)
+                IconButton(
+                  onPressed: () => _openFile(item.filePath),
+                  icon: Icon(
+                    Icons.play_arrow,
+                    color: colorScheme.primary,
+                  ),
+                  tooltip: context.l10n.tooltipPlay,
+                )
+              else
+                Icon(
+                  Icons.error_outline,
+                  color: colorScheme.error,
                 ),
             ],
           ),

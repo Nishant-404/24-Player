@@ -44,6 +44,7 @@ class AppSettings {
   final String cloudUsername; // Server username
   final String cloudPassword; // Server password (stored securely)
   final String cloudRemotePath; // Remote folder path (e.g. /Music/SpotiFLAC)
+  final bool cloudAllowInsecureHttp; // Allow HTTP for WebDAV (insecure)
   
   // Local Library Settings
   final bool localLibraryEnabled; // Enable local library scanning
@@ -90,6 +91,7 @@ class AppSettings {
     this.cloudUsername = '',
     this.cloudPassword = '',
     this.cloudRemotePath = '/Music/SpotiFLAC',
+    this.cloudAllowInsecureHttp = false,
     // Local Library defaults
     this.localLibraryEnabled = false,
     this.localLibraryPath = '',
@@ -137,6 +139,7 @@ class AppSettings {
     String? cloudUsername,
     String? cloudPassword,
     String? cloudRemotePath,
+    bool? cloudAllowInsecureHttp,
     // Local Library
     bool? localLibraryEnabled,
     String? localLibraryPath,
@@ -182,6 +185,8 @@ class AppSettings {
       cloudUsername: cloudUsername ?? this.cloudUsername,
       cloudPassword: cloudPassword ?? this.cloudPassword,
       cloudRemotePath: cloudRemotePath ?? this.cloudRemotePath,
+      cloudAllowInsecureHttp:
+          cloudAllowInsecureHttp ?? this.cloudAllowInsecureHttp,
       // Local Library
       localLibraryEnabled: localLibraryEnabled ?? this.localLibraryEnabled,
       localLibraryPath: localLibraryPath ?? this.localLibraryPath,

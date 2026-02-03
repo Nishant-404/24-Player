@@ -202,14 +202,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         icon: Badge(
           isLabelVisible: queueState > 0,
           label: Text('$queueState'),
-          child: const Icon(Icons.history_outlined),
+          child: const Icon(Icons.library_music_outlined),
         ),
         selectedIcon: Badge(
           isLabelVisible: queueState > 0,
           label: Text('$queueState'),
-          child: const Icon(Icons.history),
+          child: const Icon(Icons.library_music),
         ),
-        label: l10n.navHistory,
+        label: l10n.navLibrary,
       ),
       if (showStore)
         NavigationDestination(

@@ -19,6 +19,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navHome => 'Home';
 
   @override
+  String get navLibrary => 'Library';
+
+  @override
   String get navHistory => 'History';
 
   @override
@@ -2133,6 +2136,59 @@ class AppLocalizationsEs extends AppLocalizations {
       'No stored SFTP host keys found.';
 
   @override
+  String get cloudSettingsAllowHttpTitle => 'Allow HTTP (Insecure)';
+
+  @override
+  String get cloudSettingsAllowHttpSubtitle =>
+      'Sends credentials without TLS. Not recommended.';
+
+  @override
+  String get cloudSettingsAllowHttpMessage =>
+      'HTTP does not encrypt your credentials. Only enable if you trust the network.';
+
+  @override
+  String get cloudSettingsAllowHttpConfirm => 'Allow HTTP';
+
+  @override
+  String get webdavErrorInvalidScheme => 'Invalid URL: scheme is required';
+
+  @override
+  String get webdavErrorHttpsRequired => 'WebDAV URL must use https';
+
+  @override
+  String get webdavErrorInvalidHost => 'Invalid URL: hostname is required';
+
+  @override
+  String get webdavErrorAuthFailed =>
+      'Authentication failed. Check username and password.';
+
+  @override
+  String get webdavErrorForbidden =>
+      'Access denied. Check permissions on the server.';
+
+  @override
+  String get webdavErrorNotFound => 'Server path not found. Check the URL.';
+
+  @override
+  String get webdavErrorConnectionFailed =>
+      'Cannot connect to server. Check URL and network.';
+
+  @override
+  String get webdavErrorTlsError =>
+      'SSL/TLS error. Server certificate may be invalid.';
+
+  @override
+  String get webdavErrorTimeout =>
+      'Connection timed out. Server may be unreachable.';
+
+  @override
+  String get webdavErrorInsufficientStorage =>
+      'Insufficient storage on server.';
+
+  @override
+  String get webdavErrorUnknown => 'Upload failed. Please try again.';
+
+  @override
   String get queueEmpty => 'No downloads in queue';
 
   @override
@@ -2470,6 +2526,101 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get libraryFolderNotExist => 'Selected folder does not exist';
+
+  @override
+  String get librarySourceDownloaded => 'Downloaded';
+
+  @override
+  String get librarySourceLocal => 'Local';
+
+  @override
+  String get libraryFilterAll => 'All';
+
+  @override
+  String get libraryFilterDownloaded => 'Downloaded';
+
+  @override
+  String get libraryFilterLocal => 'Local';
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes ago',
+      one: '1 minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '1 hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cloudProviderWebdav => 'WebDAV (Synology, Nextcloud, QNAP)';
+
+  @override
+  String get cloudProviderSftp => 'SFTP (SSH File Transfer)';
+
+  @override
+  String get cloudProviderNotConfigured => 'Not Configured';
+
+  @override
+  String get cloudProviderWebdavTitle => 'WebDAV';
+
+  @override
+  String get cloudProviderWebdavSubtitle =>
+      'Synology, Nextcloud, QNAP, ownCloud';
+
+  @override
+  String get cloudProviderSftpTitle => 'SFTP';
+
+  @override
+  String get cloudProviderSftpSubtitle => 'SSH File Transfer Protocol';
+
+  @override
+  String get cloudTestErrorServerUrlRequired => 'Server URL is required';
+
+  @override
+  String get cloudTestErrorCredentialsRequired =>
+      'Username and password are required';
+
+  @override
+  String get cloudTestSuccessWebdav => 'Connected to WebDAV server';
+
+  @override
+  String get cloudTestSuccessSftp => 'Connected to SFTP server';
+
+  @override
+  String get cloudTestErrorNoProvider => 'No provider selected';
+
+  @override
+  String connectionTestSuccess(String message) {
+    return 'Success: $message';
+  }
+
+  @override
+  String get uploadStatusPending => 'Pending';
+
+  @override
+  String get uploadStatusUploading => 'Uploading';
+
+  @override
+  String get uploadStatusDone => 'Done';
+
+  @override
+  String get uploadStatusFailed => 'Failed';
 }
 
 /// The translations for Spanish Castilian, as used in Spain (`es_ES`).

@@ -41,11 +41,37 @@ func isPathInAllowedDirs(absPath string) bool {
 	defer allowedDownloadDirsMu.RUnlock()
 
 	for _, allowedDir := range allowedDownloadDirs {
-		if strings.HasPrefix(absPath, allowedDir) {
+		if isPathWithinBase(allowedDir, absPath) {
 			return true
 		}
 	}
 	return false
+}
+
+func isPathWithinBase(baseDir, targetPath string) bool {
+	baseAbs, err := filepath.Abs(baseDir)
+	if err != nil {
+		return false
+	}
+	targetAbs, err := filepath.Abs(targetPath)
+	if err != nil {
+		return false
+	}
+
+	rel, err := filepath.Rel(baseAbs, targetAbs)
+	if err != nil {
+		return false
+	}
+	rel = filepath.Clean(rel)
+	if rel == "." {
+		return true
+	}
+
+	prefix := ".." + string(filepath.Separator)
+	if rel == ".." || strings.HasPrefix(rel, prefix) {
+		return false
+	}
+	return true
 }
 
 func (r *ExtensionRuntime) validatePath(path string) (string, error) {
@@ -77,7 +103,7 @@ func (r *ExtensionRuntime) validatePath(path string) (string, error) {
 	}
 
 	absDataDir, _ := filepath.Abs(r.dataDir)
-	if !strings.HasPrefix(absPath, absDataDir) {
+	if !isPathWithinBase(absDataDir, absPath) {
 		return "", fmt.Errorf("file access denied: path '%s' is outside sandbox", path)
 	}
 

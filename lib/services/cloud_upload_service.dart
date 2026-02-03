@@ -10,11 +10,13 @@ import 'package:spotiflac_android/utils/logger.dart';
 class CloudUploadResult {
   final bool success;
   final String? error;
+  final String? errorCode;
   final String? remotePath;
 
   const CloudUploadResult({
     required this.success,
     this.error,
+    this.errorCode,
     this.remotePath,
   });
 
@@ -23,9 +25,11 @@ class CloudUploadResult {
     remotePath: remotePath,
   );
 
-  factory CloudUploadResult.failure(String error) => CloudUploadResult(
+  factory CloudUploadResult.failure(String error, {String? errorCode}) =>
+      CloudUploadResult(
     success: false,
     error: error,
+    errorCode: errorCode,
   );
 }
 
@@ -35,6 +39,13 @@ class SftpServerInfo {
   final int port;
   
   const SftpServerInfo({required this.host, required this.port});
+}
+
+class _WebDavError {
+  final String code;
+  final String message;
+
+  const _WebDavError({required this.code, required this.message});
 }
 
 /// Service for uploading files to cloud storage (WebDAV, SFTP)
@@ -51,6 +62,7 @@ class CloudUploadService {
   String? _currentServerUrl;
   String? _currentUsername;
   String? _currentPassword;
+  bool? _currentAllowInsecureHttp;
 
   static const _sftpHostKeysKey = 'sftp_known_host_keys';
   Map<String, Map<String, String>>? _knownHostKeys;
@@ -78,9 +90,35 @@ class CloudUploadService {
   // WebDAV Methods
   // ============================================================
 
-  bool _isHttpsUrl(String url) {
-    final uri = Uri.tryParse(url);
-    return uri != null && uri.scheme == 'https';
+  _WebDavError? _validateWebDavUrl(
+    String url, {
+    required bool allowInsecureHttp,
+  }) {
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || uri.scheme.isEmpty) {
+      return const _WebDavError(
+        code: 'webdav_invalid_scheme',
+        message: 'Invalid URL: scheme is required',
+      );
+    }
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme != 'https') {
+      if (scheme == 'http' && allowInsecureHttp) {
+        // Explicitly allowed by user
+      } else {
+        return const _WebDavError(
+          code: 'webdav_https_required',
+          message: 'WebDAV URL must use https',
+        );
+      }
+    }
+    if (uri.host.isEmpty) {
+      return const _WebDavError(
+        code: 'webdav_invalid_host',
+        message: 'Invalid URL: hostname is required',
+      );
+    }
+    return null;
   }
 
   /// Initialize WebDAV client with server credentials
@@ -88,16 +126,22 @@ class CloudUploadService {
     required String serverUrl,
     required String username,
     required String password,
+    bool allowInsecureHttp = false,
   }) async {
-    if (!_isHttpsUrl(serverUrl)) {
-      throw ArgumentError('WebDAV URL must use https');
+    final urlError = _validateWebDavUrl(
+      serverUrl,
+      allowInsecureHttp: allowInsecureHttp,
+    );
+    if (urlError != null) {
+      throw ArgumentError(urlError.message);
     }
 
     // Reuse existing client if credentials haven't changed
     if (_webdavClient != null && 
         _currentServerUrl == serverUrl && 
         _currentUsername == username &&
-        _currentPassword == password) {
+        _currentPassword == password &&
+        _currentAllowInsecureHttp == allowInsecureHttp) {
       return;
     }
 
@@ -111,6 +155,7 @@ class CloudUploadService {
     _currentServerUrl = serverUrl;
     _currentUsername = username;
     _currentPassword = password;
+    _currentAllowInsecureHttp = allowInsecureHttp;
 
     _logInfo('CloudUpload', 'WebDAV client initialized for $serverUrl');
   }
@@ -120,9 +165,17 @@ class CloudUploadService {
     required String serverUrl,
     required String username,
     required String password,
+    bool allowInsecureHttp = false,
   }) async {
-    if (!_isHttpsUrl(serverUrl)) {
-      return CloudUploadResult.failure('WebDAV URL must use https.');
+    final urlError = _validateWebDavUrl(
+      serverUrl,
+      allowInsecureHttp: allowInsecureHttp,
+    );
+    if (urlError != null) {
+      return CloudUploadResult.failure(
+        urlError.message,
+        errorCode: urlError.code,
+      );
     }
     try {
       final client = webdav.newClient(
@@ -139,7 +192,11 @@ class CloudUploadService {
       return CloudUploadResult.success('/');
     } catch (e) {
       _logError('CloudUpload', 'WebDAV connection test failed', e.toString());
-      return CloudUploadResult.failure(_parseWebDAVError(e));
+      final parsed = _parseWebDAVError(e);
+      return CloudUploadResult.failure(
+        parsed.message,
+        errorCode: parsed.code,
+      );
     }
   }
 
@@ -151,9 +208,17 @@ class CloudUploadService {
     required String username,
     required String password,
     void Function(int sent, int total)? onProgress,
+    bool allowInsecureHttp = false,
   }) async {
-    if (!_isHttpsUrl(serverUrl)) {
-      return CloudUploadResult.failure('WebDAV URL must use https.');
+    final urlError = _validateWebDavUrl(
+      serverUrl,
+      allowInsecureHttp: allowInsecureHttp,
+    );
+    if (urlError != null) {
+      return CloudUploadResult.failure(
+        urlError.message,
+        errorCode: urlError.code,
+      );
     }
     try {
       // Initialize client if needed
@@ -161,6 +226,7 @@ class CloudUploadService {
         serverUrl: serverUrl,
         username: username,
         password: password,
+        allowInsecureHttp: allowInsecureHttp,
       );
 
       final client = _webdavClient!;
@@ -189,7 +255,11 @@ class CloudUploadService {
       return CloudUploadResult.success(remotePath);
     } catch (e) {
       _logError('CloudUpload', 'WebDAV upload failed', e.toString());
-      return CloudUploadResult.failure(_parseWebDAVError(e));
+      final parsed = _parseWebDAVError(e);
+      return CloudUploadResult.failure(
+        parsed.message,
+        errorCode: parsed.code,
+      );
     }
   }
 
@@ -209,32 +279,56 @@ class CloudUploadService {
   }
 
   /// Parse WebDAV error to user-friendly message
-  String _parseWebDAVError(dynamic error) {
+  _WebDavError _parseWebDAVError(dynamic error) {
     final errorStr = error.toString().toLowerCase();
     
     if (errorStr.contains('401') || errorStr.contains('unauthorized')) {
-      return 'Authentication failed. Check username and password.';
+      return const _WebDavError(
+        code: 'webdav_auth_failed',
+        message: 'Authentication failed. Check username and password.',
+      );
     }
     if (errorStr.contains('403') || errorStr.contains('forbidden')) {
-      return 'Access denied. Check permissions on the server.';
+      return const _WebDavError(
+        code: 'webdav_forbidden',
+        message: 'Access denied. Check permissions on the server.',
+      );
     }
     if (errorStr.contains('404') || errorStr.contains('not found')) {
-      return 'Server path not found. Check the URL.';
+      return const _WebDavError(
+        code: 'webdav_not_found',
+        message: 'Server path not found. Check the URL.',
+      );
     }
     if (errorStr.contains('connection refused') || errorStr.contains('socket')) {
-      return 'Cannot connect to server. Check URL and network.';
+      return const _WebDavError(
+        code: 'webdav_connection_failed',
+        message: 'Cannot connect to server. Check URL and network.',
+      );
     }
     if (errorStr.contains('certificate') || errorStr.contains('ssl') || errorStr.contains('tls')) {
-      return 'SSL/TLS error. Server certificate may be invalid.';
+      return const _WebDavError(
+        code: 'webdav_tls_error',
+        message: 'SSL/TLS error. Server certificate may be invalid.',
+      );
     }
     if (errorStr.contains('timeout')) {
-      return 'Connection timed out. Server may be unreachable.';
+      return const _WebDavError(
+        code: 'webdav_timeout',
+        message: 'Connection timed out. Server may be unreachable.',
+      );
     }
     if (errorStr.contains('507') || errorStr.contains('insufficient storage')) {
-      return 'Insufficient storage on server.';
+      return const _WebDavError(
+        code: 'webdav_insufficient_storage',
+        message: 'Insufficient storage on server.',
+      );
     }
 
-    return 'Upload failed: ${error.toString()}';
+    return _WebDavError(
+      code: 'webdav_unknown',
+      message: 'Upload failed: ${error.toString()}',
+    );
   }
 
   // ============================================================
@@ -508,6 +602,7 @@ class CloudUploadService {
     _currentServerUrl = null;
     _currentUsername = null;
     _currentPassword = null;
+    _currentAllowInsecureHttp = null;
   }
 
   Future<bool> clearSftpHostKey({required String serverUrl}) async {
