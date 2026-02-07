@@ -10,6 +10,8 @@ import 'package:spotiflac_android/utils/logger.dart';
 final _log = AppLogger('FFmpeg');
 
 class FFmpegService {
+  static const int _commandLogPreviewLength = 300;
+
   static String _buildOutputPath(String inputPath, String extension) {
     final normalizedExt = extension.startsWith('.') ? extension : '.$extension';
     final inputFile = File(inputPath);
@@ -24,6 +26,25 @@ class FFmpegService {
           '$dir${Platform.pathSeparator}${baseName}_converted$normalizedExt';
     }
     return outputPath;
+  }
+
+  static String _previewCommandForLog(String command) {
+    final redacted = command
+        .replaceAll(
+          RegExp(r'-metadata\s+lyrics="[^"]*"', caseSensitive: false),
+          '-metadata lyrics="<redacted>"',
+        )
+        .replaceAll(
+          RegExp(r'-metadata\s+unsyncedlyrics="[^"]*"', caseSensitive: false),
+          '-metadata unsyncedlyrics="<redacted>"',
+        )
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    if (redacted.length <= _commandLogPreviewLength) {
+      return redacted;
+    }
+    return '${redacted.substring(0, _commandLogPreviewLength)}...';
   }
 
   static Future<FFmpegResult> _execute(String command) async {
@@ -280,7 +301,7 @@ class FFmpegService {
     cmdBuffer.write('"$tempOutput" -y');
 
     final command = cmdBuffer.toString();
-    _log.d('Executing FFmpeg command: $command');
+    _log.d('Executing FFmpeg command: ${_previewCommandForLog(command)}');
 
     final result = await _execute(command);
 
@@ -359,7 +380,9 @@ class FFmpegService {
     cmdBuffer.write('-id3v2_version 3 "$tempOutput" -y');
 
     final command = cmdBuffer.toString();
-    _log.d('Executing FFmpeg MP3 embed command: $command');
+    _log.d(
+      'Executing FFmpeg MP3 embed command: ${_previewCommandForLog(command)}',
+    );
 
     final result = await _execute(command);
 

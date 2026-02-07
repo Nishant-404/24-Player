@@ -199,7 +199,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   void setConcurrentDownloads(int count) {
-    final clamped = count.clamp(1, 3);
+    final clamped = count.clamp(1, 5);
     state = state.copyWith(concurrentDownloads: clamped);
     _saveSettings();
   }

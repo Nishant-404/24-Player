@@ -614,6 +614,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
   static const _cleanupInterval = 50;
   static const _queueStorageKey = 'download_queue';
   static const _progressPollingInterval = Duration(milliseconds: 800);
+  static const _queueSchedulingInterval = Duration(milliseconds: 250);
   final NotificationService _notificationService = NotificationService();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   int _totalQueuedAtStart = 0;
@@ -630,12 +631,24 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
   @override
   DownloadQueueState build() {
+    ref.listen<AppSettings>(settingsProvider, (previous, next) {
+      final previousConcurrent =
+          previous?.concurrentDownloads ?? state.concurrentDownloads;
+      updateSettings(next);
+      if (previousConcurrent != next.concurrentDownloads) {
+        _log.i(
+          'Concurrent downloads updated: $previousConcurrent -> ${next.concurrentDownloads}',
+        );
+      }
+    });
+
     ref.onDispose(() {
       _progressTimer?.cancel();
       _progressTimer = null;
     });
 
     Future.microtask(() async {
+      updateSettings(ref.read(settingsProvider));
       await _initOutputDir();
       await _loadQueueFromStorage();
     });
@@ -1222,6 +1235,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
   }
 
   void updateSettings(AppSettings settings) {
+    final concurrentDownloads = settings.concurrentDownloads.clamp(1, 5);
     state = state.copyWith(
       outputDir: settings.downloadDirectory.isNotEmpty
           ? settings.downloadDirectory
@@ -1229,7 +1243,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       filenameFormat: settings.filenameFormat,
       audioQuality: settings.audioQuality,
       autoFallback: settings.autoFallback,
-      concurrentDownloads: settings.concurrentDownloads,
+      concurrentDownloads: concurrentDownloads,
     );
   }
 
@@ -2178,6 +2192,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
     // Check network connectivity before starting
     final settings = ref.read(settingsProvider);
+    updateSettings(settings);
     final isSafMode = _isSafMode(settings);
     if (settings.downloadNetworkMode == 'wifi_only') {
       final connectivityResult = await Connectivity().checkConnectivity();
@@ -2288,12 +2303,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       }
     }
     _log.d('Concurrent downloads: ${state.concurrentDownloads}');
-
-    if (state.concurrentDownloads > 1) {
-      await _processQueueParallel();
-    } else {
-      await _processQueueSequential();
-    }
+    await _processQueueParallel();
 
     _stopProgressPolling();
 
@@ -2349,54 +2359,23 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     }
   }
 
-  Future<void> _processQueueSequential() async {
-    _startMultiProgressPolling();
-
-    while (true) {
-      if (state.isPaused) {
-        _log.d('Queue is paused, waiting...');
-        await Future.delayed(_progressPollingInterval);
-        continue;
-      }
-
-      final currentItems = state.items;
-      final nextIndex = currentItems.indexWhere(
-        (item) => item.status == DownloadStatus.queued,
-      );
-      if (nextIndex == -1) {
-        _log.d(
-          'No more items to process (checked ${currentItems.length} items)',
-        );
-        break;
-      }
-
-      final nextItem = currentItems[nextIndex];
-      _log.d(
-        'Processing next item: ${nextItem.track.name} (id: ${nextItem.id})',
-      );
-      await _downloadSingleItem(nextItem);
-
-      PlatformBridge.clearItemProgress(nextItem.id).catchError((_) {});
-    }
-
-    _stopProgressPolling();
-  }
-
   Future<void> _processQueueParallel() async {
-    final maxConcurrent = state.concurrentDownloads;
     final activeDownloads = <String, Future<void>>{};
+    var lastLoggedMaxConcurrent = -1;
 
     _startMultiProgressPolling();
 
     while (true) {
       if (state.isPaused) {
         _log.d('Queue is paused, waiting for active downloads...');
-        if (activeDownloads.isNotEmpty) {
-          await Future.any(activeDownloads.values);
-        } else {
-          await Future.delayed(_progressPollingInterval);
-        }
+        await Future.delayed(_queueSchedulingInterval);
         continue;
+      }
+
+      final maxConcurrent = max(1, state.concurrentDownloads);
+      if (lastLoggedMaxConcurrent != maxConcurrent) {
+        _log.d('Parallel worker max concurrency now: $maxConcurrent');
+        lastLoggedMaxConcurrent = maxConcurrent;
       }
 
       final queuedItems = state.items
@@ -2427,7 +2406,14 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
       }
 
       if (activeDownloads.isNotEmpty) {
-        await Future.any(activeDownloads.values);
+        // Re-check queue/settings periodically so concurrency changes
+        // (e.g. 1 -> 3) can take effect before any active item finishes.
+        await Future.any([
+          Future.any(activeDownloads.values),
+          Future.delayed(_queueSchedulingInterval),
+        ]);
+      } else {
+        await Future.delayed(_queueSchedulingInterval);
       }
     }
 

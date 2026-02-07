@@ -31,10 +31,15 @@
   - `lib/screens/queue_screen.dart`
   - `lib/screens/settings_screen.dart`
   - `lib/screens/settings_tab.dart`
+- Concurrent download limit increased from `3` to `5` (settings clamp + Options UI chips now support `1..5`)
+- Download queue now uses a single parallel scheduler path; `1` concurrency is handled as parallel-with-limit-1 (no separate sequential engine)
+- Download queue now listens to settings updates in real-time so concurrency/output settings stay in sync while queue is active
 
 ### Fixed
 
 - CSV parser now correctly handles escaped quotes (`""`) inside quoted fields during import
+- Fixed dynamic concurrency update during active downloads: changing limit (e.g. `1 -> 3`) now schedules additional queued items without waiting current active item to finish
+- Queue scheduler now re-checks capacity/queued items on short intervals to avoid blocking on long-running single active download
 
 ---
 

@@ -22,6 +22,11 @@ type LogBuffer struct {
 	loggingEnabled bool
 }
 
+const (
+	defaultLogBufferSize = 500
+	maxLogMessageLength  = 500
+)
+
 var (
 	globalLogBuffer *LogBuffer
 	logBufferOnce   sync.Once
@@ -30,12 +35,20 @@ var (
 func GetLogBuffer() *LogBuffer {
 	logBufferOnce.Do(func() {
 		globalLogBuffer = &LogBuffer{
-			entries:        make([]LogEntry, 0, 1000),
-			maxSize:        1000,
+			entries:        make([]LogEntry, 0, defaultLogBufferSize),
+			maxSize:        defaultLogBufferSize,
 			loggingEnabled: false, // Default: disabled for performance (user can enable in settings)
 		}
 	})
 	return globalLogBuffer
+}
+
+func truncateLogMessage(message string) string {
+	runes := []rune(message)
+	if len(runes) <= maxLogMessageLength {
+		return message
+	}
+	return string(runes[:maxLogMessageLength]) + "...[truncated]"
 }
 
 func (lb *LogBuffer) SetLoggingEnabled(enabled bool) {
@@ -57,6 +70,8 @@ func (lb *LogBuffer) Add(level, tag, message string) {
 	if !lb.loggingEnabled && level != "ERROR" && level != "FATAL" {
 		return
 	}
+
+	message = truncateLogMessage(message)
 
 	entry := LogEntry{
 		Timestamp: time.Now().Format("15:04:05.000"),

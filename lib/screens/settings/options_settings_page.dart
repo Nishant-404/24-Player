@@ -24,46 +24,48 @@ class OptionsSettingsPage extends ConsumerWidget {
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
-            expandedHeight: 120 + topPadding,
-            collapsedHeight: kToolbarHeight,
-            floating: false,
-            pinned: true,
-            backgroundColor: colorScheme.surface,
-            surfaceTintColor: Colors.transparent,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(context),
-            ),
-            flexibleSpace: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxHeight = 120 + topPadding;
-                final minHeight = kToolbarHeight + topPadding;
-                final expandRatio =
-                    ((constraints.maxHeight - minHeight) /
-                            (maxHeight - minHeight))
-                        .clamp(0.0, 1.0);
-                final leftPadding = 56 - (32 * expandRatio); // 56 -> 24
-                return FlexibleSpaceBar(
-                  expandedTitleScale: 1.0,
-                  titlePadding: EdgeInsets.only(
-                    left: leftPadding,
-                    bottom: 16,
-                  ),
-                  title: Text(
-                    context.l10n.optionsTitle,
-                    style: TextStyle(
-                      fontSize: 20 + (8 * expandRatio), // 20 -> 28
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+              expandedHeight: 120 + topPadding,
+              collapsedHeight: kToolbarHeight,
+              floating: false,
+              pinned: true,
+              backgroundColor: colorScheme.surface,
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+              flexibleSpace: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxHeight = 120 + topPadding;
+                  final minHeight = kToolbarHeight + topPadding;
+                  final expandRatio =
+                      ((constraints.maxHeight - minHeight) /
+                              (maxHeight - minHeight))
+                          .clamp(0.0, 1.0);
+                  final leftPadding = 56 - (32 * expandRatio); // 56 -> 24
+                  return FlexibleSpaceBar(
+                    expandedTitleScale: 1.0,
+                    titlePadding: EdgeInsets.only(
+                      left: leftPadding,
+                      bottom: 16,
                     ),
-                  ),
-                );
-              },
+                    title: Text(
+                      context.l10n.optionsTitle,
+                      style: TextStyle(
+                        fontSize: 20 + (8 * expandRatio), // 20 -> 28
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
 
             SliverToBoxAdapter(
-              child: SettingsSectionHeader(title: context.l10n.sectionSearchSource),
+              child: SettingsSectionHeader(
+                title: context.l10n.sectionSearchSource,
+              ),
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
@@ -86,14 +88,18 @@ class OptionsSettingsPage extends ConsumerWidget {
                               children: [
                                 Icon(
                                   Icons.warning_amber_rounded,
-                                  color: Theme.of(context).colorScheme.onErrorContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onErrorContainer,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     context.l10n.optionsSpotifyWarning,
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onErrorContainer,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -107,7 +113,11 @@ class OptionsSettingsPage extends ConsumerWidget {
                       icon: Icons.key,
                       title: context.l10n.optionsSpotifyCredentials,
                       subtitle: settings.spotifyClientId.isNotEmpty
-                          ? context.l10n.optionsSpotifyCredentialsConfigured(settings.spotifyClientId.length > 8 ? settings.spotifyClientId.substring(0, 8) : settings.spotifyClientId)
+                          ? context.l10n.optionsSpotifyCredentialsConfigured(
+                              settings.spotifyClientId.length > 8
+                                  ? settings.spotifyClientId.substring(0, 8)
+                                  : settings.spotifyClientId,
+                            )
                           : context.l10n.optionsSpotifyCredentialsRequired,
                       onTap: () =>
                           _showSpotifyCredentialsDialog(context, ref, settings),
@@ -168,7 +178,9 @@ class OptionsSettingsPage extends ConsumerWidget {
             ),
 
             SliverToBoxAdapter(
-              child: SettingsSectionHeader(title: context.l10n.sectionPerformance),
+              child: SettingsSectionHeader(
+                title: context.l10n.sectionPerformance,
+              ),
             ),
             SliverToBoxAdapter(
               child: SettingsGroup(
@@ -277,9 +289,7 @@ class OptionsSettingsPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.dialogClearHistoryTitle),
-        content: Text(
-          context.l10n.dialogClearHistoryMessage,
-        ),
+        content: Text(context.l10n.dialogClearHistoryMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -289,11 +299,14 @@ class OptionsSettingsPage extends ConsumerWidget {
             onPressed: () {
               ref.read(downloadHistoryProvider.notifier).clearHistory();
               Navigator.pop(context);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(context.l10n.snackbarHistoryCleared)));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.l10n.snackbarHistoryCleared)),
+              );
             },
-            child: Text(context.l10n.dialogClear, style: TextStyle(color: colorScheme.error)),
+            child: Text(
+              context.l10n.dialogClear,
+              style: TextStyle(color: colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -323,7 +336,7 @@ class OptionsSettingsPage extends ConsumerWidget {
       final removed = await ref
           .read(downloadHistoryProvider.notifier)
           .cleanupOrphanedDownloads();
-      
+
       if (context.mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
@@ -339,9 +352,9 @@ class OptionsSettingsPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -493,7 +506,11 @@ class OptionsSettingsPage extends ConsumerWidget {
                             .setSpotifyCredentials(clientId, clientSecret);
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.l10n.snackbarCredentialsSaved)),
+                          SnackBar(
+                            content: Text(
+                              context.l10n.snackbarCredentialsSaved,
+                            ),
+                          ),
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -524,7 +541,11 @@ class OptionsSettingsPage extends ConsumerWidget {
                             .clearSpotifyCredentials();
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.l10n.snackbarCredentialsCleared)),
+                          SnackBar(
+                            content: Text(
+                              context.l10n.snackbarCredentialsCleared,
+                            ),
+                          ),
                         );
                       },
                       style: TextButton.styleFrom(
@@ -582,7 +603,9 @@ class _ConcurrentDownloadsItem extends StatelessWidget {
                     Text(
                       currentValue == 1
                           ? context.l10n.optionsConcurrentSequential
-                          : context.l10n.optionsConcurrentParallel(currentValue),
+                          : context.l10n.optionsConcurrentParallel(
+                              currentValue,
+                            ),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -611,6 +634,18 @@ class _ConcurrentDownloadsItem extends StatelessWidget {
                 label: '3',
                 isSelected: currentValue == 3,
                 onTap: () => onChanged(3),
+              ),
+              const SizedBox(width: 8),
+              _ConcurrentChip(
+                label: '4',
+                isSelected: currentValue == 4,
+                onTap: () => onChanged(4),
+              ),
+              const SizedBox(width: 8),
+              _ConcurrentChip(
+                label: '5',
+                isSelected: currentValue == 5,
+                onTap: () => onChanged(5),
               ),
             ],
           ),
@@ -837,20 +872,21 @@ class _MetadataSourceSelector extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final settings = ref.watch(settingsProvider);
     final extState = ref.watch(extensionProvider);
-    
+
     Extension? activeExtension;
-    if (settings.searchProvider != null && settings.searchProvider!.isNotEmpty) {
+    if (settings.searchProvider != null &&
+        settings.searchProvider!.isNotEmpty) {
       activeExtension = extState.extensions
           .where((e) => e.id == settings.searchProvider && e.enabled)
           .firstOrNull;
     }
     final hasExtensionSearch = activeExtension != null;
-    
+
     String? extensionName;
     if (hasExtensionSearch) {
       extensionName = activeExtension.displayName;
     }
-    
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -868,8 +904,8 @@ class _MetadataSourceSelector extends ConsumerWidget {
                 ? context.l10n.optionsUsingExtension(extensionName!)
                 : context.l10n.optionsPrimaryProviderSubtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: hasExtensionSearch 
-                  ? colorScheme.primary 
+              color: hasExtensionSearch
+                  ? colorScheme.primary
                   : colorScheme.onSurfaceVariant,
             ),
           ),

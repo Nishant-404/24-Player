@@ -7,6 +7,15 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:spotiflac_android/constants/app_info.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
 
+const int _maxLogMessageLength = 500;
+
+String _truncateLogText(String value, {int maxLength = _maxLogMessageLength}) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return '${value.substring(0, maxLength)}...[truncated]';
+}
+
 class LogEntry {
   final DateTime timestamp;
   final String level;
@@ -70,10 +79,26 @@ class LogBuffer extends ChangeNotifier {
       return;
     }
 
+    final sanitizedMessage = _truncateLogText(entry.message);
+    final sanitizedError = entry.error != null
+        ? _truncateLogText(entry.error!)
+        : null;
+    final sanitizedEntry =
+        (sanitizedMessage == entry.message && sanitizedError == entry.error)
+        ? entry
+        : LogEntry(
+            timestamp: entry.timestamp,
+            level: entry.level,
+            tag: entry.tag,
+            message: sanitizedMessage,
+            error: sanitizedError,
+            isFromGo: entry.isFromGo,
+          );
+
     if (_entries.length >= maxEntries) {
       _entries.removeFirst();
     }
-    _entries.add(entry);
+    _entries.add(sanitizedEntry);
     notifyListeners();
   }
 
@@ -283,12 +308,12 @@ class BufferedOutput extends LogOutput {
   void output(OutputEvent event) {
     if (kDebugMode) {
       for (final line in event.lines) {
-        debugPrint(line);
+        debugPrint(_truncateLogText(line));
       }
     }
 
     final level = _levelToString(event.level);
-    final message = event.lines.join('\n');
+    final message = _truncateLogText(event.lines.join('\n'));
 
     LogBuffer().add(
       LogEntry(
@@ -386,7 +411,9 @@ class AppLogger {
     if (error != null) {
       _addToBuffer('ERROR', message, error: error.toString());
       if (kDebugMode) {
-        debugPrint('[$_tag] ERROR: $message | $error');
+        debugPrint(
+          '[$_tag] ERROR: ${_truncateLogText(message)} | ${_truncateLogText(error.toString())}',
+        );
         if (stackTrace != null) {
           debugPrint(stackTrace.toString());
         }
