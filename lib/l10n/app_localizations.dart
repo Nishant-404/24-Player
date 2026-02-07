@@ -988,6 +988,18 @@ abstract class AppLocalizations {
   /// **'The best Qobuz streaming API. Hi-Res downloads wouldn\'t be possible without this!'**
   String get aboutDabMusicDesc;
 
+  /// Name of SpotiSaver API service - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'SpotiSaver'**
+  String get aboutSpotiSaver;
+
+  /// Credit for SpotiSaver API
+  ///
+  /// In en, this message translates to:
+  /// **'Tidal Hi-Res FLAC streaming endpoints. A key piece of the lossless puzzle!'**
+  String get aboutSpotiSaverDesc;
+
   /// App description in header card
   ///
   /// In en, this message translates to:

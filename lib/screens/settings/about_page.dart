@@ -123,6 +123,13 @@ class AboutPage extends StatelessWidget {
                   title: context.l10n.aboutDabMusic,
                   subtitle: context.l10n.aboutDabMusicDesc,
                   onTap: () => _launchUrl('https://dabmusic.xyz'),
+                  showDivider: true,
+                ),
+                _AboutSettingsItem(
+                  icon: Icons.music_note_outlined,
+                  title: context.l10n.aboutSpotiSaver,
+                  subtitle: context.l10n.aboutSpotiSaverDesc,
+                  onTap: () => _launchUrl('https://spotisaver.net'),
                   showDivider: false,
                 ),
               ],

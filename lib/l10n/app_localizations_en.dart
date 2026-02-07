@@ -492,6 +492,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The best Qobuz streaming API. Hi-Res downloads wouldn\'t be possible without this!';
 
   @override
+  String get aboutSpotiSaver => 'SpotiSaver';
+
+  @override
+  String get aboutSpotiSaverDesc =>
+      'Tidal Hi-Res FLAC streaming endpoints. A key piece of the lossless puzzle!';
+
+  @override
   String get aboutAppDescription =>
       'Download Spotify tracks in lossless quality from Tidal, Qobuz, and Amazon Music.';
 

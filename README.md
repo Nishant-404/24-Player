@@ -108,6 +108,15 @@ You are solely responsible for:
 The software is provided "as is", without warranty of any kind. The author assumes no liability for any bans, damages, or legal issues arising from its use.
 
 
+## API Credits
+
+- **Tidal**: [hifi-api](https://github.com/binimum/hifi-api), [music.binimum.org](https://music.binimum.org), [qqdl.site](https://qqdl.site), [squid.wtf](https://squid.wtf), [spotisaver.net](https://spotisaver.net)
+- **Qobuz**: [dabmusic.xyz](https://dabmusic.xyz), [squid.wtf](https://squid.wtf), [jumo-dl](https://jumo-dl.pages.dev)
+- **Amazon**: [AfkarXYZ](https://github.com/afkarxyz)
+- **Lyrics**: [LRCLib](https://lrclib.net)
+- **Track Linking**: [SongLink / Odesli](https://odesli.co), [IDHS](https://github.com/sjdonado/idonthavespotify)
+
+
 > [!TIP]
 >
 > **Star Us**, You will receive all release notifications from GitHub without any delay ~
