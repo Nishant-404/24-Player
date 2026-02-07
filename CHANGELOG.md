@@ -41,6 +41,36 @@
 - Fixed dynamic concurrency update during active downloads: changing limit (e.g. `1 -> 3`) now schedules additional queued items without waiting current active item to finish
 - Queue scheduler now re-checks capacity/queued items on short intervals to avoid blocking on long-running single active download
 
+### Dependencies
+
+#### Flutter
+- `flutter_local_notifications` 19.x → 20.0.0 (breaking: all positional params converted to named params)
+- `connectivity_plus` 6.x → 7.0.0
+- `flutter_secure_storage` 9.x → 10.0.0
+- Removed `palette_generator` dependency
+
+#### Go
+- `go-flac/go-flac` v1.0.0 → v2.0.4
+- `go-flac/flacvorbis` v0.2.0 → v2.0.2
+- `go-flac/flacpicture` v0.3.0 → v2.0.2
+- Go toolchain 1.24 → 1.25.7
+
+#### Android
+- Android Gradle Plugin 8.x → 9.0.0
+- Kotlin 2.1.x → 2.3.10
+- `desugar_jdk_libs` → 2.1.5
+- `kotlinx-coroutines-android` → 1.10.2
+- `lifecycle-runtime-ktx` → 2.10.0
+- `activity-ktx` → 1.12.3
+
+#### CI/CD
+- `actions/cache` v4 → v5
+- `actions/checkout` v4 → v6
+- `actions/setup-go` v5 → v6
+- `actions/setup-java` v4 → v5
+- `softprops/action-gh-release` v1 → v2
+- GitHub artifact actions updated
+
 ---
 
 ## [3.5.0] - 2026-02-07
