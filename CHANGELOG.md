@@ -33,6 +33,8 @@
 - Added immediate connection cleanup on every download failure path (error response and exception), not only periodic cleanup every N downloads
 - Fixed incremental SAF scan edge case where `lastModified()` failure could misclassify existing files as removed (`removedUris`)
 - Fixed tracks marked "In Library" still showing active download button - download button now shows as completed (checkmark) for local library tracks across all screens (album, playlist, artist, home/search)
+- Fixed FFmpeg M4A-to-FLAC conversion erroneously triggered on already-existing FLAC files when re-downloading duplicates via Tidal
+- Fixed SAF download creating empty artist/album folders when re-downloading duplicate tracks; directory is now only created after confirming the file does not already exist
 
 ## [3.5.1] - 2026-02-08
 

@@ -2813,6 +2813,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
             (filePath.endsWith('.flac') ||
                 (mimeType != null && mimeType.contains('flac')));
         final shouldForceTidalSafM4aHandling =
+            !wasExisting &&
             isContentUriPath &&
             effectiveSafMode &&
             actualService == 'tidal' &&

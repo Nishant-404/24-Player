@@ -602,22 +602,30 @@ class MainActivity: FlutterFragmentActivity() {
         val relativeDir = req.optString("saf_relative_dir", "")
         val outputExt = normalizeExt(req.optString("saf_output_ext", ""))
         val mimeType = mimeTypeForExt(outputExt)
+        val fileName = buildSafFileName(req, outputExt)
+
+        // Check for existing file WITHOUT creating the directory first.
+        // This prevents empty folders from being created for duplicate downloads.
+        val existingDir = findDocumentDir(treeUri, relativeDir)
+        if (existingDir != null) {
+            val existing = existingDir.findFile(fileName)
+            if (existing != null && existing.isFile && existing.length() > 0) {
+                val obj = JSONObject()
+                obj.put("success", true)
+                obj.put("message", "File already exists")
+                obj.put("file_path", existing.uri.toString())
+                obj.put("file_name", existing.name ?: fileName)
+                obj.put("already_exists", true)
+                return obj.toString()
+            }
+        }
+
+        // Only create the directory now that we know we need to download
         val targetDir = ensureDocumentDir(treeUri, relativeDir)
             ?: return errorJson("Failed to access SAF directory")
 
-        val fileName = buildSafFileName(req, outputExt)
-        val existing = targetDir.findFile(fileName)
-        if (existing != null && existing.isFile && existing.length() > 0) {
-            val obj = JSONObject()
-            obj.put("success", true)
-            obj.put("message", "File already exists")
-            obj.put("file_path", existing.uri.toString())
-            obj.put("file_name", existing.name ?: fileName)
-            obj.put("already_exists", true)
-            return obj.toString()
-        }
-
-        val document = existing ?: targetDir.createFile(mimeType, fileName)
+        val existingFile = targetDir.findFile(fileName)
+        val document = existingFile ?: targetDir.createFile(mimeType, fileName)
             ?: return errorJson("Failed to create SAF file")
 
         val pfd = contentResolver.openFileDescriptor(document.uri, "rw")

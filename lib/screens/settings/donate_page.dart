@@ -54,47 +54,6 @@ class DonatePage extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Header message
-                  Card(
-                    elevation: 0,
-                    color: colorScheme.surfaceContainerLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.favorite_rounded,
-                            size: 48,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Support SpotiFLAC-Mobile',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'SpotiFLAC-Mobile is free and open source. '
-                            'If you enjoy using it, consider supporting '
-                            'the development.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   // Donate links card
                   _DonateLinksCard(colorScheme: colorScheme),
 
@@ -103,57 +62,83 @@ class DonatePage extends StatelessWidget {
                   // Recent donors section
                   _RecentDonorsCard(colorScheme: colorScheme),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Notice
+                  // Combined notice card
                   Card(
                     elevation: 0,
-                    color: colorScheme.surfaceContainerLow,
+                    color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            size: 20,
-                            color: colorScheme.onSurfaceVariant,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.volunteer_activism_rounded,
+                                size: 20,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Good to Know',
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'About Supporters',
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'By supporting SpotiFLAC, you become part of this app\'s history. '
-                                  'Your name will remain in this version permanently as a token of appreciation. '
-                                  'The supporter list is updated manually each month and embedded directly in the app '
-                                  '-- no remote server is used. Even if your support period ends, your name stays in '
-                                  'every version it was included in.',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ],
-                            ),
+                          const SizedBox(height: 10),
+                          _NoticeLine(
+                            icon: Icons.block,
+                            text: 'Not selling early access, premium features, or paywalls',
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(height: 6),
+                          _NoticeLine(
+                            icon: Icons.build_outlined,
+                            text: 'Funds go to dev tools & testing devices',
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(height: 6),
+                          _NoticeLine(
+                            icon: Icons.favorite_border,
+                            text: 'Your support is the only way to keep this project alive',
+                            colorScheme: colorScheme,
+                          ),
+                          Divider(
+                            height: 24,
+                            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                          ),
+                          _NoticeLine(
+                            icon: Icons.history,
+                            text: 'Your name stays permanently in every version it was included in',
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(height: 6),
+                          _NoticeLine(
+                            icon: Icons.update,
+                            text: 'Supporter list is updated monthly and embedded in the app',
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(height: 6),
+                          _NoticeLine(
+                            icon: Icons.cloud_off,
+                            text: 'No remote server -- everything is stored locally',
+                            colorScheme: colorScheme,
                           ),
                         ],
                       ),
                     ),
                   ),
+
+
                 ],
               ),
             ),
@@ -413,6 +398,37 @@ class _DonorTile extends StatelessWidget {
             thickness: 1,
             color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
+      ],
+    );
+  }
+}
+
+class _NoticeLine extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final ColorScheme colorScheme;
+
+  const _NoticeLine({
+    required this.icon,
+    required this.text,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ),
       ],
     );
   }
