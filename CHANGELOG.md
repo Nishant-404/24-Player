@@ -7,12 +7,40 @@
 - "Use Primary Artist Only" setting: strips featured artists from folder names (e.g. "Justin Bieber, Quavo" becomes "Justin Bieber") for cleaner folder organization
   - Supports separators: `, ` `;` `&` `feat.` `ft.` `featuring` `with` `x`
   - Available in Settings > Download > below "Use Album Artist for folders"
+- Unified download request contract (`DownloadRequestPayload`) for all providers/flows
+  - Includes full superset fields: lyrics mode, genre/label/copyright, provider IDs, SAF params, cover/quality settings
+  - Added strategy flags in payload: `use_extensions`, `use_fallback`
+- New Go unified router entrypoint: `DownloadByStrategy(requestJSON)`
+  - Routing priority: YouTube service -> extension fallback -> built-in fallback -> direct service
+- New Android method channel handler: `"downloadByStrategy"` -> `Gobackend.downloadByStrategy(...)`
+
+### Changed
+
+- Download queue execution now builds one payload and uses a single bridge entrypoint (`PlatformBridge.downloadByStrategy`) instead of branching into multiple bridge methods
+- Dart `downloadByStrategy` now sends a single request to Go (`downloadByStrategy` channel); routing concern is centralized in Go backend
+- Legacy Dart bridge methods (`downloadTrack`, `downloadWithFallback`, `downloadWithExtensions`, `downloadFromYouTube`) are now thin wrappers and marked `@Deprecated`
 
 ### Fixed
 
 - Fixed lyrics mode "External .LRC" still embedding lyrics into metadata - `lyrics_mode` was not being sent to Go backend for single-service downloads and YouTube provider, causing Go to default to "embed"
 - Fixed `flutter_local_notifications` v20 breaking changes - migrated all `initialize()`, `show()`, and `cancel()` calls from positional parameters to named parameters
 - Fixed SAF duplicate folder bug: concurrent batch downloads creating empty folders with `(1)`, `(2)`, `(3)` suffixes - added synchronized lock to `ensureDocumentDir` in Kotlin with duplicate detection and cleanup
+- Inconsistent parameter parity across download paths
+  - `downloadWithExtensions` now carries `copyright`
+  - YouTube path now carries `embed_max_quality_cover` and metadata parity fields
+- Inconsistent success response metadata between direct/fallback flows
+  - Added shared Go response builder for `DownloadTrack` and `DownloadWithFallback`
+  - Success responses now consistently include `genre`, `label`, `copyright`, and `lyrics_lrc`
+- YouTube success response now also includes extended metadata fields (`cover_url`, `genre`, `label`, `copyright`) for parity with other providers
+
+### Technical
+
+- Centralized request serialization in `PlatformBridge` via shared invoke helper and unified payload model
+- Go strategy router normalizes incoming service casing before dispatch
+- Verified integration after AAR refresh with:
+  - `flutter analyze`
+  - `go test -v ./...`
+  - Android Kotlin compile check (`:app:compileDebugKotlin`)
 
 ---
 

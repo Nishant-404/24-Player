@@ -1294,24 +1294,6 @@ class MainActivity: FlutterFragmentActivity() {
                             }
                             result.success(response)
                         }
-                        "downloadTrack" -> {
-                            val requestJson = call.arguments as String
-                            val response = withContext(Dispatchers.IO) {
-                                handleSafDownload(requestJson) { json ->
-                                    Gobackend.downloadTrack(json)
-                                }
-                            }
-                            result.success(response)
-                        }
-                        "downloadWithFallback" -> {
-                            val requestJson = call.arguments as String
-                            val response = withContext(Dispatchers.IO) {
-                                handleSafDownload(requestJson) { json ->
-                                    Gobackend.downloadWithFallback(json)
-                                }
-                            }
-                            result.success(response)
-                        }
                         "downloadByStrategy" -> {
                             val requestJson = call.arguments as String
                             val response = withContext(Dispatchers.IO) {
@@ -2117,24 +2099,6 @@ class MainActivity: FlutterFragmentActivity() {
                             val limit = call.argument<Int>("limit") ?: 20
                             val response = withContext(Dispatchers.IO) {
                                 Gobackend.searchTracksWithExtensionsJSON(query, limit.toLong())
-                            }
-                            result.success(response)
-                        }
-                        "downloadWithExtensions" -> {
-                            val requestJson = call.arguments as String
-                            val response = withContext(Dispatchers.IO) {
-                                handleSafDownload(requestJson) { json ->
-                                    Gobackend.downloadWithExtensionsJSON(json)
-                                }
-                            }
-                            result.success(response)
-                        }
-                        "downloadFromYouTube" -> {
-                            val requestJson = call.arguments as String
-                            val response = withContext(Dispatchers.IO) {
-                                handleSafDownload(requestJson) { json ->
-                                    Gobackend.downloadFromYouTube(json)
-                                }
                             }
                             result.success(response)
                         }
