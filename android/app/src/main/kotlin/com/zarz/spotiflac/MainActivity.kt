@@ -33,6 +33,7 @@ class MainActivity: FlutterFragmentActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var pendingSafTreeResult: MethodChannel.Result? = null
     private val safScanLock = Any()
+    private val safDirLock = Any()
     private var safScanProgress = SafScanProgress()
     @Volatile private var safScanCancel = false
     @Volatile private var safScanActive = false
@@ -300,19 +301,36 @@ class MainActivity: FlutterFragmentActivity() {
     }
 
     private fun ensureDocumentDir(treeUri: Uri, relativeDir: String): DocumentFile? {
-        var current = DocumentFile.fromTreeUri(this, treeUri) ?: return null
-        if (relativeDir.isBlank()) return current
-
-        val parts = relativeDir.split("/").filter { it.isNotBlank() }
-        for (part in parts) {
-            val existing = current.findFile(part)
-            current = if (existing != null && existing.isDirectory) {
-                existing
-            } else {
-                current.createDirectory(part) ?: return null
-            }
+        if (relativeDir.isBlank()) {
+            return DocumentFile.fromTreeUri(this, treeUri)
         }
-        return current
+
+        // Synchronize to prevent concurrent downloads from creating duplicate
+        // directories with (1), (2) suffixes via SAF's auto-rename behavior.
+        synchronized(safDirLock) {
+            var current = DocumentFile.fromTreeUri(this, treeUri) ?: return null
+
+            val parts = relativeDir.split("/").filter { it.isNotBlank() }
+            for (part in parts) {
+                val existing = current.findFile(part)
+                current = if (existing != null && existing.isDirectory) {
+                    existing
+                } else {
+                    val created = current.createDirectory(part) ?: return null
+                    // SAF may auto-rename to "part (1)" if another thread just created it.
+                    // Re-check: if the created name differs, delete it and use the original.
+                    val createdName = created.name ?: part
+                    if (createdName != part) {
+                        // Another thread won the race; delete the duplicate and use theirs.
+                        created.delete()
+                        current.findFile(part) ?: return null
+                    } else {
+                        created
+                    }
+                }
+            }
+            return current
+        }
     }
 
     private fun findDocumentDir(treeUri: Uri, relativeDir: String): DocumentFile? {

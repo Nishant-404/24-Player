@@ -3550,6 +3550,24 @@ abstract class AppLocalizations {
   /// **'Artist folders use Track Artist only'**
   String get downloadUseAlbumArtistForFoldersTrackSubtitle;
 
+  /// Setting - strip featured artists from folder name
+  ///
+  /// In en, this message translates to:
+  /// **'Primary artist only for folders'**
+  String get downloadUsePrimaryArtistOnly;
+
+  /// Subtitle when primary artist only is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Featured artists removed from folder name (e.g. Justin Bieber, Quavo → Justin Bieber)'**
+  String get downloadUsePrimaryArtistOnlyEnabled;
+
+  /// Subtitle when primary artist only is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Full artist string used for folder name'**
+  String get downloadUsePrimaryArtistOnlyDisabled;
+
   /// Setting - output file format
   ///
   /// In en, this message translates to:

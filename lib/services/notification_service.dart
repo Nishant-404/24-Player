@@ -30,7 +30,7 @@ class NotificationService {
       iOS: iosSettings,
     );
 
-    await _notifications.initialize(settings: initSettings);
+    await _notifications.initialize(initSettings);
 
     if (Platform.isAndroid) {
       await _notifications
@@ -90,10 +90,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: downloadProgressId,
-      title: 'Downloading $trackName',
-      body: '$artistName • $percentage%',
-      notificationDetails: details,
+      downloadProgressId,
+      'Downloading $trackName',
+      '$artistName • $percentage%',
+      details,
     );
   }
 
@@ -133,10 +133,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: downloadProgressId,
-      title: 'Finalizing $trackName',
-      body: '$artistName • Embedding metadata...',
-      notificationDetails: details,
+      downloadProgressId,
+      'Finalizing $trackName',
+      '$artistName • Embedding metadata...',
+      details,
     );
   }
 
@@ -183,10 +183,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: downloadProgressId,
-      title: title,
-      body: '$trackName - $artistName',
-      notificationDetails: details,
+      downloadProgressId,
+      title,
+      '$trackName - $artistName',
+      details,
     );
   }
 
@@ -223,15 +223,15 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: downloadProgressId,
-      title: title,
-      body: '$completedCount tracks downloaded successfully',
-      notificationDetails: details,
+      downloadProgressId,
+      title,
+      '$completedCount tracks downloaded successfully',
+      details,
     );
   }
 
   Future<void> cancelDownloadNotification() async {
-    await _notifications.cancel(id: downloadProgressId);
+    await _notifications.cancel(downloadProgressId);
   }
 
   Future<void> showUpdateDownloadProgress({
@@ -274,10 +274,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: updateDownloadId,
-      title: 'Downloading SpotiFLAC v$version',
-      body: '$receivedMB / $totalMB MB • $percentage%',
-      notificationDetails: details,
+      updateDownloadId,
+      'Downloading SpotiFLAC v$version',
+      '$receivedMB / $totalMB MB • $percentage%',
+      details,
     );
   }
 
@@ -307,10 +307,10 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: updateDownloadId,
-      title: 'Update Ready',
-      body: 'SpotiFLAC v$version downloaded. Tap to install.',
-      notificationDetails: details,
+      updateDownloadId,
+      'Update Ready',
+      'SpotiFLAC v$version downloaded. Tap to install.',
+      details,
     );
   }
 
@@ -339,14 +339,14 @@ class NotificationService {
     );
 
     await _notifications.show(
-      id: updateDownloadId,
-      title: 'Update Failed',
-      body: 'Could not download update. Try again later.',
-      notificationDetails: details,
+      updateDownloadId,
+      'Update Failed',
+      'Could not download update. Try again later.',
+      details,
     );
   }
 
   Future<void> cancelUpdateNotification() async {
-    await _notifications.cancel(id: updateDownloadId);
+    await _notifications.cancel(updateDownloadId);
   }
 }

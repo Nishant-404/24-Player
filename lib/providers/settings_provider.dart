@@ -231,6 +231,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
     _saveSettings();
   }
 
+  void setUsePrimaryArtistOnly(bool enabled) {
+    state = state.copyWith(usePrimaryArtistOnly: enabled);
+    _saveSettings();
+  }
+
   void setHistoryViewMode(String mode) {
     state = state.copyWith(historyViewMode: mode);
     _saveSettings();

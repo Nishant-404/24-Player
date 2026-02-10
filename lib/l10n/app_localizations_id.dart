@@ -1959,6 +1959,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Folder artis hanya memakai Track Artist';
 
   @override
+  String get downloadUsePrimaryArtistOnly => 'Hanya artis utama untuk folder';
+
+  @override
+  String get downloadUsePrimaryArtistOnlyEnabled =>
+      'Featured artist dihapus dari nama folder (misal Justin Bieber, Quavo → Justin Bieber)';
+
+  @override
+  String get downloadUsePrimaryArtistOnlyDisabled =>
+      'Nama artis lengkap dipakai untuk folder';
+
+  @override
   String get downloadSaveFormat => 'Simpan Format';
 
   @override

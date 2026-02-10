@@ -1033,11 +1033,15 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     bool separateSingles = false,
     String albumFolderStructure = 'artist_album',
     bool useAlbumArtistForFolders = true,
+    bool usePrimaryArtistOnly = false,
   }) async {
     String baseDir = state.outputDir;
-    final folderArtist = useAlbumArtistForFolders
+    var folderArtist = useAlbumArtistForFolders
         ? _normalizeOptionalString(track.albumArtist) ?? track.artistName
         : track.artistName;
+    if (usePrimaryArtistOnly) {
+      folderArtist = _extractPrimaryArtist(folderArtist);
+    }
 
     if (separateSingles) {
       final isSingle = track.isSingle;
@@ -1129,6 +1133,19 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         .trim();
   }
 
+  static final _featuredArtistPattern = RegExp(
+    r'\s*[,;&]\s*|\s+(?:feat\.?|ft\.?|featuring|with|x)\s+',
+    caseSensitive: false,
+  );
+
+  String _extractPrimaryArtist(String artist) {
+    final match = _featuredArtistPattern.firstMatch(artist);
+    if (match != null && match.start > 0) {
+      return artist.substring(0, match.start).trim();
+    }
+    return artist;
+  }
+
   bool _isSafMode(AppSettings settings) {
     return Platform.isAndroid &&
         settings.storageMode == 'saf' &&
@@ -1152,10 +1169,14 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     bool separateSingles = false,
     String albumFolderStructure = 'artist_album',
     bool useAlbumArtistForFolders = true,
+    bool usePrimaryArtistOnly = false,
   }) async {
-    final folderArtist = useAlbumArtistForFolders
+    var folderArtist = useAlbumArtistForFolders
         ? _normalizeOptionalString(track.albumArtist) ?? track.artistName
         : track.artistName;
+    if (usePrimaryArtistOnly) {
+      folderArtist = _extractPrimaryArtist(folderArtist);
+    }
 
     if (separateSingles) {
       final isSingle = track.isSingle;
@@ -2565,6 +2586,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
               separateSingles: settings.separateSingles,
               albumFolderStructure: settings.albumFolderStructure,
               useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
+              usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
             )
           : '';
       String? appOutputDir;
@@ -2576,6 +2598,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
               separateSingles: settings.separateSingles,
               albumFolderStructure: settings.albumFolderStructure,
               useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
+              usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
             );
       var effectiveOutputDir = initialOutputDir;
       var effectiveSafMode = isSafMode;
@@ -2873,6 +2896,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
           separateSingles: settings.separateSingles,
           albumFolderStructure: settings.albumFolderStructure,
           useAlbumArtistForFolders: settings.useAlbumArtistForFolders,
+          usePrimaryArtistOnly: settings.usePrimaryArtistOnly,
         );
         final fallbackResult = await runDownload(
           useSaf: false,

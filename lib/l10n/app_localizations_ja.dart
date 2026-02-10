@@ -1934,6 +1934,17 @@ class AppLocalizationsJa extends AppLocalizations {
       'Artist folders use Track Artist only';
 
   @override
+  String get downloadUsePrimaryArtistOnly => 'Primary artist only for folders';
+
+  @override
+  String get downloadUsePrimaryArtistOnlyEnabled =>
+      'Featured artists removed from folder name (e.g. Justin Bieber, Quavo → Justin Bieber)';
+
+  @override
+  String get downloadUsePrimaryArtistOnlyDisabled =>
+      'Full artist string used for folder name';
+
+  @override
   String get downloadSaveFormat => '形式を保存';
 
   @override

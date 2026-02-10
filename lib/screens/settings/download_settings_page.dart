@@ -365,6 +365,18 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
                         .setUseAlbumArtistForFolders(value),
                     showDivider: false,
                     ),
+                  SettingsSwitchItem(
+                    icon: Icons.person_outline,
+                    title: context.l10n.downloadUsePrimaryArtistOnly,
+                    subtitle: settings.usePrimaryArtistOnly
+                        ? context.l10n.downloadUsePrimaryArtistOnlyEnabled
+                        : context.l10n.downloadUsePrimaryArtistOnlyDisabled,
+                    value: settings.usePrimaryArtistOnly,
+                    onChanged: (value) => ref
+                        .read(settingsProvider.notifier)
+                        .setUsePrimaryArtistOnly(value),
+                    showDivider: false,
+                    ),
                 ],
               ),
             ),

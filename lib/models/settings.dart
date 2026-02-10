@@ -20,6 +20,7 @@ class AppSettings {
   final bool hasSearchedBefore;
   final String folderOrganization;
   final bool useAlbumArtistForFolders;
+  final bool usePrimaryArtistOnly; // Strip featured artists from folder name
   final String historyViewMode;
   final String historyFilterMode;
   final bool askQualityBeforeDownload;
@@ -65,6 +66,7 @@ class AppSettings {
     this.hasSearchedBefore = false,
     this.folderOrganization = 'none',
     this.useAlbumArtistForFolders = true,
+    this.usePrimaryArtistOnly = false,
     this.historyViewMode = 'grid',
     this.historyFilterMode = 'all',
     this.askQualityBeforeDownload = true,
@@ -109,6 +111,7 @@ class AppSettings {
     bool? hasSearchedBefore,
     String? folderOrganization,
     bool? useAlbumArtistForFolders,
+    bool? usePrimaryArtistOnly,
     String? historyViewMode,
     String? historyFilterMode,
     bool? askQualityBeforeDownload,
@@ -154,6 +157,8 @@ class AppSettings {
       folderOrganization: folderOrganization ?? this.folderOrganization,
       useAlbumArtistForFolders:
           useAlbumArtistForFolders ?? this.useAlbumArtistForFolders,
+      usePrimaryArtistOnly:
+          usePrimaryArtistOnly ?? this.usePrimaryArtistOnly,
       historyViewMode: historyViewMode ?? this.historyViewMode,
       historyFilterMode: historyFilterMode ?? this.historyFilterMode,
       askQualityBeforeDownload: askQualityBeforeDownload ?? this.askQualityBeforeDownload,
