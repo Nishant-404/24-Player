@@ -2374,7 +2374,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
 
     return CustomScrollView(
       slivers: [
-        if (totalTrackCount > 0 && !hasQueueItems && filterMode == 'all')
+        if (totalTrackCount > 0 && filterMode == 'all')
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -2424,7 +2424,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
 
         if ((filteredGroupedAlbums.isNotEmpty ||
                 filteredGroupedLocalAlbums.isNotEmpty) &&
-            !hasQueueItems &&
             filterMode == 'albums')
           SliverToBoxAdapter(
             child: Padding(
@@ -2461,7 +2460,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
         // Albums empty state with filter button
         if (filteredGroupedAlbums.isEmpty &&
             filteredGroupedLocalAlbums.isEmpty &&
-            !hasQueueItems &&
             filterMode == 'albums' &&
             (historyItems.isNotEmpty || localLibraryItems.isNotEmpty))
           SliverToBoxAdapter(
@@ -2612,7 +2610,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                 ),
 
         // Singles filter - show unified items (downloaded + local singles)
-        if (filterMode == 'singles' && !hasQueueItems)
+        if (filterMode == 'singles')
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
