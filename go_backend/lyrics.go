@@ -224,6 +224,15 @@ func (c *lyricsCache) Size() int {
 	return len(c.cache)
 }
 
+func (c *lyricsCache) ClearAll() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	cleared := len(c.cache)
+	c.cache = make(map[string]*lyricsCacheEntry)
+	return cleared
+}
+
 type LRCLibResponse struct {
 	ID           int     `json:"id"`
 	Name         string  `json:"name"`
@@ -399,7 +408,7 @@ func (c *LyricsClient) FetchLyricsAllSources(spotifyID, trackName, artistName st
 	}
 
 	isValidResult := func(l *LyricsResponse) bool {
-		return l != nil && (len(l.Lines) > 0 || l.Instrumental)
+		return lyricsHasUsableText(l)
 	}
 
 	// Try extension lyrics providers first
@@ -619,6 +628,9 @@ func parseSyncedLyrics(syncedLyrics string) []LyricsLine {
 		if len(matches) == 5 {
 			startMs := lrcTimestampToMs(matches[1], matches[2], matches[3])
 			words := strings.TrimSpace(matches[4])
+			if words == "" {
+				continue
+			}
 
 			lines = append(lines, LyricsLine{
 				StartTimeMs: startMs,
@@ -637,6 +649,63 @@ func parseSyncedLyrics(syncedLyrics string) []LyricsLine {
 	}
 
 	return lines
+}
+
+func lyricsHasUsableText(lyrics *LyricsResponse) bool {
+	if lyrics == nil {
+		return false
+	}
+	if lyrics.Instrumental {
+		return true
+	}
+	if strings.TrimSpace(lyrics.PlainLyrics) != "" {
+		return true
+	}
+	for _, line := range lyrics.Lines {
+		if strings.TrimSpace(line.Words) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// detectLyricsErrorPayload extracts human-readable error messages from
+// JSON payloads returned by lyrics proxies when no lyric is available.
+func detectLyricsErrorPayload(raw string) (string, bool) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" || !strings.HasPrefix(trimmed, "{") {
+		return "", false
+	}
+
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(trimmed), &payload); err != nil {
+		return "", false
+	}
+
+	lyricsKeys := []string{"lyrics", "lyric", "lrc", "content", "lines", "syncedLyrics", "unsyncedLyrics"}
+	hasLyricsKey := false
+	for _, key := range lyricsKeys {
+		if _, ok := payload[key]; ok {
+			hasLyricsKey = true
+			break
+		}
+	}
+
+	errorKeys := []string{"message", "error", "detail", "reason"}
+	for _, key := range errorKeys {
+		if msg, ok := payload[key].(string); ok {
+			msg = strings.TrimSpace(msg)
+			if msg != "" && !hasLyricsKey {
+				return msg, true
+			}
+		}
+	}
+
+	if success, ok := payload["success"].(bool); ok && !success && !hasLyricsKey {
+		return "request unsuccessful", true
+	}
+
+	return "", false
 }
 
 func lrcTimestampToMs(minutes, seconds, centiseconds string) int64 {

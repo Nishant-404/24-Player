@@ -163,6 +163,9 @@ func (c *QQMusicClient) FetchLyrics(
 	if err != nil {
 		return nil, err
 	}
+	if errMsg, isErrorPayload := detectLyricsErrorPayload(rawLyrics); isErrorPayload {
+		return nil, fmt.Errorf("qqmusic proxy returned non-lyric payload: %s", errMsg)
+	}
 
 	// Try to parse as pax format (word-by-word or line)
 	lrcText, err := formatPaxLyricsToLRC(rawLyrics, multiPersonWordByWord)

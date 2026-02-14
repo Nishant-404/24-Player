@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -1519,17 +1520,13 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
       }
 
       // No embedded lyrics, fetch from online
-      final result =
-          await PlatformBridge.getLyricsLRCWithSource(
-            _spotifyId ?? '',
-            trackName,
-            artistName,
-            filePath: null, // Don't check file again
-            durationMs: durationMs,
-          ).timeout(
-            const Duration(seconds: 20),
-            onTimeout: () => <String, dynamic>{'lyrics': '', 'source': ''},
-          );
+      final result = await PlatformBridge.getLyricsLRCWithSource(
+        _spotifyId ?? '',
+        trackName,
+        artistName,
+        filePath: null, // Don't check file again
+        durationMs: durationMs,
+      ).timeout(const Duration(seconds: 20));
 
       final lrcText = result['lyrics']?.toString() ?? '';
       final source = result['source']?.toString() ?? '';
@@ -1561,13 +1558,17 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
           });
         }
       }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _lyricsError = context.l10n.trackLyricsTimeout;
+          _lyricsLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
-        final errorMsg = e.toString().contains('TimeoutException')
-            ? context.l10n.trackLyricsTimeout
-            : context.l10n.trackLyricsLoadFailed;
         setState(() {
-          _lyricsError = errorMsg;
+          _lyricsError = context.l10n.trackLyricsLoadFailed;
           _lyricsLoading = false;
         });
       }
