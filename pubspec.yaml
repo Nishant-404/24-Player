@@ -80,10 +80,13 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "icon.png"
-  adaptive_icon_background: "#1a1a2e"
-  adaptive_icon_foreground: "icon.png"
+  image_path_android: "icon_android.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "icon_foreground_android.png"
+  adaptive_icon_foreground_inset: 16
   ios_content_mode: scaleAspectFill
   remove_alpha_ios: true
+  background_color_ios: "#000000"
 
 flutter:
   uses-material-design: true

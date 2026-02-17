@@ -165,6 +165,16 @@ class _RecentDonorsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const donorNames = [
+      'J',
+      'Julian',
+      'matt_3050',
+      'Daniel',
+      '283Fabio',
+      'laflame',
+      'Elias el Autentico',
+      'Faylyne',
+    ];
 
     // Match SettingsGroup color logic
     final cardColor = isDark
@@ -207,16 +217,15 @@ class _RecentDonorsCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _DonorTile(name: 'J', colorScheme: colorScheme),
-            _DonorTile(name: 'Julian', colorScheme: colorScheme),
-            _DonorTile(name: 'matt_3050', colorScheme: colorScheme),
-            _DonorTile(name: 'Daniel', colorScheme: colorScheme),
-            _DonorTile(name: '283Fabio', colorScheme: colorScheme),
-            _DonorTile(name: 'laflame', colorScheme: colorScheme),
-            _DonorTile(
-              name: 'Elias el Autentico',
-              colorScheme: colorScheme,
-              showDivider: false,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: donorNames
+                  .map(
+                    (name) =>
+                        _SupporterChip(name: name, colorScheme: colorScheme),
+                  )
+                  .toList(),
             ),
           ],
         ),
@@ -348,55 +357,45 @@ class _DonateCardItem extends StatelessWidget {
   }
 }
 
-class _DonorTile extends StatelessWidget {
+class _SupporterChip extends StatelessWidget {
   final String name;
   final ColorScheme colorScheme;
-  final bool showDivider;
 
-  const _DonorTile({
-    required this.name,
-    required this.colorScheme,
-    this.showDivider = true,
-  });
+  const _SupporterChip({required this.name, required this.colorScheme});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: colorScheme.primaryContainer,
-                child: Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+    return Material(
+      color: colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 10,
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(
-                name,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              name,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-          ),
-      ],
+      ),
     );
   }
 }
