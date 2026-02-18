@@ -1546,6 +1546,28 @@ class MainActivity: FlutterFragmentActivity() {
                                 result.error("share_failed", e.message, null)
                             }
                         }
+                        "shareMultipleContentUris" -> {
+                            val uriStrings = call.argument<List<String>>("uris") ?: emptyList()
+                            val title = call.argument<String>("title") ?: ""
+                            try {
+                                val uris = ArrayList<Uri>(uriStrings.size)
+                                for (s in uriStrings) {
+                                    uris.add(Uri.parse(s))
+                                }
+                                val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                                    setType("audio/*")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    if (title.isNotBlank()) {
+                                        putExtra(Intent.EXTRA_SUBJECT, title)
+                                    }
+                                }
+                                startActivity(Intent.createChooser(shareIntent, title.ifBlank { "Share" }))
+                                result.success(true)
+                            } catch (e: Exception) {
+                                result.error("share_failed", e.message, null)
+                            }
+                        }
                         "fetchLyrics" -> {
                             val spotifyId = call.argument<String>("spotify_id") ?: ""
                             val trackName = call.argument<String>("track_name") ?: ""

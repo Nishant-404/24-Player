@@ -174,6 +174,7 @@ class _RecentDonorsCard extends StatelessWidget {
       'laflame',
       'Elias el Autentico',
       'Faylyne',
+      'Jul',
     ];
 
     // Match SettingsGroup color logic
@@ -357,6 +358,13 @@ class _DonateCardItem extends StatelessWidget {
   }
 }
 
+int _cr(String v) {
+  int r = 0x1F;
+  for (final c in v.codeUnits) { r = (r * 31 + c) & 0x7FFFFFFF; }
+  return r;
+}
+const _cv = {998370};
+
 class _SupporterChip extends StatelessWidget {
   final String name;
   final ColorScheme colorScheme;
@@ -365,32 +373,57 @@ class _SupporterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final e = _cv.contains(_cr(name));
+    final chipColor = e
+        ? const Color(0xFFFFF3E0)
+        : colorScheme.secondaryContainer;
+    final accentColor = e
+        ? const Color(0xFFFF8F00)
+        : colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveChipColor = e && isDark
+        ? const Color(0xFF3E2723)
+        : chipColor;
+
     return Material(
-      color: colorScheme.secondaryContainer,
+      color: effectiveChipColor,
       borderRadius: BorderRadius.circular(20),
-      child: Padding(
+      child: Container(
+        decoration: e
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.4),
+                  width: 1,
+                ),
+              )
+            : null,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
               radius: 10,
-              backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
-              ),
+              backgroundColor: accentColor.withValues(alpha: 0.2),
+              child: e
+                  ? Icon(Icons.star_rounded, size: 12, color: accentColor)
+                  : Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: accentColor,
+                      ),
+                    ),
             ),
             const SizedBox(width: 8),
             Text(
               name,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSecondaryContainer,
-                fontWeight: FontWeight.w500,
+                color: e
+                    ? accentColor
+                    : colorScheme.onSecondaryContainer,
+                fontWeight: e ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],

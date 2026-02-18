@@ -5257,6 +5257,58 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conversion failed'**
   String get trackConvertFailed;
+
+  /// Share button text with count in selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Share {count} {count, plural, =1{track} other{tracks}}'**
+  String selectionShareCount(int count);
+
+  /// Snackbar when no selected files exist on disk
+  ///
+  /// In en, this message translates to:
+  /// **'No shareable files found'**
+  String get selectionShareNoFiles;
+
+  /// Convert button text with count in selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Convert {count} {count, plural, =1{track} other{tracks}}'**
+  String selectionConvertCount(int count);
+
+  /// Snackbar when no selected tracks support conversion
+  ///
+  /// In en, this message translates to:
+  /// **'No convertible tracks selected'**
+  String get selectionConvertNoConvertible;
+
+  /// Confirmation dialog title for batch conversion
+  ///
+  /// In en, this message translates to:
+  /// **'Batch Convert'**
+  String get selectionBatchConvertConfirmTitle;
+
+  /// Confirmation dialog message for batch conversion
+  ///
+  /// In en, this message translates to:
+  /// **'Convert {count} {count, plural, =1{track} other{tracks}} to {format} at {bitrate}?\n\nOriginal files will be deleted after conversion.'**
+  String selectionBatchConvertConfirmMessage(
+    int count,
+    String format,
+    String bitrate,
+  );
+
+  /// Snackbar during batch conversion progress
+  ///
+  /// In en, this message translates to:
+  /// **'Converting {current} of {total}...'**
+  String selectionBatchConvertProgress(int current, int total);
+
+  /// Snackbar after batch conversion completes
+  ///
+  /// In en, this message translates to:
+  /// **'Converted {success} of {total} tracks to {format}'**
+  String selectionBatchConvertSuccess(int success, int total, String format);
 }
 
 class _AppLocalizationsDelegate

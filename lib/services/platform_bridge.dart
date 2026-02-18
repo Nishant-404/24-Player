@@ -244,6 +244,14 @@ class PlatformBridge {
     return result as bool? ?? false;
   }
 
+  static Future<bool> shareMultipleContentUris(List<String> uris, {String title = ''}) async {
+    final result = await _channel.invokeMethod('shareMultipleContentUris', {
+      'uris': uris,
+      'title': title,
+    });
+    return result as bool? ?? false;
+  }
+
   static Future<Map<String, dynamic>> fetchLyrics(
     String spotifyId,
     String trackName,

@@ -5,7 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:spotiflac_android/services/cover_cache_manager.dart';
+import 'package:spotiflac_android/services/ffmpeg_service.dart';
+import 'package:spotiflac_android/services/platform_bridge.dart';
 import 'package:spotiflac_android/l10n/l10n.dart';
 import 'package:spotiflac_android/utils/app_bar_layout.dart';
 import 'package:spotiflac_android/utils/file_access.dart';
@@ -14,6 +18,7 @@ import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
 import 'package:spotiflac_android/providers/local_library_provider.dart';
 import 'package:spotiflac_android/services/library_database.dart';
+import 'package:spotiflac_android/services/history_database.dart';
 import 'package:spotiflac_android/services/downloaded_embedded_cover_resolver.dart';
 import 'package:spotiflac_android/screens/track_metadata_screen.dart';
 import 'package:spotiflac_android/screens/downloaded_album_screen.dart';
@@ -2922,6 +2927,512 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     );
   }
 
+  /// Share selected tracks via system share sheet
+  Future<void> _shareSelected(List<UnifiedLibraryItem> allItems) async {
+    final itemsById = {for (final item in allItems) item.id: item};
+    final safUris = <String>[];
+    final filesToShare = <XFile>[];
+
+    for (final id in _selectedIds) {
+      final item = itemsById[id];
+      if (item == null) continue;
+      final path = item.filePath;
+      if (isContentUri(path)) {
+        if (await fileExists(path)) safUris.add(path);
+      } else if (await fileExists(path)) {
+        filesToShare.add(XFile(path));
+      }
+    }
+
+    if (safUris.isEmpty && filesToShare.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.selectionShareNoFiles)),
+        );
+      }
+      return;
+    }
+
+    // Share SAF content URIs via native intent
+    if (safUris.isNotEmpty) {
+      try {
+        if (safUris.length == 1) {
+          await PlatformBridge.shareContentUri(safUris.first);
+        } else {
+          await PlatformBridge.shareMultipleContentUris(safUris);
+        }
+      } catch (_) {}
+    }
+
+    // Share regular files via SharePlus
+    if (filesToShare.isNotEmpty) {
+      await SharePlus.instance.share(
+        ShareParams(files: filesToShare),
+      );
+    }
+  }
+
+  /// Show batch convert bottom sheet for selected tracks
+  void _showBatchConvertSheet(
+    BuildContext context,
+    List<UnifiedLibraryItem> allItems,
+  ) {
+    String selectedFormat = 'MP3';
+    String selectedBitrate = '320k';
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final colorScheme = Theme.of(context).colorScheme;
+            final formats = ['MP3', 'Opus'];
+            final bitrates = ['128k', '192k', '256k', '320k'];
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.4,
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.l10n.selectionBatchConvertConfirmTitle,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      context.l10n.trackConvertTargetFormat,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: formats.map((format) {
+                        final isSelected = format == selectedFormat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(format),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setSheetState(() {
+                                  selectedFormat = format;
+                                  selectedBitrate =
+                                      format == 'Opus' ? '128k' : '320k';
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.l10n.trackConvertBitrate,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: bitrates.map((br) {
+                        final isSelected = br == selectedBitrate;
+                        return ChoiceChip(
+                          label: Text(br),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setSheetState(() => selectedBitrate = br);
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _performBatchConversion(
+                            allItems: allItems,
+                            targetFormat: selectedFormat,
+                            bitrate: selectedBitrate,
+                          );
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          context.l10n.selectionConvertCount(
+                            _selectedIds.length,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Perform batch conversion on selected tracks
+  Future<void> _performBatchConversion({
+    required List<UnifiedLibraryItem> allItems,
+    required String targetFormat,
+    required String bitrate,
+  }) async {
+    final itemsById = {for (final item in allItems) item.id: item};
+    final selectedItems = <UnifiedLibraryItem>[];
+    for (final id in _selectedIds) {
+      final item = itemsById[id];
+      if (item == null) continue;
+      // Detect format: use safFileName for download history SAF items,
+      // item.localItem?.format for local library items, file extension as fallback
+      String nameToCheck;
+      if (item.historyItem?.safFileName != null &&
+          item.historyItem!.safFileName!.isNotEmpty) {
+        nameToCheck = item.historyItem!.safFileName!.toLowerCase();
+      } else if (item.localItem?.format != null &&
+          item.localItem!.format!.isNotEmpty) {
+        // Synthesize a fake extension to keep detection unified
+        nameToCheck = '.${item.localItem!.format!.toLowerCase()}';
+      } else {
+        nameToCheck = item.filePath.toLowerCase();
+      }
+      final ext = nameToCheck.endsWith('.flac')
+          ? 'FLAC'
+          : nameToCheck.endsWith('.mp3')
+              ? 'MP3'
+              : (nameToCheck.endsWith('.opus') || nameToCheck.endsWith('.ogg'))
+                  ? 'Opus'
+                  : null;
+      if (ext != null && ext != targetFormat) {
+        selectedItems.add(item);
+      }
+    }
+
+    if (selectedItems.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.selectionConvertNoConvertible),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Confirm
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.selectionBatchConvertConfirmTitle),
+        content: Text(
+          context.l10n.selectionBatchConvertConfirmMessage(
+            selectedItems.length,
+            targetFormat,
+            bitrate,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.dialogCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.l10n.trackConvertFormat),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    int successCount = 0;
+    final total = selectedItems.length;
+    final historyDb = HistoryDatabase.instance;
+
+    for (int i = 0; i < total; i++) {
+      if (!mounted) break;
+      final item = selectedItems[i];
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.selectionBatchConvertProgress(i + 1, total),
+          ),
+          duration: const Duration(seconds: 30),
+        ),
+      );
+
+      try {
+        // Read metadata from file
+        final metadata = <String, String>{
+          'TITLE': item.trackName,
+          'ARTIST': item.artistName,
+          'ALBUM': item.albumName,
+        };
+        try {
+          final result =
+              await PlatformBridge.readFileMetadata(item.filePath);
+          if (result['error'] == null) {
+            result.forEach((key, value) {
+              if (key == 'error' || value == null) return;
+              final v = value.toString().trim();
+              if (v.isEmpty) return;
+              metadata[key.toUpperCase()] = v;
+            });
+          }
+        } catch (_) {}
+
+        // Extract cover art
+        String? coverPath;
+        try {
+          final tempDir = await getTemporaryDirectory();
+          final coverOutput =
+              '${tempDir.path}${Platform.pathSeparator}batch_cover_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final coverResult = await PlatformBridge.extractCoverToFile(
+            item.filePath,
+            coverOutput,
+          );
+          if (coverResult['error'] == null) {
+            coverPath = coverOutput;
+          }
+        } catch (_) {}
+
+        // Handle SAF vs regular file
+        String workingPath = item.filePath;
+        final isSaf = isContentUri(item.filePath);
+        String? safTempPath;
+
+        if (isSaf) {
+          safTempPath =
+              await PlatformBridge.copyContentUriToTemp(item.filePath);
+          if (safTempPath == null) continue;
+          workingPath = safTempPath;
+        }
+
+        // Convert
+        final newPath = await FFmpegService.convertAudioFormat(
+          inputPath: workingPath,
+          targetFormat: targetFormat.toLowerCase(),
+          bitrate: bitrate,
+          metadata: metadata,
+          coverPath: coverPath,
+          deleteOriginal: !isSaf,
+        );
+
+        // Cleanup cover temp
+        if (coverPath != null) {
+          try {
+            await File(coverPath).delete();
+          } catch (_) {}
+        }
+
+        if (newPath == null) {
+          if (safTempPath != null) {
+            try {
+              await File(safTempPath).delete();
+            } catch (_) {}
+          }
+          continue;
+        }
+
+        // Handle SAF write-back
+        if (isSaf && item.historyItem != null) {
+          final hi = item.historyItem!;
+          final treeUri = hi.downloadTreeUri;
+          final relativeDir = hi.safRelativeDir ?? '';
+          if (treeUri != null && treeUri.isNotEmpty) {
+            final oldFileName = hi.safFileName ?? '';
+            final dotIdx = oldFileName.lastIndexOf('.');
+            final baseName =
+                dotIdx > 0 ? oldFileName.substring(0, dotIdx) : oldFileName;
+            final newExt =
+                targetFormat.toLowerCase() == 'opus' ? '.opus' : '.mp3';
+            final newFileName = '$baseName$newExt';
+            final mimeType = targetFormat.toLowerCase() == 'opus'
+                ? 'audio/opus'
+                : 'audio/mpeg';
+
+            final safUri = await PlatformBridge.createSafFileFromPath(
+              treeUri: treeUri,
+              relativeDir: relativeDir,
+              fileName: newFileName,
+              mimeType: mimeType,
+              srcPath: newPath,
+            );
+
+            if (safUri == null || safUri.isEmpty) {
+              try {
+                await File(newPath).delete();
+              } catch (_) {}
+              if (safTempPath != null) {
+                try {
+                  await File(safTempPath).delete();
+                } catch (_) {}
+              }
+              continue;
+            }
+
+            // Delete old SAF file
+            try {
+              await PlatformBridge.safDelete(item.filePath);
+            } catch (_) {}
+
+            // Update history
+            await historyDb.updateFilePath(
+              hi.id,
+              safUri,
+              newSafFileName: newFileName,
+            );
+          }
+          // Cleanup temp files
+          try {
+            await File(newPath).delete();
+          } catch (_) {}
+          if (safTempPath != null) {
+            try {
+              await File(safTempPath).delete();
+            } catch (_) {}
+          }
+        } else if (isSaf && item.localItem != null) {
+          // Local library SAF item: parse content URI to derive tree and dir
+          final uri = Uri.parse(item.filePath);
+          final pathSegments = uri.pathSegments;
+
+          String? treeUri;
+          String relativeDir = '';
+          String oldFileName = '';
+
+          final treeIdx = pathSegments.indexOf('tree');
+          final docIdx = pathSegments.indexOf('document');
+          if (treeIdx >= 0 && treeIdx + 1 < pathSegments.length) {
+            final treeId = pathSegments[treeIdx + 1];
+            treeUri = 'content://${uri.authority}/tree/${Uri.encodeComponent(treeId)}';
+          }
+          if (docIdx >= 0 && docIdx + 1 < pathSegments.length) {
+            final docPath = Uri.decodeFull(pathSegments[docIdx + 1]);
+            final slashIdx = docPath.lastIndexOf('/');
+            if (slashIdx >= 0) {
+              oldFileName = docPath.substring(slashIdx + 1);
+              final treeId = treeIdx >= 0 && treeIdx + 1 < pathSegments.length
+                  ? Uri.decodeFull(pathSegments[treeIdx + 1])
+                  : '';
+              if (treeId.isNotEmpty && docPath.startsWith(treeId)) {
+                final afterTree = docPath.substring(treeId.length);
+                final trimmed = afterTree.startsWith('/') ? afterTree.substring(1) : afterTree;
+                final lastSlash = trimmed.lastIndexOf('/');
+                relativeDir = lastSlash >= 0 ? trimmed.substring(0, lastSlash) : '';
+              }
+            } else {
+              oldFileName = docPath;
+            }
+          }
+
+          if (treeUri != null && oldFileName.isNotEmpty) {
+            final dotIdx = oldFileName.lastIndexOf('.');
+            final baseName = dotIdx > 0 ? oldFileName.substring(0, dotIdx) : oldFileName;
+            final newExt = targetFormat.toLowerCase() == 'opus' ? '.opus' : '.mp3';
+            final newFileName = '$baseName$newExt';
+            final mimeType = targetFormat.toLowerCase() == 'opus' ? 'audio/opus' : 'audio/mpeg';
+
+            final safUri = await PlatformBridge.createSafFileFromPath(
+              treeUri: treeUri,
+              relativeDir: relativeDir,
+              fileName: newFileName,
+              mimeType: mimeType,
+              srcPath: newPath,
+            );
+
+            if (safUri == null || safUri.isEmpty) {
+              try { await File(newPath).delete(); } catch (_) {}
+              if (safTempPath != null) {
+                try { await File(safTempPath).delete(); } catch (_) {}
+              }
+              continue;
+            }
+
+            try { await PlatformBridge.safDelete(item.filePath); } catch (_) {}
+            await LibraryDatabase.instance.deleteByPath(item.filePath);
+          }
+
+          // Cleanup temp files
+          try { await File(newPath).delete(); } catch (_) {}
+          if (safTempPath != null) {
+            try { await File(safTempPath).delete(); } catch (_) {}
+          }
+        } else if (item.historyItem != null) {
+          // Regular file - update history path
+          await historyDb.updateFilePath(
+            item.historyItem!.id,
+            newPath,
+          );
+        } else if (item.localItem != null) {
+          // Regular local library file - delete old db entry, rescan picks up new file
+          await LibraryDatabase.instance.deleteByPath(item.filePath);
+        }
+
+        successCount++;
+      } catch (_) {
+        // Continue to next item on error
+      }
+    }
+
+    // Reload history and local library to reflect path changes in UI
+    ref.read(downloadHistoryProvider.notifier).reloadFromStorage();
+    ref.read(localLibraryProvider.notifier).reloadFromStorage();
+
+    _exitSelectionMode();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.selectionBatchConvertSuccess(
+              successCount,
+              total,
+              targetFormat,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   /// Bottom action bar for selection mode (Material Design 3 style)
   Widget _buildSelectionBottomBar(
     BuildContext context,
@@ -3013,7 +3524,36 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // Action buttons row: Share, Convert, Delete
+              Row(
+                children: [
+                  Expanded(
+                    child: _SelectionActionButton(
+                      icon: Icons.share_outlined,
+                      label: context.l10n.selectionShareCount(selectedCount),
+                      onPressed: selectedCount > 0
+                          ? () => _shareSelected(unifiedItems)
+                          : null,
+                      colorScheme: colorScheme,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _SelectionActionButton(
+                      icon: Icons.swap_horiz,
+                      label: context.l10n.selectionConvertCount(selectedCount),
+                      onPressed: selectedCount > 0
+                          ? () => _showBatchConvertSheet(context, unifiedItems)
+                          : null,
+                      colorScheme: colorScheme,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
 
               SizedBox(
                 width: double.infinity,
@@ -3961,6 +4501,66 @@ class _FilterChip extends StatelessWidget {
                         ? colorScheme.onPrimaryContainer
                         : colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Reusable action button for selection mode bottom bar
+class _SelectionActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final ColorScheme colorScheme;
+
+  const _SelectionActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = onPressed == null;
+    return Material(
+      color: isDisabled
+          ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+          : colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isDisabled
+                    ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+                    : colorScheme.onSecondaryContainer,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDisabled
+                        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+                        : colorScheme.onSecondaryContainer,
                   ),
                 ),
               ),
