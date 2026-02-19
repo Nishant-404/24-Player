@@ -15,6 +15,7 @@ final _log = AppLogger('SettingsProvider');
 class SettingsNotifier extends Notifier<AppSettings> {
   static const List<int> _youtubeOpusSupportedBitrates = [128, 256];
   static const List<int> _youtubeMp3SupportedBitrates = [128, 256, 320];
+  static final RegExp _isoRegionPattern = RegExp(r'^[A-Z]{2}$');
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -36,6 +37,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
       await _runMigrations(prefs);
       await _normalizeYouTubeBitratesIfNeeded();
+      await _normalizeSongLinkRegionIfNeeded();
     }
 
     await _loadSpotifyClientSecret(prefs);
@@ -162,6 +164,19 @@ class SettingsNotifier extends Notifier<AppSettings> {
       youtubeOpusBitrate: normalizedOpus,
       youtubeMp3Bitrate: normalizedMp3,
     );
+    await _saveSettings();
+  }
+
+  String _normalizeSongLinkRegion(String region) {
+    final normalized = region.trim().toUpperCase();
+    if (_isoRegionPattern.hasMatch(normalized)) return normalized;
+    return 'US';
+  }
+
+  Future<void> _normalizeSongLinkRegionIfNeeded() async {
+    final normalized = _normalizeSongLinkRegion(state.songLinkRegion);
+    if (normalized == state.songLinkRegion) return;
+    state = state.copyWith(songLinkRegion: normalized);
     await _saveSettings();
   }
 
@@ -481,6 +496,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     state = state.copyWith(networkCompatibilityMode: enabled);
     _saveSettings();
     _syncNetworkCompatibilitySettingsToBackend();
+  }
+
+  void setSongLinkRegion(String region) {
+    final normalized = _normalizeSongLinkRegion(region);
+    state = state.copyWith(songLinkRegion: normalized);
+    _saveSettings();
   }
 
   void setLocalLibraryEnabled(bool enabled) {

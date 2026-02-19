@@ -24,6 +24,206 @@ class DownloadSettingsPage extends ConsumerStatefulWidget {
 
 class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
   static const _builtInServices = ['tidal', 'qobuz', 'amazon'];
+  static const _songLinkRegions = [
+    'AD',
+    'AE',
+    'AG',
+    'AL',
+    'AM',
+    'AO',
+    'AR',
+    'AT',
+    'AU',
+    'AZ',
+    'BA',
+    'BB',
+    'BD',
+    'BE',
+    'BF',
+    'BG',
+    'BH',
+    'BI',
+    'BJ',
+    'BN',
+    'BO',
+    'BR',
+    'BS',
+    'BT',
+    'BW',
+    'BZ',
+    'CA',
+    'CD',
+    'CG',
+    'CH',
+    'CI',
+    'CL',
+    'CM',
+    'CO',
+    'CR',
+    'CV',
+    'CW',
+    'CY',
+    'CZ',
+    'DE',
+    'DJ',
+    'DK',
+    'DM',
+    'DO',
+    'DZ',
+    'EC',
+    'EE',
+    'EG',
+    'ES',
+    'ET',
+    'FI',
+    'FJ',
+    'FM',
+    'FR',
+    'GA',
+    'GB',
+    'GD',
+    'GE',
+    'GH',
+    'GM',
+    'GN',
+    'GQ',
+    'GR',
+    'GT',
+    'GW',
+    'GY',
+    'HK',
+    'HN',
+    'HR',
+    'HT',
+    'HU',
+    'ID',
+    'IE',
+    'IL',
+    'IN',
+    'IQ',
+    'IS',
+    'IT',
+    'JM',
+    'JO',
+    'JP',
+    'KE',
+    'KG',
+    'KH',
+    'KI',
+    'KM',
+    'KN',
+    'KR',
+    'KW',
+    'KZ',
+    'LA',
+    'LB',
+    'LC',
+    'LI',
+    'LK',
+    'LR',
+    'LS',
+    'LT',
+    'LU',
+    'LV',
+    'LY',
+    'MA',
+    'MC',
+    'MD',
+    'ME',
+    'MG',
+    'MH',
+    'MK',
+    'ML',
+    'MN',
+    'MO',
+    'MR',
+    'MT',
+    'MU',
+    'MV',
+    'MW',
+    'MX',
+    'MY',
+    'MZ',
+    'NA',
+    'NE',
+    'NG',
+    'NI',
+    'NL',
+    'NO',
+    'NP',
+    'NR',
+    'NZ',
+    'OM',
+    'PA',
+    'PE',
+    'PG',
+    'PH',
+    'PK',
+    'PL',
+    'PS',
+    'PT',
+    'PW',
+    'PY',
+    'QA',
+    'RO',
+    'RS',
+    'RW',
+    'SA',
+    'SB',
+    'SC',
+    'SE',
+    'SG',
+    'SI',
+    'SK',
+    'SL',
+    'SM',
+    'SN',
+    'SR',
+    'ST',
+    'SV',
+    'SZ',
+    'TD',
+    'TG',
+    'TH',
+    'TJ',
+    'TL',
+    'TN',
+    'TO',
+    'TR',
+    'TT',
+    'TV',
+    'TW',
+    'TZ',
+    'UA',
+    'UG',
+    'US',
+    'UY',
+    'UZ',
+    'VC',
+    'VE',
+    'VN',
+    'VU',
+    'WS',
+    'XK',
+    'ZA',
+    'ZM',
+    'ZW',
+  ];
+  static const _songLinkRegionNames = <String, String>{
+    'US': 'United States',
+    'GB': 'United Kingdom',
+    'FR': 'France',
+    'DE': 'Germany',
+    'JP': 'Japan',
+    'KR': 'South Korea',
+    'IN': 'India',
+    'ID': 'Indonesia',
+    'BR': 'Brazil',
+    'MX': 'Mexico',
+    'AU': 'Australia',
+    'CA': 'Canada',
+    'XK': 'Kosovo',
+  };
   int _androidSdkVersion = 0;
   bool _hasAllFilesAccess = false;
   bool _artistFolderFiltersExpanded = false;
@@ -534,6 +734,16 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
                       context,
                       ref,
                       settings.downloadNetworkMode,
+                    ),
+                  ),
+                  SettingsItem(
+                    icon: Icons.public,
+                    title: 'SongLink Region',
+                    subtitle: _getSongLinkRegionLabel(settings.songLinkRegion),
+                    onTap: () => _showSongLinkRegionPicker(
+                      context,
+                      ref,
+                      settings.songLinkRegion,
                     ),
                   ),
                   SettingsSwitchItem(
@@ -1225,6 +1435,14 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
     }
   }
 
+  String _getSongLinkRegionLabel(String code) {
+    final normalized = code.trim().toUpperCase();
+    final effective = normalized.isEmpty ? 'US' : normalized;
+    final name = _songLinkRegionNames[effective];
+    if (name == null) return effective;
+    return '$effective - $name';
+  }
+
   void _showLyricsModePicker(
     BuildContext context,
     WidgetRef ref,
@@ -1625,6 +1843,74 @@ class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
             ),
             const SizedBox(height: 16),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showSongLinkRegionPicker(
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final normalizedCurrent = current.trim().toUpperCase();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colorScheme.surfaceContainerHigh,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                child: Text(
+                  'SongLink Region',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Text(
+                  'Used as userCountry for SongLink API lookup.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _songLinkRegions.length,
+                  itemBuilder: (context, index) {
+                    final code = _songLinkRegions[index];
+                    final isSelected = code == normalizedCurrent;
+                    final displayName = _songLinkRegionNames[code];
+                    return ListTile(
+                      title: Text(code),
+                      subtitle: displayName != null ? Text(displayName) : null,
+                      trailing: isSelected
+                          ? Icon(Icons.check, color: colorScheme.primary)
+                          : null,
+                      onTap: () {
+                        ref
+                            .read(settingsProvider.notifier)
+                            .setSongLinkRegion(code);
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

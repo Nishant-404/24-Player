@@ -232,6 +232,22 @@ class DownloadHistoryState {
 
   DownloadHistoryItem? getByIsrc(String isrc) => _byIsrc[isrc];
 
+  DownloadHistoryItem? findByTrackAndArtist(
+    String trackName,
+    String artistName,
+  ) {
+    final normalizedTrack = trackName.trim().toLowerCase();
+    final normalizedArtist = artistName.trim().toLowerCase();
+    if (normalizedTrack.isEmpty) return null;
+    for (final item in items) {
+      if (item.trackName.trim().toLowerCase() == normalizedTrack &&
+          item.artistName.trim().toLowerCase() == normalizedArtist) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   DownloadHistoryState copyWith({List<DownloadHistoryItem>? items}) {
     return DownloadHistoryState(items: items ?? this.items);
   }
@@ -3111,6 +3127,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
           safRelativeDir: relativeDir,
           safFileName: fileName,
           safOutputExt: outputExt,
+          songLinkRegion: settings.songLinkRegion,
         );
 
         return PlatformBridge.downloadByStrategy(

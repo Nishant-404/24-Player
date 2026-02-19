@@ -33,6 +33,7 @@ class DownloadRequestPayload {
   final String safRelativeDir;
   final String safFileName;
   final String safOutputExt;
+  final String songLinkRegion;
 
   const DownloadRequestPayload({
     this.isrc = '',
@@ -69,6 +70,7 @@ class DownloadRequestPayload {
     this.safRelativeDir = '',
     this.safFileName = '',
     this.safOutputExt = '',
+    this.songLinkRegion = 'US',
   });
 
   Map<String, dynamic> toJson() {
@@ -107,6 +109,7 @@ class DownloadRequestPayload {
       'saf_relative_dir': safRelativeDir,
       'saf_file_name': safFileName,
       'saf_output_ext': safOutputExt,
+      'songlink_region': songLinkRegion,
     };
   }
 
@@ -149,6 +152,7 @@ class DownloadRequestPayload {
       safRelativeDir: safRelativeDir,
       safFileName: safFileName,
       safOutputExt: safOutputExt,
+      songLinkRegion: songLinkRegion,
     );
   }
 }

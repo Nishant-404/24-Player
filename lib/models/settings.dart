@@ -51,6 +51,8 @@ class AppSettings {
   downloadNetworkMode; // 'any' = WiFi + Mobile, 'wifi_only' = WiFi only
   final bool
   networkCompatibilityMode; // Try HTTP + allow invalid TLS cert for API requests
+  final String
+  songLinkRegion; // SongLink userCountry region code used for platform lookup
 
   // Local Library Settings
   final bool localLibraryEnabled; // Enable local library scanning
@@ -115,6 +117,7 @@ class AppSettings {
     this.autoExportFailedDownloads = false,
     this.downloadNetworkMode = 'any',
     this.networkCompatibilityMode = false,
+    this.songLinkRegion = 'US',
     // Local Library defaults
     this.localLibraryEnabled = false,
     this.localLibraryPath = '',
@@ -177,6 +180,7 @@ class AppSettings {
     bool? autoExportFailedDownloads,
     String? downloadNetworkMode,
     bool? networkCompatibilityMode,
+    String? songLinkRegion,
     // Local Library
     bool? localLibraryEnabled,
     String? localLibraryPath,
@@ -241,6 +245,7 @@ class AppSettings {
       downloadNetworkMode: downloadNetworkMode ?? this.downloadNetworkMode,
       networkCompatibilityMode:
           networkCompatibilityMode ?? this.networkCompatibilityMode,
+      songLinkRegion: songLinkRegion ?? this.songLinkRegion,
       // Local Library
       localLibraryEnabled: localLibraryEnabled ?? this.localLibraryEnabled,
       localLibraryPath: localLibraryPath ?? this.localLibraryPath,

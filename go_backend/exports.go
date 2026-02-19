@@ -177,6 +177,7 @@ type DownloadRequest struct {
 	LyricsMode           string `json:"lyrics_mode,omitempty"`
 	UseExtensions        bool   `json:"use_extensions,omitempty"`
 	UseFallback          bool   `json:"use_fallback,omitempty"`
+	SongLinkRegion       string `json:"songlink_region,omitempty"`
 }
 
 type DownloadResponse struct {
@@ -378,11 +379,19 @@ func enrichRequestExtendedMetadata(req *DownloadRequest) {
 	}
 }
 
+func applySongLinkRegionFromRequest(req *DownloadRequest) {
+	if req == nil {
+		return
+	}
+	SetSongLinkRegion(req.SongLinkRegion)
+}
+
 func DownloadTrack(requestJSON string) (string, error) {
 	var req DownloadRequest
 	if err := json.Unmarshal([]byte(requestJSON), &req); err != nil {
 		return errorResponse("Invalid request: " + err.Error())
 	}
+	applySongLinkRegionFromRequest(&req)
 	defer closeOwnedOutputFD(req.OutputFD)
 
 	req.TrackName = strings.TrimSpace(req.TrackName)
@@ -566,6 +575,7 @@ func DownloadWithFallback(requestJSON string) (string, error) {
 	if err := json.Unmarshal([]byte(requestJSON), &req); err != nil {
 		return errorResponse("Invalid request: " + err.Error())
 	}
+	applySongLinkRegionFromRequest(&req)
 	defer closeOwnedOutputFD(req.OutputFD)
 
 	req.TrackName = strings.TrimSpace(req.TrackName)
@@ -1533,6 +1543,7 @@ func DownloadFromYouTube(requestJSON string) (string, error) {
 	if err := json.Unmarshal([]byte(requestJSON), &req); err != nil {
 		return errorResponse("Invalid request: " + err.Error())
 	}
+	applySongLinkRegionFromRequest(&req)
 	defer closeOwnedOutputFD(req.OutputFD)
 
 	req.TrackName = strings.TrimSpace(req.TrackName)
@@ -2251,6 +2262,7 @@ func DownloadWithExtensionsJSON(requestJSON string) (string, error) {
 	if err := json.Unmarshal([]byte(requestJSON), &req); err != nil {
 		return "", fmt.Errorf("invalid request: %w", err)
 	}
+	applySongLinkRegionFromRequest(&req)
 	defer closeOwnedOutputFD(req.OutputFD)
 
 	req.TrackName = strings.TrimSpace(req.TrackName)

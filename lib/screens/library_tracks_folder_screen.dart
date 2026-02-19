@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spotiflac_android/l10n/l10n.dart';
 import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/library_collections_provider.dart';
+import 'package:spotiflac_android/providers/local_library_provider.dart';
+import 'package:spotiflac_android/services/library_database.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
 import 'package:spotiflac_android/services/cover_cache_manager.dart';
 import 'package:spotiflac_android/screens/track_metadata_screen.dart';
@@ -992,9 +994,12 @@ class _CollectionTrackTile extends ConsumerWidget {
   void _showTrackOptionsSheet(BuildContext context, WidgetRef ref) {
     final track = entry.track;
     final colorScheme = Theme.of(context).colorScheme;
-    final isDownloaded = ref.read(
-      downloadHistoryProvider.select((state) => state.isDownloaded(track.id)),
-    );
+    final historyState = ref.read(downloadHistoryProvider);
+    final isDownloaded = historyState.isDownloaded(track.id) ||
+        (track.isrc != null &&
+            track.isrc!.isNotEmpty &&
+            historyState.getByIsrc(track.isrc!) != null) ||
+        historyState.findByTrackAndArtist(track.name, track.artistName) != null;
     // Wishlist: only show "Add to Playlist" if track is already downloaded
     final showAddToPlaylist =
         mode != LibraryTracksFolderMode.wishlist || isDownloaded;
@@ -1168,22 +1173,62 @@ class _CollectionTrackTile extends ConsumerWidget {
 
   Future<void> _navigateToMetadata(BuildContext context, WidgetRef ref) async {
     final track = entry.track;
-    final historyItem = ref
-        .read(downloadHistoryProvider.notifier)
-        .getBySpotifyId(track.id);
+    final historyState = ref.read(downloadHistoryProvider);
 
-    if (historyItem == null) return;
+    // 1. Download history by Spotify ID
+    var historyItem = historyState.getBySpotifyId(track.id);
 
-    await Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 250),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            TrackMetadataScreen(item: historyItem),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(opacity: animation, child: child),
-      ),
-    );
+    // 2. Download history by ISRC
+    if (historyItem == null &&
+        track.isrc != null &&
+        track.isrc!.isNotEmpty) {
+      historyItem = historyState.getByIsrc(track.isrc!);
+    }
+
+    // 3. Download history by track name + artist (handles ID/ISRC mismatch)
+    historyItem ??=
+        historyState.findByTrackAndArtist(track.name, track.artistName);
+
+    if (historyItem != null) {
+      await Navigator.of(context).push(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: const Duration(milliseconds: 250),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              TrackMetadataScreen(item: historyItem),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
+      );
+      return;
+    }
+
+    // 4. Local library by ISRC
+    final localState = ref.read(localLibraryProvider);
+    LocalLibraryItem? localItem;
+    if (track.isrc != null && track.isrc!.isNotEmpty) {
+      localItem = localState.getByIsrc(track.isrc!);
+    }
+
+    // 5. Local library by track name + artist
+    localItem ??= localState.findByTrackAndArtist(track.name, track.artistName);
+
+    if (localItem != null) {
+      await Navigator.of(context).push(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: const Duration(milliseconds: 250),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              TrackMetadataScreen(localItem: localItem),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
+      );
+      return;
+    }
+
+    // 6. Not found anywhere — offer to download
+    _downloadTrack(context, ref);
   }
 }
 

@@ -34,6 +34,8 @@ type TrackAvailability struct {
 var (
 	globalSongLinkClient *SongLinkClient
 	songLinkClientOnce   sync.Once
+	songLinkRegion       = "US"
+	songLinkRegionMu     sync.RWMutex
 )
 
 func NewSongLinkClient() *SongLinkClient {
@@ -45,6 +47,33 @@ func NewSongLinkClient() *SongLinkClient {
 	return globalSongLinkClient
 }
 
+func normalizeSongLinkRegion(region string) string {
+	normalized := strings.ToUpper(strings.TrimSpace(region))
+	if len(normalized) != 2 {
+		return "US"
+	}
+	for _, ch := range normalized {
+		if ch < 'A' || ch > 'Z' {
+			return "US"
+		}
+	}
+	return normalized
+}
+
+func SetSongLinkRegion(region string) {
+	normalized := normalizeSongLinkRegion(region)
+	songLinkRegionMu.Lock()
+	songLinkRegion = normalized
+	songLinkRegionMu.Unlock()
+}
+
+func GetSongLinkRegion() string {
+	songLinkRegionMu.RLock()
+	region := songLinkRegion
+	songLinkRegionMu.RUnlock()
+	return region
+}
+
 func songLinkBaseURL() string {
 	opts := GetNetworkCompatibilityOptions()
 	if opts.AllowHTTP {
@@ -54,6 +83,9 @@ func songLinkBaseURL() string {
 }
 
 func buildSongLinkURLFromTarget(targetURL string, userCountry string) string {
+	if userCountry == "" {
+		userCountry = GetSongLinkRegion()
+	}
 	apiURL := fmt.Sprintf("%s?url=%s", songLinkBaseURL(), url.QueryEscape(targetURL))
 	if userCountry != "" {
 		apiURL = fmt.Sprintf("%s&userCountry=%s", apiURL, url.QueryEscape(userCountry))
@@ -62,6 +94,9 @@ func buildSongLinkURLFromTarget(targetURL string, userCountry string) string {
 }
 
 func buildSongLinkURLByPlatform(platform, entityType, entityID, userCountry string) string {
+	if userCountry == "" {
+		userCountry = GetSongLinkRegion()
+	}
 	apiURL := fmt.Sprintf("%s?platform=%s&type=%s&id=%s",
 		songLinkBaseURL(),
 		url.QueryEscape(platform),
@@ -448,7 +483,7 @@ func (s *SongLinkClient) checkAvailabilityFromDeezerSongLink(deezerTrackID strin
 	songLinkRateLimiter.WaitForSlot()
 
 	deezerURL := fmt.Sprintf("https://www.deezer.com/track/%s", deezerTrackID)
-	apiURL := buildSongLinkURLFromTarget(deezerURL, "US")
+	apiURL := buildSongLinkURLFromTarget(deezerURL, "")
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
@@ -552,7 +587,7 @@ func (s *SongLinkClient) CheckAvailabilityByPlatform(platform, entityType, entit
 
 	songLinkRateLimiter.WaitForSlot()
 
-	apiURL := buildSongLinkURLByPlatform(platform, entityType, entityID, "US")
+	apiURL := buildSongLinkURLByPlatform(platform, entityType, entityID, "")
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
