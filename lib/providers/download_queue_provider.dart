@@ -4,13 +4,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:spotiflac_android/models/download_item.dart';
 import 'package:spotiflac_android/models/settings.dart';
 import 'package:spotiflac_android/models/track.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
 import 'package:spotiflac_android/providers/extension_provider.dart';
+import 'package:spotiflac_android/services/app_state_database.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
 import 'package:spotiflac_android/services/download_request_payload.dart';
 import 'package:spotiflac_android/services/ffmpeg_service.dart';
@@ -691,14 +691,15 @@ class _ProgressUpdate {
 
 class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
   Timer? _progressTimer;
+  Timer? _queuePersistDebounce;
   int _downloadCount = 0;
   static const _cleanupInterval = 50;
-  static const _queueStorageKey = 'download_queue';
   static const _progressPollingInterval = Duration(milliseconds: 800);
   static const _queueSchedulingInterval = Duration(milliseconds: 250);
+  static const _queuePersistDebounceDuration = Duration(milliseconds: 350);
   static const _bytesUiStep = 104857; // ~0.1 MiB, matches one-decimal MB UI.
   final NotificationService _notificationService = NotificationService();
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final AppStateDatabase _appStateDb = AppStateDatabase.instance;
   int _totalQueuedAtStart = 0;
   int _completedInSession = 0;
   int _failedInSession = 0;
@@ -777,6 +778,13 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     ref.onDispose(() {
       _progressTimer?.cancel();
       _progressTimer = null;
+      if (_queuePersistDebounce?.isActive == true) {
+        _queuePersistDebounce?.cancel();
+        unawaited(_flushQueueToStorage());
+      } else {
+        _queuePersistDebounce?.cancel();
+      }
+      _queuePersistDebounce = null;
     });
 
     Future.microtask(() async {
@@ -792,46 +800,56 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
     _isLoaded = true;
 
     try {
-      final prefs = await _prefs;
-      final jsonStr = prefs.getString(_queueStorageKey);
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> jsonList = jsonDecode(jsonStr);
-        final items = jsonList
-            .map((e) => DownloadItem.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        final restoredItems = items.map((item) {
-          if (item.status == DownloadStatus.downloading) {
-            return item.copyWith(status: DownloadStatus.queued, progress: 0);
-          }
-          return item;
-        }).toList();
-
-        final pendingItems = restoredItems
-            .where((item) => item.status == DownloadStatus.queued)
-            .toList();
-
-        if (pendingItems.isNotEmpty) {
-          state = state.copyWith(items: pendingItems);
-          _log.i('Restored ${pendingItems.length} pending items from storage');
-
-          Future.microtask(() => _processQueue());
-        } else {
-          _log.d('No pending items to restore');
-          await prefs.remove(_queueStorageKey);
-        }
-      } else {
+      await _appStateDb.migrateQueueFromSharedPreferences();
+      final rows = await _appStateDb.getPendingDownloadQueueRows();
+      if (rows.isEmpty) {
         _log.d('No queue found in storage');
+        return;
       }
+
+      final pendingItems = <DownloadItem>[];
+      for (final row in rows) {
+        final itemJson = row['item_json'] as String?;
+        if (itemJson == null || itemJson.isEmpty) continue;
+
+        try {
+          final decoded = jsonDecode(itemJson);
+          if (decoded is! Map) continue;
+          var item = DownloadItem.fromJson(Map<String, dynamic>.from(decoded));
+          if (item.status == DownloadStatus.downloading) {
+            item = item.copyWith(status: DownloadStatus.queued, progress: 0);
+          }
+          if (item.status == DownloadStatus.queued) {
+            pendingItems.add(item);
+          }
+        } catch (_) {
+          continue;
+        }
+      }
+
+      if (pendingItems.isEmpty) {
+        _log.d('No pending items to restore');
+        await _appStateDb.replacePendingDownloadQueueRows(const []);
+        return;
+      }
+
+      state = state.copyWith(items: pendingItems);
+      _log.i('Restored ${pendingItems.length} pending items from storage');
+      Future.microtask(() => _processQueue());
     } catch (e) {
       _log.e('Failed to load queue from storage: $e');
     }
   }
 
-  Future<void> _saveQueueToStorage() async {
-    try {
-      final prefs = await _prefs;
+  void _saveQueueToStorage() {
+    _queuePersistDebounce?.cancel();
+    _queuePersistDebounce = Timer(_queuePersistDebounceDuration, () {
+      _flushQueueToStorage();
+    });
+  }
 
+  Future<void> _flushQueueToStorage() async {
+    try {
       final pendingItems = state.items
           .where(
             (item) =>
@@ -841,11 +859,22 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
           .toList();
 
       if (pendingItems.isEmpty) {
-        await prefs.remove(_queueStorageKey);
+        await _appStateDb.replacePendingDownloadQueueRows(const []);
         _log.d('Cleared queue storage (no pending items)');
       } else {
-        final jsonList = pendingItems.map((e) => e.toJson()).toList();
-        await prefs.setString(_queueStorageKey, jsonEncode(jsonList));
+        final nowIso = DateTime.now().toIso8601String();
+        final rows = pendingItems
+            .map(
+              (item) => <String, dynamic>{
+                'id': item.id,
+                'item_json': jsonEncode(item.toJson()),
+                'status': item.status.name,
+                'created_at': item.createdAt.toIso8601String(),
+                'updated_at': nowIso,
+              },
+            )
+            .toList(growable: false);
+        await _appStateDb.replacePendingDownloadQueueRows(rows);
         _log.d('Saved ${pendingItems.length} pending items to storage');
       }
     } catch (e) {
@@ -1977,26 +2006,37 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
       _log.d('Metadata map content: $metadata');
 
-      try {
-        final durationMs = track.duration * 1000;
+      final lyricsMode = settings.lyricsMode;
+      final shouldEmbedLyrics =
+          settings.embedLyrics &&
+          (lyricsMode == 'embed' || lyricsMode == 'both');
 
-        final lrcContent = await PlatformBridge.getLyricsLRC(
-          track.id,
-          track.name,
-          track.artistName,
-          filePath: '',
-          durationMs: durationMs,
-        );
+      if (shouldEmbedLyrics) {
+        try {
+          final durationMs = track.duration * 1000;
 
-        if (lrcContent.isNotEmpty && lrcContent != '[instrumental:true]') {
-          metadata['LYRICS'] = lrcContent;
-          metadata['UNSYNCEDLYRICS'] = lrcContent;
-          _log.d('Lyrics fetched for embedding (${lrcContent.length} chars)');
-        } else if (lrcContent == '[instrumental:true]') {
-          _log.d('Track is instrumental, skipping lyrics embedding');
+          final lrcContent = await PlatformBridge.getLyricsLRC(
+            track.id,
+            track.name,
+            track.artistName,
+            filePath: '',
+            durationMs: durationMs,
+          );
+
+          if (lrcContent.isNotEmpty && lrcContent != '[instrumental:true]') {
+            metadata['LYRICS'] = lrcContent;
+            metadata['UNSYNCEDLYRICS'] = lrcContent;
+            _log.d('Lyrics fetched for embedding (${lrcContent.length} chars)');
+          } else if (lrcContent == '[instrumental:true]') {
+            _log.d('Track is instrumental, skipping lyrics embedding');
+          }
+        } catch (e) {
+          _log.w('Failed to fetch lyrics for embedding: $e');
         }
-      } catch (e) {
-        _log.w('Failed to fetch lyrics for embedding: $e');
+      } else {
+        metadata['LYRICS'] = '';
+        metadata['UNSYNCEDLYRICS'] = '';
+        _log.d('Lyrics embedding disabled by settings, skipping lyric fetch');
       }
 
       _log.d('Generating tags for FLAC: $metadata');
@@ -3012,8 +3052,7 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         final outputExt = useSaf ? safOutputExt : '';
         final isYouTube = item.service == 'youtube';
         final shouldUseExtensions = !isYouTube && useExtensions;
-        final shouldUseFallback =
-            !isYouTube && !shouldUseExtensions && state.autoFallback;
+        final shouldUseFallback = !isYouTube && state.autoFallback;
 
         if (isYouTube) {
           _log.d('Using YouTube/Cobalt provider for download');

@@ -1,18 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spotiflac_android/services/app_state_database.dart';
 
-const _recentAccessKey = 'recent_access_history';
-const _hiddenDownloadsKey = 'hidden_downloads_in_recents';
 const _maxRecentItems = 20;
 
 /// Types of items that can be accessed
-enum RecentAccessType {
-  artist,
-  album,
-  track,
-  playlist,
-}
+enum RecentAccessType { artist, album, track, playlist }
 
 /// Represents a recently accessed item
 class RecentAccessItem {
@@ -100,7 +94,7 @@ class RecentAccessState {
 
 /// Provider for managing recent access history
 class RecentAccessNotifier extends Notifier<RecentAccessState> {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final AppStateDatabase _appStateDb = AppStateDatabase.instance;
 
   @override
   RecentAccessState build() {
@@ -109,40 +103,36 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
   }
 
   Future<void> _loadHistory() async {
-    final prefs = await _prefs;
-    final json = prefs.getString(_recentAccessKey);
-    final hiddenJson = prefs.getStringList(_hiddenDownloadsKey);
-    
-    List<RecentAccessItem> items = [];
-    Set<String> hiddenIds = {};
-    
-    if (json != null) {
-      try {
-        final List<dynamic> decoded = jsonDecode(json);
-        items = decoded
-            .map((e) => RecentAccessItem.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } catch (_) {
-        // Ignore JSON parse errors, use empty list
+    try {
+      await _appStateDb.migrateRecentAccessFromSharedPreferences();
+      final rows = await _appStateDb.getRecentAccessRows(
+        limit: _maxRecentItems,
+      );
+      final hiddenIds = await _appStateDb.getHiddenRecentDownloadIds();
+
+      final items = <RecentAccessItem>[];
+      for (final row in rows) {
+        final itemJson = row['item_json'] as String?;
+        if (itemJson == null || itemJson.isEmpty) continue;
+        try {
+          final decoded = jsonDecode(itemJson);
+          if (decoded is! Map) continue;
+          items.add(
+            RecentAccessItem.fromJson(Map<String, dynamic>.from(decoded)),
+          );
+        } catch (_) {
+          continue;
+        }
       }
-    }
-    
-    if (hiddenJson != null) {
-      hiddenIds = hiddenJson.toSet();
-    }
-    
-    state = state.copyWith(items: items, hiddenDownloadIds: hiddenIds, isLoaded: true);
-  }
 
-  Future<void> _saveHistory() async {
-    final prefs = await _prefs;
-    final json = jsonEncode(state.items.map((e) => e.toJson()).toList());
-    await prefs.setString(_recentAccessKey, json);
-  }
-
-  Future<void> _saveHiddenDownloads() async {
-    final prefs = await _prefs;
-    await prefs.setStringList(_hiddenDownloadsKey, state.hiddenDownloadIds.toList());
+      state = state.copyWith(
+        items: items,
+        hiddenDownloadIds: hiddenIds,
+        isLoaded: true,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoaded: true);
+    }
   }
 
   /// Record an access to an artist
@@ -152,14 +142,16 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
     String? imageUrl,
     String? providerId,
   }) {
-    _recordAccess(RecentAccessItem(
-      id: id,
-      name: name,
-      imageUrl: imageUrl,
-      type: RecentAccessType.artist,
-      accessedAt: DateTime.now(),
-      providerId: providerId,
-    ));
+    _recordAccess(
+      RecentAccessItem(
+        id: id,
+        name: name,
+        imageUrl: imageUrl,
+        type: RecentAccessType.artist,
+        accessedAt: DateTime.now(),
+        providerId: providerId,
+      ),
+    );
   }
 
   /// Record an access to an album
@@ -170,15 +162,17 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
     String? imageUrl,
     String? providerId,
   }) {
-    _recordAccess(RecentAccessItem(
-      id: id,
-      name: name,
-      subtitle: artistName,
-      imageUrl: imageUrl,
-      type: RecentAccessType.album,
-      accessedAt: DateTime.now(),
-      providerId: providerId,
-    ));
+    _recordAccess(
+      RecentAccessItem(
+        id: id,
+        name: name,
+        subtitle: artistName,
+        imageUrl: imageUrl,
+        type: RecentAccessType.album,
+        accessedAt: DateTime.now(),
+        providerId: providerId,
+      ),
+    );
   }
 
   /// Record an access to a track
@@ -189,15 +183,17 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
     String? imageUrl,
     String? providerId,
   }) {
-    _recordAccess(RecentAccessItem(
-      id: id,
-      name: name,
-      subtitle: artistName,
-      imageUrl: imageUrl,
-      type: RecentAccessType.track,
-      accessedAt: DateTime.now(),
-      providerId: providerId,
-    ));
+    _recordAccess(
+      RecentAccessItem(
+        id: id,
+        name: name,
+        subtitle: artistName,
+        imageUrl: imageUrl,
+        type: RecentAccessType.track,
+        accessedAt: DateTime.now(),
+        providerId: providerId,
+      ),
+    );
   }
 
   /// Record an access to a playlist
@@ -208,30 +204,42 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
     String? imageUrl,
     String? providerId,
   }) {
-    _recordAccess(RecentAccessItem(
-      id: id,
-      name: name,
-      subtitle: ownerName,
-      imageUrl: imageUrl,
-      type: RecentAccessType.playlist,
-      accessedAt: DateTime.now(),
-      providerId: providerId,
-    ));
+    _recordAccess(
+      RecentAccessItem(
+        id: id,
+        name: name,
+        subtitle: ownerName,
+        imageUrl: imageUrl,
+        type: RecentAccessType.playlist,
+        accessedAt: DateTime.now(),
+        providerId: providerId,
+      ),
+    );
   }
 
   void _recordAccess(RecentAccessItem item) {
     final updatedItems = state.items
         .where((e) => e.uniqueKey != item.uniqueKey)
         .toList();
-    
+
     updatedItems.insert(0, item);
-    
+
+    RecentAccessItem? removedTail;
     if (updatedItems.length > _maxRecentItems) {
-      updatedItems.removeRange(_maxRecentItems, updatedItems.length);
+      removedTail = updatedItems.removeLast();
     }
-    
+
     state = state.copyWith(items: updatedItems);
-    _saveHistory();
+    unawaited(
+      _appStateDb.upsertRecentAccessRow(
+        uniqueKey: item.uniqueKey,
+        itemJson: jsonEncode(item.toJson()),
+        accessedAt: item.accessedAt.toIso8601String(),
+      ),
+    );
+    if (removedTail != null) {
+      unawaited(_appStateDb.deleteRecentAccessRow(removedTail.uniqueKey));
+    }
   }
 
   /// Remove a specific item from history
@@ -240,14 +248,14 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
         .where((e) => e.uniqueKey != item.uniqueKey)
         .toList();
     state = state.copyWith(items: updatedItems);
-    _saveHistory();
+    unawaited(_appStateDb.deleteRecentAccessRow(item.uniqueKey));
   }
 
   /// Hide a download item from recents (without deleting the actual download)
   void hideDownloadFromRecents(String downloadId) {
     final updatedHidden = {...state.hiddenDownloadIds, downloadId};
     state = state.copyWith(hiddenDownloadIds: updatedHidden);
-    _saveHiddenDownloads();
+    unawaited(_appStateDb.addHiddenRecentDownloadId(downloadId));
   }
 
   /// Check if a download is hidden from recents
@@ -258,16 +266,17 @@ class RecentAccessNotifier extends Notifier<RecentAccessState> {
   /// Clear all history
   void clearHistory() {
     state = state.copyWith(items: []);
-    _saveHistory();
+    unawaited(_appStateDb.clearRecentAccessRows());
   }
 
   /// Clear hidden downloads (show all again)
   void clearHiddenDownloads() {
     state = state.copyWith(hiddenDownloadIds: {});
-    _saveHiddenDownloads();
+    unawaited(_appStateDb.clearHiddenRecentDownloadIds());
   }
 }
 
-final recentAccessProvider = NotifierProvider<RecentAccessNotifier, RecentAccessState>(
-  RecentAccessNotifier.new,
-);
+final recentAccessProvider =
+    NotifierProvider<RecentAccessNotifier, RecentAccessState>(
+      RecentAccessNotifier.new,
+    );

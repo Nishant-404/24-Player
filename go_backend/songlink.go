@@ -182,7 +182,6 @@ func (s *SongLinkClient) GetStreamingURLs(spotifyTrackID string) (map[string]str
 	return urls, nil
 }
 
-// extractDeezerIDFromURL extracts Deezer track/album/artist ID from URL
 func extractDeezerIDFromURL(deezerURL string) string {
 	parts := strings.Split(deezerURL, "/")
 	if len(parts) > 0 {
@@ -260,10 +259,6 @@ func extractQobuzIDFromURL(qobuzURL string) string {
 	return ""
 }
 
-// extractTidalIDFromURL extracts Tidal track ID from URL
-// URL formats:
-//   - https://tidal.com/browse/track/12345678
-//   - https://listen.tidal.com/track/12345678
 func extractTidalIDFromURL(tidalURL string) string {
 	if tidalURL == "" {
 		return ""
@@ -289,11 +284,6 @@ func extractTidalIDFromURL(tidalURL string) string {
 	return ""
 }
 
-// extractYouTubeIDFromURL extracts YouTube video ID from URL
-// URL formats:
-//   - https://www.youtube.com/watch?v=VIDEO_ID
-//   - https://youtu.be/VIDEO_ID
-//   - https://music.youtube.com/watch?v=VIDEO_ID
 func extractYouTubeIDFromURL(youtubeURL string) string {
 	if youtubeURL == "" {
 		return ""
@@ -350,7 +340,6 @@ func (s *SongLinkClient) GetDeezerIDFromSpotify(spotifyTrackID string) (string, 
 	return availability.DeezerID, nil
 }
 
-// GetYouTubeURLFromSpotify converts a Spotify track ID to YouTube URL using SongLink
 func (s *SongLinkClient) GetYouTubeURLFromSpotify(spotifyTrackID string) (string, error) {
 	availability, err := s.CheckTrackAvailability(spotifyTrackID, "")
 	if err != nil {
@@ -364,7 +353,6 @@ func (s *SongLinkClient) GetYouTubeURLFromSpotify(spotifyTrackID string) (string
 	return availability.YouTubeURL, nil
 }
 
-// AlbumAvailability represents album availability on different platforms
 type AlbumAvailability struct {
 	SpotifyID string `json:"spotify_id"`
 	Deezer    bool   `json:"deezer"`
@@ -422,7 +410,6 @@ func (s *SongLinkClient) CheckAlbumAvailability(spotifyAlbumID string) (*AlbumAv
 	return availability, nil
 }
 
-// GetDeezerAlbumIDFromSpotify converts a Spotify album ID to Deezer album ID using SongLink
 func (s *SongLinkClient) GetDeezerAlbumIDFromSpotify(spotifyAlbumID string) (string, error) {
 	availability, err := s.CheckAlbumAvailability(spotifyAlbumID)
 	if err != nil {
@@ -652,7 +639,6 @@ func (s *SongLinkClient) CheckAvailabilityByPlatform(platform, entityType, entit
 	return availability, nil
 }
 
-// extractSpotifyIDFromURL extracts Spotify track ID from URL
 func extractSpotifyIDFromURL(spotifyURL string) string {
 	parts := strings.Split(spotifyURL, "/track/")
 	if len(parts) > 1 {
@@ -678,7 +664,6 @@ func (s *SongLinkClient) GetSpotifyIDFromDeezer(deezerTrackID string) (string, e
 	return availability.SpotifyID, nil
 }
 
-// GetTidalURLFromDeezer converts a Deezer track ID to Tidal URL using SongLink
 func (s *SongLinkClient) GetTidalURLFromDeezer(deezerTrackID string) (string, error) {
 	availability, err := s.CheckAvailabilityFromDeezer(deezerTrackID)
 	if err != nil {
@@ -705,7 +690,6 @@ func (s *SongLinkClient) GetAmazonURLFromDeezer(deezerTrackID string) (string, e
 	return availability.AmazonURL, nil
 }
 
-// GetYouTubeURLFromDeezer converts a Deezer track ID to YouTube URL using SongLink
 func (s *SongLinkClient) GetYouTubeURLFromDeezer(deezerTrackID string) (string, error) {
 	availability, err := s.CheckAvailabilityFromDeezer(deezerTrackID)
 	if err != nil {

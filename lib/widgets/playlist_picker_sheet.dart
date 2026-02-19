@@ -18,7 +18,9 @@ Future<void> showAddTrackToPlaylistSheet(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) {
-      final playlists = ref.watch(libraryCollectionsProvider).playlists;
+      final playlists = ref.watch(
+        libraryCollectionsProvider.select((state) => state.playlists),
+      );
       return SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

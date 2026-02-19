@@ -28,10 +28,8 @@ import 'package:spotiflac_android/screens/downloaded_album_screen.dart';
 import 'package:spotiflac_android/screens/library_tracks_folder_screen.dart';
 import 'package:spotiflac_android/screens/local_album_screen.dart';
 
-/// Represents the source of a library item
 enum LibraryItemSource { downloaded, local }
 
-/// Unified library item that can come from download history or local library
 class UnifiedLibraryItem {
   final String id;
   final String trackName;
@@ -107,7 +105,6 @@ class UnifiedLibraryItem {
     );
   }
 
-  /// Returns true if this item has a cover (either URL or local path)
   bool get hasCover =>
       coverUrl != null ||
       (localCoverPath != null && localCoverPath!.isNotEmpty);
@@ -209,7 +206,6 @@ class _GroupedAlbum {
   String get key => '$albumName|$artistName';
 }
 
-/// Grouped album from local library
 class _GroupedLocalAlbum {
   final String albumName;
   final String artistName;
@@ -251,10 +247,8 @@ class _HistoryStats {
     this.localSingleTracks = 0,
   });
 
-  /// Total album count including local library
   int get totalAlbumCount => albumCount + localAlbumCount;
 
-  /// Total singles count including local library
   int get totalSingleTracks => singleTracks + localSingleTracks;
 }
 
@@ -852,7 +846,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     );
   }
 
-  /// Bottom action bar for playlist selection mode.
   Widget _buildPlaylistSelectionBottomBar(
     BuildContext context,
     ColorScheme colorScheme,
@@ -1252,7 +1245,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     return _applySorting(filtered);
   }
 
-  /// Apply current sort mode to a list of unified items
   List<UnifiedLibraryItem> _applySorting(List<UnifiedLibraryItem> items) {
     if (_sortMode == 'latest') {
       return items; // Already sorted newest first from _getUnifiedItems
@@ -1275,7 +1267,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     return sorted;
   }
 
-  /// Check if a quality string passes the current quality filter
   bool _passesQualityFilter(String? quality) {
     if (_filterQuality == null) return true;
     if (quality == null) return _filterQuality == 'lossy';
@@ -1292,13 +1283,11 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     }
   }
 
-  /// Check if a file path passes the current format filter
   bool _passesFormatFilter(String filePath) {
     if (_filterFormat == null) return true;
     return _fileExtLower(filePath) == _filterFormat;
   }
 
-  /// Filter grouped download albums by search query + advanced filters
   List<_GroupedAlbum> _filterGroupedAlbums(
     List<_GroupedAlbum> albums,
     String searchQuery,
@@ -1355,7 +1344,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     return result;
   }
 
-  /// Filter grouped local albums by search query + advanced filters
   List<_GroupedLocalAlbum> _filterGroupedLocalAlbums(
     List<_GroupedLocalAlbum> albums,
     String searchQuery,
@@ -2085,8 +2073,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) =>
-              _playlistIconFallback(colorScheme, size),
+          errorBuilder: (_, _, _) => _playlistIconFallback(colorScheme, size),
         ),
       );
     }
@@ -2098,7 +2085,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
 
     if (firstCoverUrl != null) {
       // Guard against local file paths that may have been stored as coverUrl
-      final isLocalPath = !firstCoverUrl.startsWith('http://') &&
+      final isLocalPath =
+          !firstCoverUrl.startsWith('http://') &&
           !firstCoverUrl.startsWith('https://');
       if (isLocalPath) {
         return ClipRRect(
@@ -2108,8 +2096,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             width: size,
             height: size,
             fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                _playlistIconFallback(colorScheme, size),
+            errorBuilder: (_, _, _) => _playlistIconFallback(colorScheme, size),
           ),
         );
       }
@@ -2120,10 +2107,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
           width: size,
           height: size,
           fit: BoxFit.cover,
-          placeholder: (_, _) =>
-              _playlistIconFallback(colorScheme, size),
-          errorWidget: (_, _, _) =>
-              _playlistIconFallback(colorScheme, size),
+          placeholder: (_, _) => _playlistIconFallback(colorScheme, size),
+          errorWidget: (_, _, _) => _playlistIconFallback(colorScheme, size),
         ),
       );
     }
@@ -2174,26 +2159,21 @@ class _QueueTabState extends ConsumerState<QueueTab> {
         selectedItems.add(item);
       }
 
-      int addedCount = 0;
-      int alreadyCount = 0;
-      for (final selected in selectedItems) {
-        final track = selected.toTrack();
-        final added = await notifier.addTrackToPlaylist(playlistId, track);
-        if (added) {
-          addedCount++;
-        } else {
-          alreadyCount++;
-        }
-      }
+      final batchResult = await notifier.addTracksToPlaylist(
+        playlistId,
+        selectedItems.map((selected) => selected.toTrack()),
+      );
+      final addedCount = batchResult.addedCount;
+      final alreadyCount = batchResult.alreadyInPlaylistCount;
 
       if (!context.mounted) return;
       final message = addedCount > 0
           ? 'Added $addedCount ${addedCount == 1 ? 'track' : 'tracks'} to $playlistName'
-              '${alreadyCount > 0 ? ' ($alreadyCount already in playlist)' : ''}'
+                '${alreadyCount > 0 ? ' ($alreadyCount already in playlist)' : ''}'
           : context.l10n.collectionAlreadyInPlaylist(playlistName);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       _exitSelectionMode();
       return;
     }
@@ -2221,7 +2201,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     UnifiedLibraryItem item,
     ColorScheme colorScheme,
   ) {
-    final isDraggingMultiple = _isSelectionMode &&
+    final isDraggingMultiple =
+        _isSelectionMode &&
         _selectedIds.contains(item.id) &&
         _selectedIds.length > 1;
     final count = isDraggingMultiple ? _selectedIds.length : 1;
@@ -2240,14 +2221,12 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 180),
               child: Text(
-                isDraggingMultiple
-                    ? '$count tracks'
-                    : item.trackName,
+                isDraggingMultiple ? '$count tracks' : item.trackName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -2859,7 +2838,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     required VoidCallback onTap,
     VoidCallback? onLongPress,
   }) {
-    final cover = coverWidget ??
+    final cover =
+        coverWidget ??
         Container(
           width: 56,
           height: 56,
@@ -2867,7 +2847,11 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             color: iconBgColor ?? colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon ?? Icons.folder, color: iconColor ?? Colors.white, size: 28),
+          child: Icon(
+            icon ?? Icons.folder,
+            color: iconColor ?? Colors.white,
+            size: 28,
+          ),
         );
 
     return InkWell(
@@ -2922,13 +2906,18 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     required VoidCallback onTap,
     VoidCallback? onLongPress,
   }) {
-    final cover = coverWidget ??
+    final cover =
+        coverWidget ??
         Container(
           decoration: BoxDecoration(
             color: iconBgColor ?? colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon ?? Icons.folder, color: iconColor ?? Colors.white, size: 40),
+          child: Icon(
+            icon ?? Icons.folder,
+            color: iconColor ?? Colors.white,
+            size: 40,
+          ),
         );
 
     return GestureDetector(
@@ -2949,9 +2938,9 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
           ),
           Text(
             '$count ${count == 1 ? 'item' : 'items'}',
@@ -3018,22 +3007,10 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             decoration: isHovering
                 ? BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
+                    border: Border.all(color: colorScheme.primary, width: 2),
                     color: colorScheme.primary.withValues(alpha: 0.1),
                   )
-                : isSelected
-                    ? BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.primary,
-                          width: 2,
-                        ),
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                      )
-                    : null,
+                : null,
             child: Stack(
               children: [
                 _buildCollectionGridItem(
@@ -3067,8 +3044,11 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                         ),
                       ),
                       child: isSelected
-                          ? Icon(Icons.check, size: 16,
-                              color: colorScheme.onPrimary)
+                          ? Icon(
+                              Icons.check,
+                              size: 16,
+                              color: colorScheme.onPrimary,
+                            )
                           : const SizedBox(width: 16, height: 16),
                     ),
                   ),
@@ -3134,22 +3114,10 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             decoration: isHovering
                 ? BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
+                    border: Border.all(color: colorScheme.primary, width: 2),
                     color: colorScheme.primary.withValues(alpha: 0.1),
                   )
-                : isSelected
-                    ? BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.primary,
-                          width: 2,
-                        ),
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                      )
-                    : null,
+                : null,
             child: Row(
               children: [
                 if (_isPlaylistSelectionMode)
@@ -3169,8 +3137,11 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                         ),
                       ),
                       child: isSelected
-                          ? Icon(Icons.check, size: 18,
-                              color: colorScheme.onPrimary)
+                          ? Icon(
+                              Icons.check,
+                              size: 18,
+                              color: colorScheme.onPrimary,
+                            )
                           : const SizedBox(width: 18, height: 18),
                     ),
                   ),
@@ -3268,7 +3239,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
 
         // Collection folders as list items (Spotify-style) in "All" tab
         // are now rendered inline with tracks below (unified sliver)
-
         if ((filteredGroupedAlbums.isNotEmpty ||
                 filteredGroupedLocalAlbums.isNotEmpty) &&
             filterMode == 'albums')
@@ -3422,18 +3392,69 @@ class _QueueTabState extends ConsumerState<QueueTab> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverGrid(
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 0.75,
-                    ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final collectionCount =
-                      2 + collectionState.playlists.length;
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 0.75,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final collectionCount =
+                        2 + collectionState.playlists.length;
+                    if (index < collectionCount) {
+                      return _buildAllTabGridCollectionItem(
+                        context: context,
+                        colorScheme: colorScheme,
+                        index: index,
+                        collectionState: collectionState,
+                        filteredUnifiedItems: filteredUnifiedItems,
+                      );
+                    }
+                    final trackIndex = index - collectionCount;
+                    if (trackIndex < filteredUnifiedItems.length) {
+                      final item = filteredUnifiedItems[trackIndex];
+                      return KeyedSubtree(
+                        key: ValueKey(item.id),
+                        child: LongPressDraggable<UnifiedLibraryItem>(
+                          data: item,
+                          feedback: _buildDragFeedback(
+                            context,
+                            item,
+                            colorScheme,
+                          ),
+                          childWhenDragging: Opacity(
+                            opacity: 0.4,
+                            child: _buildUnifiedGridItem(
+                              context,
+                              item,
+                              colorScheme,
+                            ),
+                          ),
+                          child: _buildUnifiedGridItem(
+                            context,
+                            item,
+                            colorScheme,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  childCount:
+                      2 +
+                      collectionState.playlists.length +
+                      filteredUnifiedItems.length,
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final collectionCount = 2 + collectionState.playlists.length;
                   if (index < collectionCount) {
-                    return _buildAllTabGridCollectionItem(
+                    return _buildAllTabListCollectionItem(
                       context: context,
                       colorScheme: colorScheme,
                       index: index,
@@ -3455,13 +3476,13 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                         ),
                         childWhenDragging: Opacity(
                           opacity: 0.4,
-                          child: _buildUnifiedGridItem(
+                          child: _buildUnifiedLibraryItem(
                             context,
                             item,
                             colorScheme,
                           ),
                         ),
-                        child: _buildUnifiedGridItem(
+                        child: _buildUnifiedLibraryItem(
                           context,
                           item,
                           colorScheme,
@@ -3475,57 +3496,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                     2 +
                     collectionState.playlists.length +
                     filteredUnifiedItems.length,
-                ),
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final collectionCount =
-                    2 + collectionState.playlists.length;
-                if (index < collectionCount) {
-                  return _buildAllTabListCollectionItem(
-                    context: context,
-                    colorScheme: colorScheme,
-                    index: index,
-                    collectionState: collectionState,
-                    filteredUnifiedItems: filteredUnifiedItems,
-                  );
-                }
-                final trackIndex = index - collectionCount;
-                if (trackIndex < filteredUnifiedItems.length) {
-                  final item = filteredUnifiedItems[trackIndex];
-                  return KeyedSubtree(
-                    key: ValueKey(item.id),
-                    child: LongPressDraggable<UnifiedLibraryItem>(
-                      data: item,
-                      feedback: _buildDragFeedback(
-                        context,
-                        item,
-                        colorScheme,
-                      ),
-                      childWhenDragging: Opacity(
-                        opacity: 0.4,
-                        child: _buildUnifiedLibraryItem(
-                          context,
-                          item,
-                          colorScheme,
-                        ),
-                      ),
-                      child: _buildUnifiedLibraryItem(
-                        context,
-                        item,
-                        colorScheme,
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-              childCount:
-                  2 +
-                  collectionState.playlists.length +
-                  filteredUnifiedItems.length,
               ),
             ),
         ],
@@ -5521,9 +5491,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
-                                  color: colorScheme.onSurfaceVariant.withValues(
-                                    alpha: 0.7,
-                                  ),
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                 ),
                           ),
                         ),

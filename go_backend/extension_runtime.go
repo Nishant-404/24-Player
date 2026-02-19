@@ -145,7 +145,6 @@ func (e *RedirectBlockedError) Error() string {
 	return "redirect blocked: domain '" + e.Domain + "' not in allowed list"
 }
 
-// isPrivateIP checks if a hostname resolves to a private/local IP address
 func isPrivateIP(host string) bool {
 	hostLower := strings.ToLower(strings.TrimSpace(host))
 	if hostLower == "" {

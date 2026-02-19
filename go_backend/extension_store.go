@@ -77,7 +77,6 @@ type StoreRegistry struct {
 	Extensions []StoreExtension `json:"extensions"`
 }
 
-// StoreExtensionResponse is the normalized response sent to Flutter
 type StoreExtensionResponse struct {
 	ID               string   `json:"id"`
 	Name             string   `json:"name"`
@@ -421,7 +420,6 @@ func (s *ExtensionStore) ClearCache() {
 	LogInfo("ExtensionStore", "Cache cleared")
 }
 
-// Helper: case-insensitive contains
 func containsIgnoreCase(s, substr string) bool {
 	return containsStr(toLower(s), substr)
 }

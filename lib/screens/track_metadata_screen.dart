@@ -51,6 +51,7 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
   _embeddedCoverPreviewCache = {};
 
   bool _fileExists = false;
+  bool _hasCheckedFile = false;
   int? _fileSize;
   String? _lyrics; // Cleaned lyrics for display (no timestamps)
   String? _rawLyrics; // Raw LRC with timestamps for embedding
@@ -232,10 +233,12 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
       }
     } catch (_) {}
 
-    if (mounted && (exists != _fileExists || size != _fileSize)) {
+    if (mounted &&
+        (exists != _fileExists || size != _fileSize || !_hasCheckedFile)) {
       setState(() {
         _fileExists = exists;
         _fileSize = size;
+        _hasCheckedFile = true;
       });
     }
 
@@ -818,7 +821,7 @@ class _TrackMetadataScreenState extends ConsumerState<TrackMetadataScreen> {
                           ],
                         ),
                       ),
-                    if (!_fileExists)
+                    if (_hasCheckedFile && !_fileExists)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,

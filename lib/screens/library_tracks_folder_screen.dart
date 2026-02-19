@@ -9,7 +9,7 @@ import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/library_collections_provider.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
 import 'package:spotiflac_android/services/cover_cache_manager.dart';
-import 'package:spotiflac_android/utils/file_access.dart';
+import 'package:spotiflac_android/screens/track_metadata_screen.dart';
 import 'package:spotiflac_android/widgets/download_service_picker.dart';
 import 'package:spotiflac_android/widgets/playlist_picker_sheet.dart';
 
@@ -104,19 +104,34 @@ class _LibraryTracksFolderScreenState
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final state = ref.watch(libraryCollectionsProvider);
-    final playlist =
-        widget.mode == LibraryTracksFolderMode.playlist &&
-                widget.playlistId != null
-            ? state.playlistById(widget.playlistId!)
-            : null;
+    final UserPlaylistCollection? playlist;
+    final List<CollectionTrackEntry> entries;
 
-    final entries = switch (widget.mode) {
-      LibraryTracksFolderMode.wishlist => state.wishlist,
-      LibraryTracksFolderMode.loved => state.loved,
-      LibraryTracksFolderMode.playlist =>
-        playlist?.tracks ?? const <CollectionTrackEntry>[],
-    };
+    switch (widget.mode) {
+      case LibraryTracksFolderMode.wishlist:
+        playlist = null;
+        entries = ref.watch(
+          libraryCollectionsProvider.select((state) => state.wishlist),
+        );
+        break;
+      case LibraryTracksFolderMode.loved:
+        playlist = null;
+        entries = ref.watch(
+          libraryCollectionsProvider.select((state) => state.loved),
+        );
+        break;
+      case LibraryTracksFolderMode.playlist:
+        final playlistId = widget.playlistId;
+        playlist = playlistId == null
+            ? null
+            : ref.watch(
+                libraryCollectionsProvider.select(
+                  (state) => state.playlistById(playlistId),
+                ),
+              );
+        entries = playlist?.tracks ?? const <CollectionTrackEntry>[];
+        break;
+    }
 
     final title = switch (widget.mode) {
       LibraryTracksFolderMode.wishlist => context.l10n.collectionWishlist,
@@ -157,10 +172,11 @@ class _LibraryTracksFolderScreenState
             )
           else
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final entry = entries[index];
-                  return Column(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final entry = entries[index];
+                return KeyedSubtree(
+                  key: ValueKey(entry.key),
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _CollectionTrackTile(
@@ -168,13 +184,11 @@ class _LibraryTracksFolderScreenState
                         mode: widget.mode,
                         playlistId: widget.playlistId,
                       ),
-                      if (index < entries.length - 1)
-                        const Divider(height: 1),
+                      if (index < entries.length - 1) const Divider(height: 1),
                     ],
-                  );
-                },
-                childCount: entries.length,
-              ),
+                  ),
+                );
+              }, childCount: entries.length),
             ),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -299,8 +313,7 @@ class _LibraryTracksFolderScreenState
                               Container(color: colorScheme.surface),
                         )
                       : CachedNetworkImage(
-                          imageUrl:
-                              _highResCoverUrl(coverUrl) ?? coverUrl,
+                          imageUrl: _highResCoverUrl(coverUrl) ?? coverUrl,
                           fit: BoxFit.cover,
                           cacheManager: CoverCacheManager.instance,
                           placeholder: (_, _) =>
@@ -541,9 +554,7 @@ class _CollectionTrackTile extends ConsumerWidget {
       ),
       onTap: mode == LibraryTracksFolderMode.wishlist
           ? () => _downloadTrack(context, ref)
-          : mode == LibraryTracksFolderMode.playlist
-              ? () => _openInMusicPlayer(context, ref)
-              : null,
+          : () => _navigateToMetadata(context, ref),
       onLongPress: () => _showTrackOptionsSheet(context, ref),
     );
   }
@@ -613,8 +624,7 @@ class _CollectionTrackTile extends ConsumerWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color:
-                        colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -624,8 +634,8 @@ class _CollectionTrackTile extends ConsumerWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: track.coverUrl != null &&
-                                track.coverUrl!.isNotEmpty
+                        child:
+                            track.coverUrl != null && track.coverUrl!.isNotEmpty
                             ? _buildTrackCover(context, track.coverUrl!, 56)
                             : Container(
                                 width: 56,
@@ -644,9 +654,7 @@ class _CollectionTrackTile extends ConsumerWidget {
                           children: [
                             Text(
                               track.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w600),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -654,9 +662,7 @@ class _CollectionTrackTile extends ConsumerWidget {
                             const SizedBox(height: 2),
                             Text(
                               track.artistName,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -762,14 +768,12 @@ class _CollectionTrackTile extends ConsumerWidget {
           .read(downloadQueueProvider.notifier)
           .addToQueue(track, settings.defaultService);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.snackbarAddedToQueue(track.name)),
-        ),
+        SnackBar(content: Text(context.l10n.snackbarAddedToQueue(track.name))),
       );
     }
   }
 
-  Future<void> _openInMusicPlayer(BuildContext context, WidgetRef ref) async {
+  Future<void> _navigateToMetadata(BuildContext context, WidgetRef ref) async {
     final track = entry.track;
     final historyItem = ref
         .read(downloadHistoryProvider.notifier)
@@ -777,29 +781,16 @@ class _CollectionTrackTile extends ConsumerWidget {
 
     if (historyItem == null) return;
 
-    final exists = await fileExists(historyItem.filePath);
-    if (!exists) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.snackbarCannotOpenFile('File not found'),
-          ),
-        ),
-      );
-      return;
-    }
-
-    try {
-      await openFile(historyItem.filePath);
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.snackbarCannotOpenFile(e.toString())),
-        ),
-      );
-    }
+    await Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            TrackMetadataScreen(item: historyItem),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    );
   }
 }
 

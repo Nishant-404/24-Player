@@ -1,5 +1,3 @@
-// Package gobackend provides exported functions for gomobile binding
-// These functions are the bridge between Flutter and Go backend
 package gobackend
 
 import (
@@ -464,8 +462,8 @@ func DownloadTrack(requestJSON string) (string, error) {
 		if youtubeErr == nil {
 			result = DownloadResult{
 				FilePath:    youtubeResult.FilePath,
-				BitDepth:    0, // Lossy format, no bit depth
-				SampleRate:  0, // Lossy format
+				BitDepth:    0,
+				SampleRate:  0,
 				Title:       youtubeResult.Title,
 				Artist:      youtubeResult.Artist,
 				Album:       youtubeResult.Album,
@@ -543,6 +541,11 @@ func DownloadByStrategy(requestJSON string) (string, error) {
 	}
 
 	if req.UseExtensions {
+		// Respect strict mode when auto fallback is disabled:
+		// for built-in providers, route directly to selected service only.
+		if !req.UseFallback && isBuiltInProvider(serviceNormalized) {
+			return DownloadTrack(normalizedJSON)
+		}
 		resp, err := DownloadWithExtensionsJSON(normalizedJSON)
 		if err != nil {
 			return errorResponse(err.Error())
@@ -916,7 +919,6 @@ func SetDownloadDirectory(path string) error {
 	return setDownloadDir(path)
 }
 
-// AllowDownloadDir adds a directory to the extension file sandbox allowlist.
 func AllowDownloadDir(path string) {
 	if strings.TrimSpace(path) == "" {
 		return
@@ -1524,11 +1526,6 @@ func errorResponse(msg string) (string, error) {
 	return string(jsonBytes), nil
 }
 
-// ==================== YOUTUBE PROVIDER (LOSSY ONLY) ====================
-
-// DownloadFromYouTube downloads a track from YouTube via Cobalt API
-// This is a lossy-only provider (Opus/MP3 with configurable bitrate)
-// It does NOT participate in the lossless fallback chain
 func DownloadFromYouTube(requestJSON string) (string, error) {
 	var req DownloadRequest
 	if err := json.Unmarshal([]byte(requestJSON), &req); err != nil {
@@ -1575,20 +1572,14 @@ func DownloadFromYouTube(requestJSON string) (string, error) {
 	return string(jsonBytes), nil
 }
 
-// IsYouTubeURLExport checks if a URL is a YouTube URL (exported for Flutter)
 func IsYouTubeURLExport(urlStr string) bool {
 	return IsYouTubeURL(urlStr)
 }
 
-// ExtractYouTubeVideoIDExport extracts video ID from YouTube URL (exported for Flutter)
 func ExtractYouTubeVideoIDExport(urlStr string) (string, error) {
 	return ExtractYouTubeVideoID(urlStr)
 }
 
-// ==================== COVER & LYRICS SAVE ====================
-
-// DownloadCoverToFile downloads cover art from URL and saves to outputPath.
-// If maxQuality is true, upgrades to highest available resolution.
 func DownloadCoverToFile(coverURL string, outputPath string, maxQuality bool) error {
 	if coverURL == "" {
 		return fmt.Errorf("no cover URL provided")
@@ -1607,7 +1598,6 @@ func DownloadCoverToFile(coverURL string, outputPath string, maxQuality bool) er
 	return nil
 }
 
-// ExtractCoverToFile extracts embedded cover art from audio file and saves to outputPath.
 func ExtractCoverToFile(audioPath string, outputPath string) error {
 	lower := strings.ToLower(audioPath)
 
@@ -1636,7 +1626,6 @@ func ExtractCoverToFile(audioPath string, outputPath string) error {
 	return nil
 }
 
-// FetchAndSaveLyrics fetches lyrics from lrclib and saves as .lrc file.
 func FetchAndSaveLyrics(trackName, artistName, spotifyID string, durationMs int64, outputPath string) error {
 	client := NewLyricsClient()
 	durationSec := float64(durationMs) / 1000.0
@@ -1663,9 +1652,6 @@ func FetchAndSaveLyrics(trackName, artistName, spotifyID string, durationMs int6
 	return nil
 }
 
-// ==================== LYRICS PROVIDER SETTINGS ====================
-
-// SetLyricsProvidersJSON sets the lyrics provider order from a JSON array of provider IDs.
 func SetLyricsProvidersJSON(providersJSON string) error {
 	var providers []string
 	if err := json.Unmarshal([]byte(providersJSON), &providers); err != nil {
@@ -1676,7 +1662,6 @@ func SetLyricsProvidersJSON(providersJSON string) error {
 	return nil
 }
 
-// GetLyricsProvidersJSON returns the current lyrics provider order as JSON.
 func GetLyricsProvidersJSON() (string, error) {
 	providers := GetLyricsProviderOrder()
 	jsonBytes, err := json.Marshal(providers)
@@ -1686,7 +1671,6 @@ func GetLyricsProvidersJSON() (string, error) {
 	return string(jsonBytes), nil
 }
 
-// GetAvailableLyricsProvidersJSON returns metadata about all available lyrics providers.
 func GetAvailableLyricsProvidersJSON() (string, error) {
 	providers := GetAvailableLyricsProviders()
 	jsonBytes, err := json.Marshal(providers)
@@ -1696,7 +1680,6 @@ func GetAvailableLyricsProvidersJSON() (string, error) {
 	return string(jsonBytes), nil
 }
 
-// SetLyricsFetchOptionsJSON sets lyrics provider fetch options.
 func SetLyricsFetchOptionsJSON(optionsJSON string) error {
 	opts := GetLyricsFetchOptions()
 	if strings.TrimSpace(optionsJSON) != "" {
@@ -1709,7 +1692,6 @@ func SetLyricsFetchOptionsJSON(optionsJSON string) error {
 	return nil
 }
 
-// GetLyricsFetchOptionsJSON returns current lyrics provider fetch options.
 func GetLyricsFetchOptionsJSON() (string, error) {
 	opts := GetLyricsFetchOptions()
 	jsonBytes, err := json.Marshal(opts)

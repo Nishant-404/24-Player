@@ -1,4 +1,3 @@
-// Package gobackend provides extension provider interfaces
 package gobackend
 
 import (
@@ -15,9 +14,6 @@ import (
 	"github.com/dop251/goja"
 )
 
-// ==================== Metadata Types ====================
-
-// ExtTrackMetadata represents track metadata from an extension
 type ExtTrackMetadata struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -675,8 +671,20 @@ func isBuiltInProvider(providerID string) bool {
 func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, error) {
 	priority := GetProviderPriority()
 	extManager := GetExtensionManager()
+	strictMode := !req.UseFallback
+	selectedProvider := strings.TrimSpace(req.Service)
 
-	if req.Service != "" && isBuiltInProvider(req.Service) {
+	if strictMode {
+		if selectedProvider == "" {
+			selectedProvider = strings.TrimSpace(req.Source)
+		}
+		if selectedProvider != "" {
+			priority = []string{selectedProvider}
+			GoLog("[DownloadWithExtensionFallback] Strict mode enabled, provider locked to: %s\n", selectedProvider)
+		}
+	}
+
+	if !strictMode && req.Service != "" && isBuiltInProvider(strings.ToLower(req.Service)) {
 		GoLog("[DownloadWithExtensionFallback] User selected service: %s, prioritizing it first\n", req.Service)
 		newPriority := []string{req.Service}
 		for _, p := range priority {
@@ -691,7 +699,7 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 	var lastErr error
 	var skipBuiltIn bool
 
-	if req.Source != "" && !isBuiltInProvider(req.Source) {
+	if req.Source != "" && !isBuiltInProvider(strings.ToLower(req.Source)) {
 		ext, err := extManager.GetExtension(req.Source)
 		if err == nil && ext.Enabled && ext.Error == "" && ext.Manifest.IsMetadataProvider() {
 			GoLog("[DownloadWithExtensionFallback] Enriching track from extension '%s'...\n", req.Source)
@@ -754,7 +762,9 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 		}
 	}
 
-	if req.Source != "" && !isBuiltInProvider(req.Source) {
+	if req.Source != "" &&
+		!isBuiltInProvider(strings.ToLower(req.Source)) &&
+		(!strictMode || selectedProvider == "" || strings.EqualFold(selectedProvider, req.Source)) {
 		GoLog("[DownloadWithExtensionFallback] Track source is extension '%s', trying it first\n", req.Source)
 
 		ext, err := extManager.GetExtension(req.Source)
@@ -768,12 +778,29 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 			GoLog("[DownloadWithExtensionFallback] Downloading from source extension with trackID: %s (skipBuiltInFallback: %v)\n", trackID, skipBuiltIn)
 
 			outputPath := buildOutputPath(req)
+			if req.ItemID != "" {
+				StartItemProgress(req.ItemID)
+			}
 
 			result, err := provider.Download(trackID, req.Quality, outputPath, func(percent int) {
 				if req.ItemID != "" {
-					SetItemProgress(req.ItemID, float64(percent), 0, 0)
+					normalized := float64(percent) / 100.0
+					if normalized < 0 {
+						normalized = 0
+					}
+					if normalized > 1 {
+						normalized = 1
+					}
+					SetItemProgress(req.ItemID, normalized, 0, 0)
 				}
 			})
+			if req.ItemID != "" {
+				if err == nil && result != nil && result.Success {
+					CompleteItemProgress(req.ItemID)
+				} else {
+					RemoveItemProgress(req.ItemID)
+				}
+			}
 
 			if err == nil && result.Success {
 				resp := &DownloadResponse{
@@ -860,18 +887,23 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 	}
 
 	for _, providerID := range priority {
+		providerID = strings.TrimSpace(providerID)
+		if providerID == "" {
+			continue
+		}
+		providerIDNormalized := strings.ToLower(providerID)
 		if providerID == req.Source {
 			continue
 		}
 
-		if skipBuiltIn && isBuiltInProvider(providerID) {
+		if skipBuiltIn && isBuiltInProvider(providerIDNormalized) {
 			GoLog("[DownloadWithExtensionFallback] Skipping built-in provider %s (skipBuiltInFallback)\n", providerID)
 			continue
 		}
 
 		GoLog("[DownloadWithExtensionFallback] Trying provider: %s\n", providerID)
 
-		if isBuiltInProvider(providerID) {
+		if isBuiltInProvider(providerIDNormalized) {
 			if (req.Genre == "" || req.Label == "") && req.ISRC != "" {
 				GoLog("[DownloadWithExtensionFallback] Enriching extended metadata from Deezer for ISRC: %s\n", req.ISRC)
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -892,9 +924,9 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 				}
 			}
 
-			result, err := tryBuiltInProvider(providerID, req)
+			result, err := tryBuiltInProvider(providerIDNormalized, req)
 			if err == nil && result.Success {
-				result.Service = providerID
+				result.Service = providerIDNormalized
 				if req.Label != "" {
 					result.Label = req.Label
 				}
@@ -915,11 +947,11 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 						Success:   false,
 						Error:     "Download cancelled",
 						ErrorType: "cancelled",
-						Service:   providerID,
+						Service:   providerIDNormalized,
 					}, nil
 				}
 				lastErr = err
-				GoLog("[DownloadWithExtensionFallback] %s failed: %v\n", providerID, err)
+				GoLog("[DownloadWithExtensionFallback] %s failed: %v\n", providerIDNormalized, err)
 			}
 		} else {
 			ext, err := extManager.GetExtension(providerID)
@@ -944,12 +976,29 @@ func DownloadWithExtensionFallback(req DownloadRequest) (*DownloadResponse, erro
 			}
 
 			outputPath := buildOutputPath(req)
+			if req.ItemID != "" {
+				StartItemProgress(req.ItemID)
+			}
 
 			result, err := provider.Download(availability.TrackID, req.Quality, outputPath, func(percent int) {
 				if req.ItemID != "" {
-					SetItemProgress(req.ItemID, float64(percent), 0, 0)
+					normalized := float64(percent) / 100.0
+					if normalized < 0 {
+						normalized = 0
+					}
+					if normalized > 1 {
+						normalized = 1
+					}
+					SetItemProgress(req.ItemID, normalized, 0, 0)
 				}
 			})
+			if req.ItemID != "" {
+				if err == nil && result != nil && result.Success {
+					CompleteItemProgress(req.ItemID)
+				} else {
+					RemoveItemProgress(req.ItemID)
+				}
+			}
 
 			if err == nil && result.Success {
 				resp := &DownloadResponse{

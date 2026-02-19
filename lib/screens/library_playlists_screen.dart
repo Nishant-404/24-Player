@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spotiflac_android/l10n/l10n.dart';
 import 'package:spotiflac_android/providers/library_collections_provider.dart';
 import 'package:spotiflac_android/screens/library_tracks_folder_screen.dart';
+import 'package:spotiflac_android/services/cover_cache_manager.dart';
 import 'package:spotiflac_android/utils/app_bar_layout.dart';
 
 class LibraryPlaylistsScreen extends ConsumerWidget {
@@ -47,10 +48,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
 
                 return FlexibleSpaceBar(
                   expandedTitleScale: 1.0,
-                  titlePadding: EdgeInsets.only(
-                    left: leftPadding,
-                    bottom: 16,
-                  ),
+                  titlePadding: EdgeInsets.only(left: leftPadding, bottom: 16),
                   title: Text(
                     context.l10n.collectionPlaylists,
                     style: TextStyle(
@@ -87,10 +85,9 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
                       Text(
                         context.l10n.collectionNoPlaylistsSubtitle,
                         textAlign: TextAlign.center,
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -99,42 +96,39 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
             )
           else
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  // Even indices = playlist tiles, odd indices = dividers
-                  if (index.isOdd) {
-                    return const Divider(height: 1);
-                  }
-                  final playlistIndex = index ~/ 2;
-                  final playlist = playlists[playlistIndex];
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
+              delegate: SliverChildBuilderDelegate((context, index) {
+                // Even indices = playlist tiles, odd indices = dividers
+                if (index.isOdd) {
+                  return const Divider(height: 1);
+                }
+                final playlistIndex = index ~/ 2;
+                final playlist = playlists[playlistIndex];
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 2,
+                  ),
+                  leading: _buildPlaylistThumbnail(context, playlist),
+                  title: Text(playlist.name),
+                  subtitle: Text(
+                    context.l10n.collectionPlaylistTracks(
+                      playlist.tracks.length,
                     ),
-                    leading: _buildPlaylistThumbnail(context, playlist),
-                    title: Text(playlist.name),
-                    subtitle: Text(
-                      context.l10n.collectionPlaylistTracks(
-                        playlist.tracks.length,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => LibraryTracksFolderScreen(
-                            mode: LibraryTracksFolderMode.playlist,
-                            playlistId: playlist.id,
-                          ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => LibraryTracksFolderScreen(
+                          mode: LibraryTracksFolderMode.playlist,
+                          playlistId: playlist.id,
                         ),
-                      );
-                    },
-                    onLongPress: () =>
-                        _showPlaylistOptionsSheet(context, ref, playlist),
-                  );
-                },
-                childCount: playlists.length * 2 - 1,
-              ),
+                      ),
+                    );
+                  },
+                  onLongPress: () =>
+                      _showPlaylistOptionsSheet(context, ref, playlist),
+                );
+              }, childCount: playlists.length * 2 - 1),
             ),
         ],
       ),
@@ -171,8 +165,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color:
-                        colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -188,9 +181,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
                           children: [
                             Text(
                               playlist.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w600),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -200,9 +191,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
                               context.l10n.collectionPlaylistTracks(
                                 playlist.tracks.length,
                               ),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -291,12 +280,33 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
       );
     }
 
-    final firstCoverUrl = playlist.tracks
-        .where((e) => e.track.coverUrl != null && e.track.coverUrl!.isNotEmpty)
-        .map((e) => e.track.coverUrl!)
-        .firstOrNull;
+    String? firstCoverUrl;
+    for (final entry in playlist.tracks) {
+      final coverUrl = entry.track.coverUrl;
+      if (coverUrl != null && coverUrl.isNotEmpty) {
+        firstCoverUrl = coverUrl;
+        break;
+      }
+    }
 
     if (firstCoverUrl != null) {
+      final isLocalPath =
+          !firstCoverUrl.startsWith('http://') &&
+          !firstCoverUrl.startsWith('https://');
+
+      if (isLocalPath) {
+        return ClipRRect(
+          borderRadius: borderRadius,
+          child: Image.file(
+            File(firstCoverUrl),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => _playlistIconFallback(colorScheme, size),
+          ),
+        );
+      }
+
       return ClipRRect(
         borderRadius: borderRadius,
         child: CachedNetworkImage(
@@ -304,6 +314,8 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
+          memCacheWidth: (size * 2).toInt(),
+          cacheManager: CoverCacheManager.instance,
           placeholder: (_, _) => _playlistIconFallback(colorScheme, size),
           errorWidget: (_, _, _) => _playlistIconFallback(colorScheme, size),
         ),
@@ -321,10 +333,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
         color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        Icons.queue_music,
-        color: colorScheme.onSurfaceVariant,
-      ),
+      child: Icon(Icons.queue_music, color: colorScheme.onSurfaceVariant),
     );
   }
 
