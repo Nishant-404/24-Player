@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:spotiflac_android/providers/extension_provider.dart';
 import 'package:spotiflac_android/providers/settings_provider.dart';
 import 'package:spotiflac_android/l10n/l10n.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
@@ -405,6 +406,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
       ref.read(settingsProvider.notifier).setInteractionMode(_selectedMode);
       ref.read(settingsProvider.notifier).setMetadataSource('deezer');
+      await ref
+          .read(extensionProvider.notifier)
+          .ensureSpotifyWebExtensionReady();
       ref.read(settingsProvider.notifier).setFirstLaunchComplete();
 
       if (mounted) context.go('/tutorial');
@@ -970,9 +974,7 @@ class _ModeCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isSelected
@@ -1001,9 +1003,7 @@ class _ModeCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               feature,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: isSelected
                                         ? colorScheme.onPrimaryContainer

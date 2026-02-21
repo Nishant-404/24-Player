@@ -227,8 +227,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     );
     final homeNavigator = _navigatorForTab(0, showStore);
     homeNavigator?.popUntil((route) => route.isFirst);
-    ref.read(trackProvider.notifier).clear();
+    // Unfocus BEFORE clear so _onTrackStateChanged can properly
+    // clear _urlController (it checks !_searchFocusNode.hasFocus)
     FocusManager.instance.primaryFocus?.unfocus();
+    ref.read(trackProvider.notifier).clear();
   }
 
   void _onNavTap(int index) {
@@ -262,7 +264,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   void _handleBackPress() {
     final rootNavigator = Navigator.of(context, rootNavigator: true);
     if (rootNavigator.canPop()) {
+      _log.i('Back: step 1 - root navigator pop');
       rootNavigator.pop();
+      _lastBackPress = null;
       return;
     }
 
@@ -271,7 +275,9 @@ class _MainShellState extends ConsumerState<MainShell> {
     );
     final currentNavigator = _navigatorForTab(_currentIndex, showStore);
     if (currentNavigator != null && currentNavigator.canPop()) {
+      _log.i('Back: step 2 - tab navigator pop (tab=$_currentIndex)');
       currentNavigator.pop();
+      _lastBackPress = null;
       return;
     }
 
@@ -279,7 +285,33 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
+    _log.d(
+      'Back: state check - tab=$_currentIndex, '
+      'isShowingRecentAccess=${trackState.isShowingRecentAccess}, '
+      'hasSearchText=${trackState.hasSearchText}, '
+      'hasContent=${trackState.hasContent}, '
+      'isLoading=${trackState.isLoading}, '
+      'isKeyboardVisible=$isKeyboardVisible',
+    );
+
+    if (_currentIndex == 0 &&
+        trackState.isShowingRecentAccess &&
+        !trackState.isLoading &&
+        (trackState.hasSearchText || trackState.hasContent)) {
+      // Has recent access AND search content — clear everything at once
+      _log.i(
+        'Back: step 3a - dismiss recent access + clear search/content '
+        '(hasSearchText=${trackState.hasSearchText}, hasContent=${trackState.hasContent})',
+      );
+      FocusManager.instance.primaryFocus?.unfocus();
+      ref.read(trackProvider.notifier).clear();
+      _lastBackPress = null;
+      return;
+    }
+
     if (_currentIndex == 0 && trackState.isShowingRecentAccess) {
+      // Recent access overlay only (no search content) — just dismiss it
+      _log.i('Back: step 3b - dismiss recent access only');
       ref.read(trackProvider.notifier).setShowingRecentAccess(false);
       FocusManager.instance.primaryFocus?.unfocus();
       _lastBackPress = null;
@@ -289,36 +321,44 @@ class _MainShellState extends ConsumerState<MainShell> {
     if (_currentIndex == 0 &&
         !trackState.isLoading &&
         (trackState.hasSearchText || trackState.hasContent)) {
+      _log.i(
+        'Back: step 4 - clear search/content '
+        '(hasSearchText=${trackState.hasSearchText}, hasContent=${trackState.hasContent})',
+      );
+      // Unfocus BEFORE clear so _onTrackStateChanged can properly
+      // clear _urlController (it checks !_searchFocusNode.hasFocus)
+      FocusManager.instance.primaryFocus?.unfocus();
       ref.read(trackProvider.notifier).clear();
+      _lastBackPress = null;
+      return;
+    }
+
+    if (_currentIndex == 0 && isKeyboardVisible) {
+      _log.i('Back: step 5 - dismiss keyboard');
       FocusManager.instance.primaryFocus?.unfocus();
       _lastBackPress = null;
       return;
     }
 
-    final primaryFocus = FocusManager.instance.primaryFocus;
-    if (_currentIndex == 0 &&
-        (isKeyboardVisible ||
-            (primaryFocus != null && primaryFocus.hasFocus))) {
-      primaryFocus?.unfocus();
-      _lastBackPress = null;
-      return;
-    }
-
     if (_currentIndex != 0) {
+      _log.i('Back: step 6 - switch to home tab from tab=$_currentIndex');
       _onNavTap(0);
       _lastBackPress = null;
       return;
     }
 
     if (trackState.isLoading) {
+      _log.i('Back: blocked - loading in progress');
       return;
     }
 
     final now = DateTime.now();
     if (_lastBackPress != null &&
         now.difference(_lastBackPress!) < const Duration(seconds: 2)) {
+      _log.i('Back: step 8 - double-tap exit');
       SystemNavigator.pop();
     } else {
+      _log.i('Back: step 7 - first tap, showing exit snackbar');
       _lastBackPress = now;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

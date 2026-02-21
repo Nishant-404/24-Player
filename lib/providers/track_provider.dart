@@ -551,6 +551,7 @@ class TrackNotifier extends Notifier<TrackState> {
     state = TrackState(
       isLoading: true,
       hasSearchText: state.hasSearchText,
+      isShowingRecentAccess: state.isShowingRecentAccess,
       selectedSearchFilter: currentFilter,
     );
 
@@ -713,6 +714,7 @@ class TrackNotifier extends Notifier<TrackState> {
         searchPlaylists: playlists,
         isLoading: false,
         hasSearchText: state.hasSearchText,
+        isShowingRecentAccess: state.isShowingRecentAccess,
         selectedSearchFilter: currentFilter, // Preserve filter in results
       );
     } catch (e, stackTrace) {
@@ -722,6 +724,7 @@ class TrackNotifier extends Notifier<TrackState> {
         isLoading: false,
         error: e.toString(),
         hasSearchText: state.hasSearchText,
+        isShowingRecentAccess: state.isShowingRecentAccess,
         selectedSearchFilter: currentFilter,
       );
     }
@@ -737,6 +740,7 @@ class TrackNotifier extends Notifier<TrackState> {
     state = TrackState(
       isLoading: true,
       hasSearchText: state.hasSearchText,
+      isShowingRecentAccess: state.isShowingRecentAccess,
       selectedSearchFilter:
           state.selectedSearchFilter, // Preserve filter during loading
     );
@@ -776,6 +780,7 @@ class TrackNotifier extends Notifier<TrackState> {
         searchArtists: [],
         isLoading: false,
         hasSearchText: state.hasSearchText,
+        isShowingRecentAccess: state.isShowingRecentAccess,
         searchExtensionId: extensionId, // Store which extension was used
         selectedSearchFilter:
             state.selectedSearchFilter, // Preserve selected filter
@@ -787,6 +792,7 @@ class TrackNotifier extends Notifier<TrackState> {
         isLoading: false,
         error: e.toString(),
         hasSearchText: state.hasSearchText,
+        isShowingRecentAccess: state.isShowingRecentAccess,
       );
     }
   }
@@ -876,6 +882,7 @@ class TrackNotifier extends Notifier<TrackState> {
       playlistName: playlistName,
       coverUrl: coverUrl,
       hasSearchText: state.hasSearchText,
+      isShowingRecentAccess: state.isShowingRecentAccess,
     );
   }
 

@@ -254,6 +254,12 @@ class _HomeTabState extends ConsumerState<HomeTab>
     _urlController.addListener(_onSearchChanged);
     _searchFocusNode.addListener(_onSearchFocusChanged);
 
+    // Run an initial fetch check in case extensions were already initialized
+    // before HomeTab was mounted (e.g. auto-installed during first setup).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fetchExploreIfNeeded();
+    });
+
     _trackStateSub = ref.listenManual<TrackState>(trackProvider, (
       previous,
       next,

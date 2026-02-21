@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
 import 'package:spotiflac_android/utils/logger.dart';
@@ -9,6 +11,7 @@ final _log = AppLogger('ExtensionProvider');
 
 const _metadataProviderPriorityKey = 'metadata_provider_priority';
 const _providerPriorityKey = 'provider_priority';
+const _spotifyWebExtensionId = 'spotify-web';
 
 class Extension {
   final String id;
@@ -636,6 +639,68 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
     } catch (e) {
       _log.e('Failed to set extension enabled: $e');
       state = state.copyWith(error: e.toString());
+    }
+  }
+
+  Future<bool> ensureSpotifyWebExtensionReady({
+    bool setAsSearchProvider = true,
+  }) async {
+    try {
+      await refreshExtensions();
+
+      var ext = state.extensions
+          .where((e) => e.id == _spotifyWebExtensionId)
+          .firstOrNull;
+
+      if (ext == null) {
+        final cacheDir = await getTemporaryDirectory();
+        await PlatformBridge.initExtensionStore(cacheDir.path);
+
+        final tempRoot = await getTemporaryDirectory();
+        final installDir = await Directory(
+          '${tempRoot.path}/spotiflac_bootstrap_spotify_web',
+        ).create(recursive: true);
+
+        final downloadPath = await PlatformBridge.downloadStoreExtension(
+          _spotifyWebExtensionId,
+          installDir.path,
+        );
+
+        final installed = await installExtension(downloadPath);
+        if (!installed) {
+          _log.w('Failed to install spotify-web extension from store');
+          return false;
+        }
+
+        await refreshExtensions();
+        ext = state.extensions
+            .where((e) => e.id == _spotifyWebExtensionId)
+            .firstOrNull;
+      }
+
+      if (ext == null) {
+        _log.w('spotify-web extension is still not available after install');
+        return false;
+      }
+
+      if (!ext.enabled) {
+        await setExtensionEnabled(_spotifyWebExtensionId, true);
+      }
+
+      if (setAsSearchProvider) {
+        final settings = ref.read(settingsProvider);
+        if (settings.searchProvider != _spotifyWebExtensionId) {
+          ref
+              .read(settingsProvider.notifier)
+              .setSearchProvider(_spotifyWebExtensionId);
+        }
+      }
+
+      _log.i('spotify-web extension is ready');
+      return true;
+    } catch (e) {
+      _log.w('Failed to ensure spotify-web extension is ready: $e');
+      return false;
     }
   }
 

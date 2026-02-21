@@ -166,43 +166,74 @@ class PlaybackState {
 // ─── Audio Handler (audio_service bridge) ────────────────────────────────────
 class _SpotiFLACAudioHandler extends audio_service.BaseAudioHandler
     with audio_service.SeekHandler {
-  final AudioPlayer _player;
-  final void Function() _onSkipNext;
-  final void Function() _onSkipPrevious;
-  final void Function() _onStop;
+  final Future<void> Function() _onPlay;
+  final Future<void> Function() _onPause;
+  final Future<void> Function() _onSkipNext;
+  final Future<void> Function() _onSkipPrevious;
+  final Future<void> Function() _onStop;
   final Future<void> Function(Duration position) _onSeek;
 
   _SpotiFLACAudioHandler({
-    required AudioPlayer player,
-    required void Function() onSkipNext,
-    required void Function() onSkipPrevious,
-    required void Function() onStop,
+    required Future<void> Function() onPlay,
+    required Future<void> Function() onPause,
+    required Future<void> Function() onSkipNext,
+    required Future<void> Function() onSkipPrevious,
+    required Future<void> Function() onStop,
     required Future<void> Function(Duration position) onSeek,
-  }) : _player = player,
+  }) : _onPlay = onPlay,
+       _onPause = onPause,
        _onSkipNext = onSkipNext,
        _onSkipPrevious = onSkipPrevious,
        _onStop = onStop,
        _onSeek = onSeek;
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() async {
+    try {
+      await _onPlay();
+    } catch (e) {
+      _log.e('Notification play failed: $e');
+    }
+  }
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() async {
+    try {
+      await _onPause();
+    } catch (e) {
+      _log.e('Notification pause failed: $e');
+    }
+  }
 
   @override
   Future<void> seek(Duration position) => _onSeek(position);
 
   @override
   Future<void> stop() async {
-    _onStop();
+    try {
+      await _onStop();
+    } catch (e) {
+      _log.e('Notification stop failed: $e');
+    }
   }
 
   @override
-  Future<void> skipToNext() async => _onSkipNext();
+  Future<void> skipToNext() async {
+    try {
+      await _onSkipNext();
+    } catch (e) {
+      _log.e('Notification next failed: $e');
+    }
+  }
 
   @override
-  Future<void> skipToPrevious() async => _onSkipPrevious();
+  Future<void> skipToPrevious() async {
+    try {
+      await _onSkipPrevious();
+    } catch (e) {
+      _log.e('Notification previous failed: $e');
+    }
+  }
 }
 
 // ─── Controller ──────────────────────────────────────────────────────────────
@@ -228,6 +259,13 @@ class PlaybackController extends Notifier<PlaybackState> {
   static const int _smartQueueCandidatePoolLimit = 28;
   static const int _smartQueueRelatedArtistsLimit = 3;
   static const int _smartQueueMaxAffinityKeys = 160;
+  static const int _smartQueueSessionWindowSize = 10;
+  static const int _smartQueueMaxArtistRepeats = 2;
+  static const int _smartQueueMaxDecadeDriftYears = 20;
+  static const int _smartQueueMaxTempoJumpBpm = 42;
+  static const int _smartQueueMaxTempoHints = 720;
+  static const int _smartQueueMaxSkipStreak = 6;
+  static const double _smartQueuePrimarySourceRatio = 0.68;
   static const String _smartQueueSpotifyExtensionId = 'spotify-web';
   static const Duration _smartQueueRefillCooldown = Duration(seconds: 18);
   static const Duration _smartQueueSearchCacheTtl = Duration(minutes: 3);
@@ -257,12 +295,28 @@ class PlaybackController extends Notifier<PlaybackState> {
     'artist_affinity': 0.55,
     'source_affinity': 0.3,
     'novelty': 0.65,
+    'session_alignment': 0.42,
+    'hour_affinity': 0.21,
+    'skip_context': 0.29,
+    'tempo_continuity': 0.26,
+    'year_cohesion': 0.22,
   };
   final Map<String, double> _smartQueueArtistAffinity = <String, double>{};
   final Map<String, double> _smartQueueSourceAffinity = <String, double>{};
+  final Map<String, double> _smartQueueHourAffinity = <String, double>{};
+  final Map<String, double> _smartQueueTempoHintByTrackKey = <String, double>{};
+  final List<_SmartQueueSessionSignal> _smartQueueSessionSignals =
+      <_SmartQueueSessionSignal>[];
   bool _smartQueueRefillInFlight = false;
   DateTime? _lastSmartQueueRefillAt;
   int _smartQueueAutoAddedCount = 0;
+  int _smartQueueSkipStreak = 0;
+  _SmartQueueSessionProfile _smartQueueSessionProfile =
+      const _SmartQueueSessionProfile(
+        mode: _SmartQueueSessionMode.balanced,
+        targetDurationSec: 215,
+        preferredSourceKey: '',
+      );
 
   // Shuffle order: indices into queue
   List<int> _shuffleOrder = [];
@@ -458,10 +512,11 @@ class PlaybackController extends Notifier<PlaybackState> {
       _audioHandler =
           await audio_service.AudioService.init<_SpotiFLACAudioHandler>(
             builder: () => _SpotiFLACAudioHandler(
-              player: _player,
-              onSkipNext: () => unawaited(skipNext()),
-              onSkipPrevious: () => unawaited(skipPrevious()),
-              onStop: () => unawaited(stop()),
+              onPlay: _handleNotificationPlay,
+              onPause: _handleNotificationPause,
+              onSkipNext: _handleNotificationNext,
+              onSkipPrevious: _handleNotificationPrevious,
+              onStop: _handleNotificationStop,
               onSeek: seek,
             ),
             config: const audio_service.AudioServiceConfig(
@@ -484,6 +539,32 @@ class PlaybackController extends Notifier<PlaybackState> {
     } catch (e) {
       _log.w('Audio session configuration failed: $e');
     }
+  }
+
+  Future<void> _handleNotificationPlay() async {
+    if (_player.processingState == ProcessingState.idle &&
+        state.queue.isNotEmpty) {
+      final resumeIndex = state.currentIndex < 0 ? 0 : state.currentIndex;
+      await _playQueueIndex(resumeIndex);
+      return;
+    }
+    await _player.play();
+  }
+
+  Future<void> _handleNotificationPause() async {
+    await _player.pause();
+  }
+
+  Future<void> _handleNotificationNext() async {
+    await skipNext();
+  }
+
+  Future<void> _handleNotificationPrevious() async {
+    await skipPrevious();
+  }
+
+  Future<void> _handleNotificationStop() async {
+    await stop();
   }
 
   void _syncServicePlaybackState(
@@ -976,6 +1057,18 @@ class PlaybackController extends Notifier<PlaybackState> {
           _smartQueueSourceAffinity[key] = value.clamp(-1.0, 1.0);
         }
       }
+
+      _smartQueueHourAffinity.clear();
+      final hourRaw = payload['hourAffinity'];
+      if (hourRaw is Map) {
+        for (final entry in hourRaw.entries) {
+          final key = entry.key.toString().trim().toLowerCase();
+          if (key.isEmpty) continue;
+          final value = (entry.value as num?)?.toDouble();
+          if (value == null) continue;
+          _smartQueueHourAffinity[key] = value.clamp(-1.0, 1.0);
+        }
+      }
     } catch (e) {
       _log.w('Failed to restore smart queue model: $e');
     }
@@ -995,6 +1088,7 @@ class PlaybackController extends Notifier<PlaybackState> {
         'weights': _smartQueueWeights,
         'artistAffinity': _smartQueueArtistAffinity,
         'sourceAffinity': _smartQueueSourceAffinity,
+        'hourAffinity': _smartQueueHourAffinity,
       };
       await prefs.setString(_smartQueueModelKey, jsonEncode(payload));
     } catch (e) {
@@ -2013,11 +2107,19 @@ class PlaybackController extends Notifier<PlaybackState> {
     _smartQueueRefillInFlight = false;
     _lastSmartQueueRefillAt = null;
     _smartQueueAutoAddedCount = 0;
+    _smartQueueSkipStreak = 0;
+    _smartQueueSessionProfile = const _SmartQueueSessionProfile(
+      mode: _SmartQueueSessionMode.balanced,
+      targetDurationSec: 215,
+      preferredSourceKey: '',
+    );
     _smartQueuePendingFeedbackByTrack.clear();
     _smartQueueSearchCache.clear();
     _smartQueueRelatedArtistsCache.clear();
     if (clearRecent) {
       _recentPlayedTrackKeys.clear();
+      _smartQueueSessionSignals.clear();
+      _smartQueueTempoHintByTrackKey.clear();
     }
   }
 
@@ -2095,13 +2197,6 @@ class PlaybackController extends Notifier<PlaybackState> {
     final key = _trackKeyFromPlaybackItem(current);
     if (key.isEmpty) return;
 
-    final context = _smartQueuePendingFeedbackByTrack.remove(key);
-    if (context == null) return;
-    if (DateTime.now().difference(context.addedAt) >
-        _smartQueueFeedbackMaxAge) {
-      return;
-    }
-
     final durationMs = max(
       1,
       state.duration.inMilliseconds > 0
@@ -2110,27 +2205,197 @@ class PlaybackController extends Notifier<PlaybackState> {
     );
     final positionMs = state.position.inMilliseconds.clamp(0, durationMs);
     final listenRatio = completedNaturally ? 1.0 : (positionMs / durationMs);
+    final skipStreakBefore = _smartQueueSkipStreak;
+    if (current.track != null) {
+      _recordSmartQueueSessionSignal(
+        track: current.track!,
+        listenRatio: listenRatio,
+        completedNaturally: completedNaturally,
+      );
+    }
+    _updateSmartQueueSkipStreak(
+      listenRatio: listenRatio,
+      completedNaturally: completedNaturally,
+    );
+
+    final context = _smartQueuePendingFeedbackByTrack.remove(key);
+    if (context == null) return;
+    if (DateTime.now().difference(context.addedAt) >
+        _smartQueueFeedbackMaxAge) {
+      return;
+    }
+
+    final hourBucket = _currentSmartQueueHourBucket();
     final reward = _smartQueueRewardFromListenRatio(
       listenRatio: listenRatio,
       completedNaturally: completedNaturally,
+      currentSkipStreak: skipStreakBefore,
+      hourAffinityRaw: _smartQueueHourAffinity[hourBucket] ?? 0.0,
     );
     _updateSmartQueueModel(
       features: context.features,
       reward: reward,
       track: current.track,
+      hourBucket: hourBucket,
     );
   }
 
   double _smartQueueRewardFromListenRatio({
     required double listenRatio,
     required bool completedNaturally,
+    required int currentSkipStreak,
+    required double hourAffinityRaw,
   }) {
-    if (completedNaturally || listenRatio >= 0.98) return 1.0;
-    if (listenRatio >= 0.75) return 0.85;
-    if (listenRatio >= 0.50) return 0.65;
-    if (listenRatio >= 0.25) return 0.35;
-    if (listenRatio >= 0.12) return 0.15;
-    return 0.0;
+    double reward;
+    if (completedNaturally || listenRatio >= 0.98) {
+      reward = 1.0;
+    } else if (listenRatio >= 0.75) {
+      reward = 0.85;
+    } else if (listenRatio >= 0.50) {
+      reward = 0.65;
+    } else if (listenRatio >= 0.25) {
+      reward = 0.35;
+    } else if (listenRatio >= 0.12) {
+      reward = 0.15;
+    } else {
+      reward = 0.0;
+    }
+
+    // Contextual bandit shaping: adjust reward based on current context.
+    final hourAffinity = ((hourAffinityRaw + 1.0) / 2.0).clamp(0.0, 1.0);
+    reward += (hourAffinity - 0.5) * 0.10;
+    if (!completedNaturally && listenRatio < 0.25 && currentSkipStreak >= 2) {
+      reward -= 0.08;
+    }
+    if (completedNaturally && currentSkipStreak >= 2) {
+      reward += 0.05;
+    }
+    return reward.clamp(0.0, 1.0);
+  }
+
+  void _updateSmartQueueSkipStreak({
+    required double listenRatio,
+    required bool completedNaturally,
+  }) {
+    if (completedNaturally || listenRatio >= 0.70) {
+      _smartQueueSkipStreak = 0;
+      return;
+    }
+    if (listenRatio < 0.35) {
+      _smartQueueSkipStreak = min(
+        _smartQueueMaxSkipStreak,
+        _smartQueueSkipStreak + 1,
+      );
+      return;
+    }
+    _smartQueueSkipStreak = max(0, _smartQueueSkipStreak - 1);
+  }
+
+  String _currentSmartQueueHourBucket() {
+    final hour = DateTime.now().hour;
+    return 'h${hour.toString().padLeft(2, '0')}';
+  }
+
+  void _recordSmartQueueSessionSignal({
+    required Track track,
+    required double listenRatio,
+    required bool completedNaturally,
+  }) {
+    _smartQueueSessionSignals.add(
+      _SmartQueueSessionSignal(
+        artistKey: _normalizeSmartQueueKey(track.artistName),
+        sourceKey: _sourceKey(track.source ?? ''),
+        durationSec: max(1, track.duration),
+        releaseYear: _parseYear(track.releaseDate),
+        listenRatio: listenRatio.clamp(0.0, 1.0),
+        skipped: !completedNaturally && listenRatio < 0.70,
+      ),
+    );
+    final maxSignals = _smartQueueSessionWindowSize * 6;
+    if (_smartQueueSessionSignals.length > maxSignals) {
+      _smartQueueSessionSignals.removeRange(
+        0,
+        _smartQueueSessionSignals.length - maxSignals,
+      );
+    }
+  }
+
+  void _refreshSmartQueueSessionProfile({required Track seed}) {
+    final recent =
+        _smartQueueSessionSignals.length <= _smartQueueSessionWindowSize
+        ? List<_SmartQueueSessionSignal>.from(_smartQueueSessionSignals)
+        : _smartQueueSessionSignals.sublist(
+            _smartQueueSessionSignals.length - _smartQueueSessionWindowSize,
+          );
+    if (recent.isEmpty) {
+      _smartQueueSessionProfile = _SmartQueueSessionProfile(
+        mode: _SmartQueueSessionMode.balanced,
+        targetDurationSec: max(140, seed.duration),
+        targetYear: _parseYear(seed.releaseDate),
+        preferredSourceKey: _sourceKey(seed.source ?? ''),
+      );
+      return;
+    }
+
+    final avgDuration =
+        recent.map((s) => s.durationSec.toDouble()).reduce((a, b) => a + b) /
+        recent.length;
+    final avgListen =
+        recent.map((s) => s.listenRatio).reduce((a, b) => a + b) /
+        recent.length;
+    final skipRate = recent.where((s) => s.skipped).length / recent.length;
+    final variance =
+        recent
+            .map((s) => pow((s.durationSec - avgDuration).toDouble(), 2))
+            .reduce((a, b) => a + b) /
+        recent.length;
+    final durationStdDev = sqrt(variance);
+
+    _SmartQueueSessionMode mode = _SmartQueueSessionMode.balanced;
+    if (skipRate > 0.45 || avgDuration < 190) {
+      mode = _SmartQueueSessionMode.energetic;
+    } else if (avgDuration > 280 && skipRate < 0.28) {
+      mode = _SmartQueueSessionMode.chill;
+    } else if (durationStdDev < 45 && avgListen >= 0.58) {
+      mode = _SmartQueueSessionMode.focus;
+    }
+
+    final years =
+        recent
+            .map((s) => s.releaseYear)
+            .whereType<int>()
+            .toList(growable: false)
+          ..sort();
+    final targetYear = years.isEmpty
+        ? _parseYear(seed.releaseDate)
+        : years[years.length ~/ 2];
+    final sourceCounts = <String, int>{};
+    for (final signal in recent) {
+      if (signal.sourceKey.isEmpty) continue;
+      sourceCounts[signal.sourceKey] =
+          (sourceCounts[signal.sourceKey] ?? 0) + 1;
+    }
+    var preferredSourceKey = _sourceKey(seed.source ?? '');
+    if (sourceCounts.isNotEmpty) {
+      preferredSourceKey =
+          (sourceCounts.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value)))
+              .first
+              .key;
+    }
+    final targetDurationSec = switch (mode) {
+      _SmartQueueSessionMode.chill => max(240, avgDuration.round()),
+      _SmartQueueSessionMode.focus => avgDuration.round().clamp(170, 320),
+      _SmartQueueSessionMode.energetic => avgDuration.round().clamp(120, 220),
+      _SmartQueueSessionMode.balanced => avgDuration.round().clamp(145, 280),
+    };
+
+    _smartQueueSessionProfile = _SmartQueueSessionProfile(
+      mode: mode,
+      targetDurationSec: targetDurationSec,
+      targetYear: targetYear,
+      preferredSourceKey: preferredSourceKey,
+    );
   }
 
   void _updateAffinity(Map<String, double> map, String key, double reward) {
@@ -2151,6 +2416,7 @@ class PlaybackController extends Notifier<PlaybackState> {
     required Map<String, double> features,
     required double reward,
     Track? track,
+    required String hourBucket,
   }) {
     final clippedReward = reward.clamp(0.0, 1.0);
     final prediction = _smartQueuePredict(features);
@@ -2178,6 +2444,7 @@ class PlaybackController extends Notifier<PlaybackState> {
         _sourceKey(track.source ?? ''),
         clippedReward,
       );
+      _updateAffinity(_smartQueueHourAffinity, hourBucket, clippedReward);
     }
 
     _scheduleSmartQueueModelSave();
@@ -2227,6 +2494,7 @@ class PlaybackController extends Notifier<PlaybackState> {
 
     final seed = state.currentItem?.track;
     if (seed == null) return 0;
+    _refreshSmartQueueSessionProfile(seed: seed);
 
     final epoch = _playRequestEpoch;
     _smartQueueRefillInFlight = true;
@@ -2263,6 +2531,8 @@ class PlaybackController extends Notifier<PlaybackState> {
       final targetCount = force ? max(1, needed) : max(0, needed);
       if (targetCount <= 0) return 0;
       final selected = _selectSmartQueueCandidates(
+        seed: seed,
+        sessionProfile: _smartQueueSessionProfile,
         scored: scored,
         targetCount: targetCount,
       );
@@ -2303,7 +2573,7 @@ class PlaybackController extends Notifier<PlaybackState> {
           .map((entry) => '${entry.key}:${entry.value}')
           .join(', ');
       _log.d(
-        'Smart queue appended ${selected.length} tracks (remaining=$remaining, sources=[$summaryText])',
+        'Smart queue appended ${selected.length} tracks (remaining=$remaining, session=${_smartQueueSessionProfile.mode.name}, sources=[$summaryText])',
       );
       return selected.length;
     } catch (e) {
@@ -2748,42 +3018,57 @@ class PlaybackController extends Notifier<PlaybackState> {
     final settings = ref.read(settingsProvider);
     final preferSpotify =
         settings.metadataSource.trim().toLowerCase() == 'spotify';
-    final searchCalls = preferSpotify
-        ? <Future<List<Map<String, dynamic>>> Function()>[
+    final primaryLimit = max(
+      trackLimit,
+      (trackLimit * _smartQueuePrimarySourceRatio).round() + 5,
+    );
+    final secondaryLimit = max(trackLimit ~/ 2, trackLimit - 2);
+
+    final primarySearch = preferSpotify
+        ? _safeSmartQueueTrackSearch(
             () => _searchSpotifyTracksForSmartQueue(
               normalizedQuery,
-              trackLimit: trackLimit,
+              trackLimit: primaryLimit,
             ),
+          )
+        : _safeSmartQueueTrackSearch(
             () => _searchDeezerTracksForSmartQueue(
               normalizedQuery,
-              trackLimit: trackLimit,
+              trackLimit: primaryLimit,
             ),
-          ]
-        : <Future<List<Map<String, dynamic>>> Function()>[
+          );
+    final secondarySearch = preferSpotify
+        ? _safeSmartQueueTrackSearch(
             () => _searchDeezerTracksForSmartQueue(
               normalizedQuery,
-              trackLimit: trackLimit,
+              trackLimit: secondaryLimit,
             ),
+          )
+        : _safeSmartQueueTrackSearch(
             () => _searchSpotifyTracksForSmartQueue(
               normalizedQuery,
-              trackLimit: trackLimit,
+              trackLimit: secondaryLimit,
             ),
-          ];
+          );
+
+    final responses = await Future.wait([primarySearch, secondarySearch]);
+    final blended = _blendSmartQueueTrackCandidates(
+      primary: responses[0],
+      secondary: responses[1],
+      targetCount: max(10, trackLimit + 6),
+      primaryRatio: _smartQueuePrimarySourceRatio,
+    );
 
     final parsedTracks = <Track>[];
-    for (final call in searchCalls) {
-      try {
-        final list = await call();
-        for (final entry in list) {
-          final track = _parseSearchTrackForSmartQueue(entry);
-          if (track.id.trim().isEmpty || track.name.trim().isEmpty) continue;
-          if (track.isCollection) continue;
-          parsedTracks.add(track);
-        }
-        if (parsedTracks.isNotEmpty) break;
-      } catch (_) {
-        continue;
-      }
+    final seenTrackKeys = <String>{};
+    for (final entry in blended) {
+      final track = _parseSearchTrackForSmartQueue(entry);
+      if (track.id.trim().isEmpty || track.name.trim().isEmpty) continue;
+      if (track.isCollection) continue;
+      final key = _trackKeyFromTrack(track);
+      if (key.isNotEmpty && !seenTrackKeys.add(key)) continue;
+      _registerSmartQueueTrackHints(track: track, raw: entry);
+      parsedTracks.add(track);
     }
 
     _smartQueueSearchCache[normalizedQuery] = _SmartQueueCachedResult(
@@ -2791,6 +3076,96 @@ class PlaybackController extends Notifier<PlaybackState> {
       fetchedAt: now,
     );
     return parsedTracks;
+  }
+
+  Future<List<Map<String, dynamic>>> _safeSmartQueueTrackSearch(
+    Future<List<Map<String, dynamic>>> Function() resolver,
+  ) async {
+    try {
+      return await resolver();
+    } catch (_) {
+      return const <Map<String, dynamic>>[];
+    }
+  }
+
+  List<Map<String, dynamic>> _blendSmartQueueTrackCandidates({
+    required List<Map<String, dynamic>> primary,
+    required List<Map<String, dynamic>> secondary,
+    required int targetCount,
+    required double primaryRatio,
+  }) {
+    final merged = <Map<String, dynamic>>[];
+    final seen = <String>{};
+    var primaryIndex = 0;
+    var secondaryIndex = 0;
+    var primaryTaken = 0;
+    var secondaryTaken = 0;
+    final maxTarget = max(1, targetCount);
+
+    void tryTakeFrom(List<Map<String, dynamic>> source, bool isPrimary) {
+      while (true) {
+        final index = isPrimary ? primaryIndex : secondaryIndex;
+        if (index >= source.length) return;
+        final item = source[index];
+        if (isPrimary) {
+          primaryIndex++;
+        } else {
+          secondaryIndex++;
+        }
+        final dedupKey = _smartQueueRawTrackDedupKey(item);
+        if (dedupKey.isEmpty || !seen.add(dedupKey)) {
+          continue;
+        }
+        merged.add(item);
+        if (isPrimary) {
+          primaryTaken++;
+        } else {
+          secondaryTaken++;
+        }
+        return;
+      }
+    }
+
+    while (merged.length < maxTarget &&
+        (primaryIndex < primary.length || secondaryIndex < secondary.length)) {
+      final expectedPrimary = ((merged.length + 1) * primaryRatio).round();
+      final shouldTakePrimary =
+          secondaryIndex >= secondary.length ||
+          (primaryIndex < primary.length && primaryTaken < expectedPrimary);
+      if (shouldTakePrimary) {
+        tryTakeFrom(primary, true);
+      } else {
+        tryTakeFrom(secondary, false);
+      }
+      if (merged.length >= maxTarget) break;
+      if (primaryIndex >= primary.length && secondaryIndex < secondary.length) {
+        tryTakeFrom(secondary, false);
+      } else if (secondaryIndex >= secondary.length &&
+          primaryIndex < primary.length) {
+        tryTakeFrom(primary, true);
+      }
+      if (primaryTaken + secondaryTaken == 0) {
+        break;
+      }
+    }
+    return merged;
+  }
+
+  String _smartQueueRawTrackDedupKey(Map<String, dynamic> raw) {
+    final id = (raw['spotify_id'] ?? raw['id'] ?? '').toString().trim();
+    final source = (raw['source'] ?? raw['provider_id'] ?? '')
+        .toString()
+        .trim();
+    if (id.isNotEmpty && source.isNotEmpty) {
+      return 'src:${_normalizeSmartQueueKey(source)}:${_normalizeSmartQueueKey(id)}';
+    }
+    if (id.isNotEmpty) {
+      return 'id:${_normalizeSmartQueueKey(id)}';
+    }
+    final title = (raw['name'] ?? '').toString().trim();
+    final artist = (raw['artists'] ?? raw['artist'] ?? '').toString().trim();
+    if (title.isEmpty && artist.isEmpty) return '';
+    return 'name:${_normalizeSmartQueueKey(title)}|${_normalizeSmartQueueKey(artist)}';
   }
 
   Future<List<Map<String, dynamic>>> _searchSpotifyTracksForSmartQueue(
@@ -2899,6 +3274,42 @@ class PlaybackController extends Notifier<PlaybackState> {
     return 0;
   }
 
+  void _registerSmartQueueTrackHints({
+    required Track track,
+    required Map<String, dynamic> raw,
+  }) {
+    final tempo = _extractTempoBpmForSmartQueue(raw);
+    if (tempo == null || tempo <= 0) return;
+    final key = _trackKeyFromTrack(track);
+    if (key.isEmpty) return;
+    _smartQueueTempoHintByTrackKey[key] = tempo;
+    if (_smartQueueTempoHintByTrackKey.length > _smartQueueMaxTempoHints) {
+      final removeCount =
+          _smartQueueTempoHintByTrackKey.length - _smartQueueMaxTempoHints;
+      final keys = _smartQueueTempoHintByTrackKey.keys
+          .take(removeCount)
+          .toList(growable: false);
+      for (final k in keys) {
+        _smartQueueTempoHintByTrackKey.remove(k);
+      }
+    }
+  }
+
+  double? _extractTempoBpmForSmartQueue(Map<String, dynamic> raw) {
+    const keys = <String>['tempo', 'bpm', 'audio_tempo', 'track_bpm'];
+    for (final key in keys) {
+      final value = raw[key];
+      if (value is num) {
+        final bpm = value.toDouble();
+        if (bpm > 30 && bpm < 260) return bpm;
+      } else if (value is String) {
+        final bpm = double.tryParse(value.trim());
+        if (bpm != null && bpm > 30 && bpm < 260) return bpm;
+      }
+    }
+    return null;
+  }
+
   _SmartQueueCandidate? _buildSmartQueueCandidate({
     required Track seed,
     required Track candidate,
@@ -2915,7 +3326,8 @@ class PlaybackController extends Notifier<PlaybackState> {
       existingTrackKeys: existingTrackKeys,
     );
     final prediction = _smartQueuePredict(features);
-    final exploration = _smartQueueRandom.nextDouble() * 0.06;
+    final exploration =
+        _smartQueueRandom.nextDouble() * _sessionExplorationCeiling();
     final score = prediction + exploration;
     return _SmartQueueCandidate(
       track: candidate,
@@ -2961,6 +3373,21 @@ class PlaybackController extends Notifier<PlaybackState> {
         _smartQueueSourceAffinity[_sourceKey(candidate.source ?? '')] ?? 0.0;
     final artistAffinity = ((artistAffinityRaw + 1.0) / 2.0).clamp(0.0, 1.0);
     final sourceAffinity = ((sourceAffinityRaw + 1.0) / 2.0).clamp(0.0, 1.0);
+    final sessionAlignment = _smartQueueSessionAlignment(
+      profile: _smartQueueSessionProfile,
+      candidate: candidate,
+    );
+    final hourAffinityRaw =
+        _smartQueueHourAffinity[_currentSmartQueueHourBucket()] ?? 0.0;
+    final hourAffinity = ((hourAffinityRaw + 1.0) / 2.0).clamp(0.0, 1.0);
+    final tempoContinuity = _smartQueueTempoContinuity(
+      seed: seed,
+      candidate: candidate,
+    );
+    final yearCohesion = _smartQueueYearCohesion(
+      profile: _smartQueueSessionProfile,
+      candidate: candidate,
+    );
 
     var artistRepetition = 0;
     final candidateArtist = _normalizeSmartQueueKey(candidate.artistName);
@@ -2983,6 +3410,9 @@ class PlaybackController extends Notifier<PlaybackState> {
       _trackKeyFromTrack(candidate),
     );
     final noveltyAfterDuplicateCheck = alreadySeen ? 0.0 : novelty;
+    final skipPressure = (_smartQueueSkipStreak / _smartQueueMaxSkipStreak)
+        .clamp(0.0, 1.0);
+    final skipContext = (1.0 - (sameArtist * skipPressure)).clamp(0.05, 1.0);
 
     return <String, double>{
       'same_artist': sameArtist,
@@ -2993,6 +3423,11 @@ class PlaybackController extends Notifier<PlaybackState> {
       'artist_affinity': artistAffinity,
       'source_affinity': sourceAffinity,
       'novelty': noveltyAfterDuplicateCheck,
+      'session_alignment': sessionAlignment,
+      'hour_affinity': hourAffinity,
+      'skip_context': skipContext,
+      'tempo_continuity': tempoContinuity,
+      'year_cohesion': yearCohesion,
     };
   }
 
@@ -3023,6 +3458,84 @@ class PlaybackController extends Notifier<PlaybackState> {
     return int.tryParse(match.group(1)!);
   }
 
+  double _sessionExplorationCeiling() {
+    return switch (_smartQueueSessionProfile.mode) {
+      _SmartQueueSessionMode.focus => 0.03,
+      _SmartQueueSessionMode.chill => 0.045,
+      _SmartQueueSessionMode.energetic => 0.08,
+      _SmartQueueSessionMode.balanced => 0.06,
+    };
+  }
+
+  double _smartQueueSessionAlignment({
+    required _SmartQueueSessionProfile profile,
+    required Track candidate,
+  }) {
+    final targetDuration = max(1, profile.targetDurationSec);
+    final durationDiff = (candidate.duration - targetDuration).abs().toDouble();
+    final durationMatch =
+        (1.0 - (durationDiff / max(90.0, targetDuration.toDouble()))).clamp(
+          0.0,
+          1.0,
+        );
+    final yearMatch = _smartQueueYearCohesion(
+      profile: profile,
+      candidate: candidate,
+    );
+    final preferredSource = _normalizeSmartQueueKey(profile.preferredSourceKey);
+    final candidateSource = _sourceKey(candidate.source ?? '');
+    final sourceMatch =
+        preferredSource.isEmpty || candidateSource == preferredSource
+        ? 1.0
+        : 0.45;
+    return ((durationMatch * 0.55) + (yearMatch * 0.25) + (sourceMatch * 0.20))
+        .clamp(0.0, 1.0);
+  }
+
+  double _smartQueueYearCohesion({
+    required _SmartQueueSessionProfile profile,
+    required Track candidate,
+  }) {
+    final targetYear = profile.targetYear;
+    final candidateYear = _parseYear(candidate.releaseDate);
+    if (targetYear == null || candidateYear == null) return 0.55;
+    final diff = (targetYear - candidateYear).abs();
+    if (diff == 0) return 1.0;
+    if (diff <= 2) return 0.88;
+    if (diff <= 5) return 0.72;
+    if (diff <= 10) return 0.5;
+    if (diff <= 15) return 0.3;
+    return 0.1;
+  }
+
+  double _smartQueueTempoContinuity({
+    required Track seed,
+    required Track candidate,
+  }) {
+    final seedTempo = _smartQueueTempoHintForTrack(seed);
+    final candidateTempo = _smartQueueTempoHintForTrack(candidate);
+    if (seedTempo == null || candidateTempo == null) {
+      return _durationSimilarity(
+        seed.duration,
+        candidate.duration,
+      ).clamp(0.2, 1.0);
+    }
+    final diff = (seedTempo - candidateTempo).abs();
+    if (diff <= 8) return 1.0;
+    if (diff <= 16) return 0.82;
+    if (diff <= 26) return 0.62;
+    if (diff <= _smartQueueMaxTempoJumpBpm) return 0.38;
+    return 0.12;
+  }
+
+  double? _smartQueueTempoHintForTrack(Track track) {
+    final key = _trackKeyFromTrack(track);
+    if (key.isEmpty) return null;
+    final raw = _smartQueueTempoHintByTrackKey[key];
+    if (raw == null || raw <= 0) return null;
+    return raw;
+  }
+
   String _sourceKey(String sourceRaw) {
     final normalized = _normalizeSmartQueueKey(sourceRaw);
     if (normalized.isNotEmpty) return normalized;
@@ -3032,6 +3545,8 @@ class PlaybackController extends Notifier<PlaybackState> {
   }
 
   List<_SmartQueueCandidate> _selectSmartQueueCandidates({
+    required Track seed,
+    required _SmartQueueSessionProfile sessionProfile,
     required List<_SmartQueueCandidate> scored,
     required int targetCount,
   }) {
@@ -3039,7 +3554,7 @@ class PlaybackController extends Notifier<PlaybackState> {
 
     final pool = scored.take(14).toList(growable: true);
     final selected = <_SmartQueueCandidate>[];
-    final artistCounts = <String, int>{};
+    final artistCounts = _buildSmartQueueArtistBaselineCounts();
     final selectedKeys = <String>{};
 
     while (pool.isNotEmpty && selected.length < targetCount) {
@@ -3051,7 +3566,15 @@ class PlaybackController extends Notifier<PlaybackState> {
 
       final artistKey = _normalizeSmartQueueKey(picked.track.artistName);
       final repeats = artistCounts[artistKey] ?? 0;
-      if (artistKey.isNotEmpty && repeats >= 2) {
+      if (artistKey.isNotEmpty && repeats >= _smartQueueMaxArtistRepeats) {
+        continue;
+      }
+
+      if (!_passesSmartQueueConstraints(
+        seed: seed,
+        candidate: picked.track,
+        profile: sessionProfile,
+      )) {
         continue;
       }
 
@@ -3062,6 +3585,58 @@ class PlaybackController extends Notifier<PlaybackState> {
       }
     }
     return selected;
+  }
+
+  Map<String, int> _buildSmartQueueArtistBaselineCounts() {
+    final counts = <String, int>{};
+    for (final item in state.queue.reversed.take(8)) {
+      final artistKey = _normalizeSmartQueueKey(item.artist);
+      if (artistKey.isEmpty) continue;
+      counts[artistKey] = (counts[artistKey] ?? 0) + 1;
+    }
+    for (final signal in _smartQueueSessionSignals.reversed.take(8)) {
+      final artistKey = signal.artistKey;
+      if (artistKey.isEmpty) continue;
+      counts[artistKey] = (counts[artistKey] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  bool _passesSmartQueueConstraints({
+    required Track seed,
+    required Track candidate,
+    required _SmartQueueSessionProfile profile,
+  }) {
+    final seedYear = _parseYear(seed.releaseDate);
+    final candidateYear = _parseYear(candidate.releaseDate);
+    if (seedYear != null &&
+        candidateYear != null &&
+        (seedYear - candidateYear).abs() > _smartQueueMaxDecadeDriftYears) {
+      return false;
+    }
+
+    if (profile.targetYear != null &&
+        candidateYear != null &&
+        (profile.targetYear! - candidateYear).abs() >
+            _smartQueueMaxDecadeDriftYears) {
+      return false;
+    }
+
+    final seedTempo = _smartQueueTempoHintForTrack(seed);
+    final candidateTempo = _smartQueueTempoHintForTrack(candidate);
+    if (seedTempo != null &&
+        candidateTempo != null &&
+        (seedTempo - candidateTempo).abs() > _smartQueueMaxTempoJumpBpm) {
+      return false;
+    }
+
+    final seedDuration = max(1, seed.duration);
+    final candidateDuration = max(1, candidate.duration);
+    final durationRatio = candidateDuration / seedDuration;
+    if (durationRatio > 2.25 || durationRatio < 0.45) {
+      return false;
+    }
+    return true;
   }
 
   _SmartQueueCandidate _pickWeightedCandidate(List<_SmartQueueCandidate> pool) {
@@ -3547,6 +4122,40 @@ class _SmartQueueLearningContext {
   const _SmartQueueLearningContext({
     required this.features,
     required this.addedAt,
+  });
+}
+
+enum _SmartQueueSessionMode { balanced, focus, chill, energetic }
+
+class _SmartQueueSessionProfile {
+  final _SmartQueueSessionMode mode;
+  final int targetDurationSec;
+  final int? targetYear;
+  final String preferredSourceKey;
+
+  const _SmartQueueSessionProfile({
+    required this.mode,
+    required this.targetDurationSec,
+    this.targetYear,
+    this.preferredSourceKey = '',
+  });
+}
+
+class _SmartQueueSessionSignal {
+  final String artistKey;
+  final String sourceKey;
+  final int durationSec;
+  final int? releaseYear;
+  final double listenRatio;
+  final bool skipped;
+
+  const _SmartQueueSessionSignal({
+    required this.artistKey,
+    required this.sourceKey,
+    required this.durationSec,
+    required this.releaseYear,
+    required this.listenRatio,
+    required this.skipped,
   });
 }
 

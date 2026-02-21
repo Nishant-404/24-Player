@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
@@ -1353,6 +1354,18 @@ class MainActivity: AudioServiceFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Always-enabled back callback to ensure back presses reach Flutter.
+        // Nested tab navigators can incorrectly set frameworkHandlesBack(false),
+        // which disables Flutter's own OnBackPressedCallback and causes the
+        // system default (finish activity) to run. This callback guarantees
+        // popRoute is always forwarded to Flutter, where PopScope handles it.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                flutterEngine.navigationChannel.popRoute()
+            }
+        })
+
         val messenger = flutterEngine.dartExecutor.binaryMessenger
 
         EventChannel(
