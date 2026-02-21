@@ -1587,202 +1587,224 @@ class _QueueTabState extends ConsumerState<QueueTab> {
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) {
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 32,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(2),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxSheetHeight = constraints.maxHeight * 0.9;
+                return ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxSheetHeight),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 32,
+                              height: 4,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.outlineVariant,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+
+                          Row(
+                            children: [
+                              Text(
+                                context.l10n.libraryFilterTitle,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const Spacer(),
+                              TextButton(
+                                onPressed: () {
+                                  setSheetState(() {
+                                    tempSource = null;
+                                    tempQuality = null;
+                                    tempFormat = null;
+                                    tempSortMode = 'latest';
+                                  });
+                                },
+                                child: Text(context.l10n.libraryFilterReset),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          Text(
+                            context.l10n.libraryFilterSource,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              FilterChip(
+                                label: Text(context.l10n.libraryFilterAll),
+                                selected: tempSource == null,
+                                onSelected: (_) =>
+                                    setSheetState(() => tempSource = null),
+                              ),
+                              FilterChip(
+                                label: Text(
+                                  context.l10n.libraryFilterDownloaded,
+                                ),
+                                selected: tempSource == 'downloaded',
+                                onSelected: (_) => setSheetState(
+                                  () => tempSource = 'downloaded',
+                                ),
+                              ),
+                              FilterChip(
+                                label: Text(context.l10n.libraryFilterLocal),
+                                selected: tempSource == 'local',
+                                onSelected: (_) =>
+                                    setSheetState(() => tempSource = 'local'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          Text(
+                            context.l10n.libraryFilterQuality,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              FilterChip(
+                                label: Text(context.l10n.libraryFilterAll),
+                                selected: tempQuality == null,
+                                onSelected: (_) =>
+                                    setSheetState(() => tempQuality = null),
+                              ),
+                              FilterChip(
+                                label: Text(
+                                  context.l10n.libraryFilterQualityHiRes,
+                                ),
+                                selected: tempQuality == 'hires',
+                                onSelected: (_) =>
+                                    setSheetState(() => tempQuality = 'hires'),
+                              ),
+                              FilterChip(
+                                label: Text(
+                                  context.l10n.libraryFilterQualityCD,
+                                ),
+                                selected: tempQuality == 'cd',
+                                onSelected: (_) =>
+                                    setSheetState(() => tempQuality = 'cd'),
+                              ),
+                              FilterChip(
+                                label: Text(
+                                  context.l10n.libraryFilterQualityLossy,
+                                ),
+                                selected: tempQuality == 'lossy',
+                                onSelected: (_) =>
+                                    setSheetState(() => tempQuality = 'lossy'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          Text(
+                            context.l10n.libraryFilterFormat,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              FilterChip(
+                                label: Text(context.l10n.libraryFilterAll),
+                                selected: tempFormat == null,
+                                onSelected: (_) =>
+                                    setSheetState(() => tempFormat = null),
+                              ),
+                              for (final format
+                                  in availableFormats.toList()..sort())
+                                FilterChip(
+                                  label: Text(format.toUpperCase()),
+                                  selected: tempFormat == format,
+                                  onSelected: (_) =>
+                                      setSheetState(() => tempFormat = format),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          Text(
+                            context.l10n.libraryFilterSort,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              FilterChip(
+                                label: Text(
+                                  context.l10n.libraryFilterSortLatest,
+                                ),
+                                selected: tempSortMode == 'latest',
+                                onSelected: (_) => setSheetState(
+                                  () => tempSortMode = 'latest',
+                                ),
+                              ),
+                              FilterChip(
+                                label: Text(
+                                  context.l10n.libraryFilterSortOldest,
+                                ),
+                                selected: tempSortMode == 'oldest',
+                                onSelected: (_) => setSheetState(
+                                  () => tempSortMode = 'oldest',
+                                ),
+                              ),
+                              FilterChip(
+                                label: const Text('A-Z'),
+                                selected: tempSortMode == 'a-z',
+                                onSelected: (_) =>
+                                    setSheetState(() => tempSortMode = 'a-z'),
+                              ),
+                              FilterChip(
+                                label: const Text('Z-A'),
+                                selected: tempSortMode == 'z-a',
+                                onSelected: (_) =>
+                                    setSheetState(() => tempSortMode = 'z-a'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () {
+                                setState(() {
+                                  _filterSource = tempSource;
+                                  _filterQuality = tempQuality;
+                                  _filterFormat = tempFormat;
+                                  _sortMode = tempSortMode;
+                                  _unifiedItemsCache.clear();
+                                  _invalidateFilterContentCache();
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: Text(context.l10n.libraryFilterApply),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-
-                  Row(
-                    children: [
-                      Text(
-                        context.l10n.libraryFilterTitle,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          setSheetState(() {
-                            tempSource = null;
-                            tempQuality = null;
-                            tempFormat = null;
-                            tempSortMode = 'latest';
-                          });
-                        },
-                        child: Text(context.l10n.libraryFilterReset),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    context.l10n.libraryFilterSource,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterAll),
-                        selected: tempSource == null,
-                        onSelected: (_) =>
-                            setSheetState(() => tempSource = null),
-                      ),
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterDownloaded),
-                        selected: tempSource == 'downloaded',
-                        onSelected: (_) =>
-                            setSheetState(() => tempSource = 'downloaded'),
-                      ),
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterLocal),
-                        selected: tempSource == 'local',
-                        onSelected: (_) =>
-                            setSheetState(() => tempSource = 'local'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    context.l10n.libraryFilterQuality,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterAll),
-                        selected: tempQuality == null,
-                        onSelected: (_) =>
-                            setSheetState(() => tempQuality = null),
-                      ),
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterQualityHiRes),
-                        selected: tempQuality == 'hires',
-                        onSelected: (_) =>
-                            setSheetState(() => tempQuality = 'hires'),
-                      ),
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterQualityCD),
-                        selected: tempQuality == 'cd',
-                        onSelected: (_) =>
-                            setSheetState(() => tempQuality = 'cd'),
-                      ),
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterQualityLossy),
-                        selected: tempQuality == 'lossy',
-                        onSelected: (_) =>
-                            setSheetState(() => tempQuality = 'lossy'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    context.l10n.libraryFilterFormat,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterAll),
-                        selected: tempFormat == null,
-                        onSelected: (_) =>
-                            setSheetState(() => tempFormat = null),
-                      ),
-                      for (final format in availableFormats.toList()..sort())
-                        FilterChip(
-                          label: Text(format.toUpperCase()),
-                          selected: tempFormat == format,
-                          onSelected: (_) =>
-                              setSheetState(() => tempFormat = format),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    context.l10n.libraryFilterSort,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterSortLatest),
-                        selected: tempSortMode == 'latest',
-                        onSelected: (_) =>
-                            setSheetState(() => tempSortMode = 'latest'),
-                      ),
-                      FilterChip(
-                        label: Text(context.l10n.libraryFilterSortOldest),
-                        selected: tempSortMode == 'oldest',
-                        onSelected: (_) =>
-                            setSheetState(() => tempSortMode = 'oldest'),
-                      ),
-                      FilterChip(
-                        label: const Text('A-Z'),
-                        selected: tempSortMode == 'a-z',
-                        onSelected: (_) =>
-                            setSheetState(() => tempSortMode = 'a-z'),
-                      ),
-                      FilterChip(
-                        label: const Text('Z-A'),
-                        selected: tempSortMode == 'z-a',
-                        onSelected: (_) =>
-                            setSheetState(() => tempSortMode = 'z-a'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        setState(() {
-                          _filterSource = tempSource;
-                          _filterQuality = tempQuality;
-                          _filterFormat = tempFormat;
-                          _sortMode = tempSortMode;
-                          _unifiedItemsCache.clear();
-                          _invalidateFilterContentCache();
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: Text(context.l10n.libraryFilterApply),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           );
         },

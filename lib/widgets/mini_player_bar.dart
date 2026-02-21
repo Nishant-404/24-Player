@@ -255,8 +255,8 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
 
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final mediaSectionHeight = (screenHeight * 0.50).clamp(300.0, 560.0);
+    final screenSize = MediaQuery.sizeOf(context);
+    final isLandscape = screenSize.width > screenSize.height;
 
     final duration = state.duration;
     final position = state.position;
@@ -274,265 +274,315 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Top bar (close + title + lyrics toggle)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 30,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    tooltip: 'Close',
-                  ),
-                  const Spacer(),
-                  // Queue info (tappable to open queue sheet)
-                  if (state.queue.length > 1)
-                    GestureDetector(
-                      onTap: () => _showQueueSheet(context, ref),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withValues(
-                            alpha: 0.5,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.queue_music_rounded,
-                              size: 16,
-                              color: colorScheme.onPrimaryContainer,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompactLayout = isLandscape || constraints.maxHeight < 620;
+            final mediaSectionHeight =
+                (constraints.maxHeight * (isCompactLayout ? 0.32 : 0.50)).clamp(
+                  isCompactLayout ? 140.0 : 260.0,
+                  isCompactLayout ? 280.0 : 560.0,
+                );
+            final horizontalPadding = isCompactLayout ? 16.0 : 24.0;
+            final verticalGap = isCompactLayout ? 2.0 : 4.0;
+            final showAlbum = item.album.isNotEmpty && !isCompactLayout;
+
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  children: [
+                    // ── Top bar (close + title + lyrics toggle)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: isCompactLayout ? 2 : 4,
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 30,
                             ),
-                            const SizedBox(width: 6),
+                            visualDensity: isCompactLayout
+                                ? VisualDensity.compact
+                                : VisualDensity.standard,
+                            onPressed: () => Navigator.of(context).pop(),
+                            tooltip: 'Close',
+                          ),
+                          const Spacer(),
+                          // Queue info (tappable to open queue sheet)
+                          if (state.queue.length > 1)
+                            GestureDetector(
+                              onTap: () => _showQueueSheet(context, ref),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer
+                                      .withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.queue_music_rounded,
+                                      size: 16,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '$queuePositionLabel / ${state.queue.length}',
+                                      style: textTheme.labelMedium?.copyWith(
+                                        color: colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          const Spacer(),
+                          // Lyrics toggle button
+                          IconButton(
+                            visualDensity: isCompactLayout
+                                ? VisualDensity.compact
+                                : VisualDensity.standard,
+                            icon: Icon(
+                              Icons.lyrics_outlined,
+                              color: _currentPage == 1
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                            ),
+                            onPressed: () {
+                              if (_currentPage == 0) {
+                                _switchToLyrics();
+                              } else {
+                                _switchToCover();
+                              }
+                            },
+                            tooltip: 'Lyrics',
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── Main content area (swipeable cover / lyrics)
+                    SizedBox(
+                      height: mediaSectionHeight,
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (page) =>
+                            setState(() => _currentPage = page),
+                        children: [
+                          // Page 0: Cover art
+                          _CoverArtPage(item: item, colorScheme: colorScheme),
+                          // Page 1: Lyrics
+                          _LyricsPage(
+                            state: state,
+                            colorScheme: colorScheme,
+                            onRetry: () => ref
+                                .read(playbackProvider.notifier)
+                                .refetchLyrics(),
+                            onSeek: state.seekSupported
+                                ? (ms) => ref
+                                      .read(playbackProvider.notifier)
+                                      .seek(Duration(milliseconds: ms))
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── Page indicator dots
+                    Padding(
+                      padding: EdgeInsets.only(top: isCompactLayout ? 4 : 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _PageDot(
+                            active: _currentPage == 0,
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(width: 6),
+                          _PageDot(
+                            active: _currentPage == 1,
+                            colorScheme: colorScheme,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: isCompactLayout ? 4 : 8),
+
+                    // ── Track info
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style:
+                                (isCompactLayout
+                                        ? textTheme.titleMedium
+                                        : textTheme.titleLarge)
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          SizedBox(height: verticalGap),
+                          Text(
+                            item.artist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                (isCompactLayout
+                                        ? textTheme.bodySmall
+                                        : textTheme.bodyMedium)
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                          ),
+                          if (showAlbum) ...[
+                            const SizedBox(height: 2),
                             Text(
-                              '$queuePositionLabel / ${state.queue.length}',
-                              style: textTheme.labelMedium?.copyWith(
-                                color: colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
+                              item.album,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: verticalGap),
+
+                    // ── Quality + Service badge row
+                    _QualityServiceRow(item: item, colorScheme: colorScheme),
+                    SizedBox(height: verticalGap),
+
+                    // ── Error message
+                    if (playbackError != null)
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: verticalGap,
+                        ),
+                        child: Text(
+                          playbackError,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.error,
+                          ),
+                        ),
+                      ),
+
+                    // ── Seek slider
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompactLayout ? 12 : 16,
+                      ),
+                      child: SliderTheme(
+                        data: SliderThemeData(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 14,
+                          ),
+                          activeTrackColor: colorScheme.primary,
+                          inactiveTrackColor: colorScheme.primary.withValues(
+                            alpha: 0.15,
+                          ),
+                        ),
+                        child: Slider(
+                          value: sliderSeconds,
+                          max: maxSeconds > 0 ? maxSeconds : 1,
+                          onChangeStart: state.seekSupported && maxSeconds > 0
+                              ? (value) {
+                                  setState(() {
+                                    _isScrubbing = true;
+                                    _scrubSeconds = value;
+                                  });
+                                }
+                              : null,
+                          onChanged: state.seekSupported
+                              ? (value) {
+                                  if (!_isScrubbing) {
+                                    setState(() {
+                                      _isScrubbing = true;
+                                    });
+                                  }
+                                  setState(() {
+                                    _scrubSeconds = value;
+                                  });
+                                }
+                              : null,
+                          onChangeEnd: state.seekSupported
+                              ? (value) async {
+                                  setState(() {
+                                    _scrubSeconds = value;
+                                    _isScrubbing = false;
+                                  });
+                                  await ref
+                                      .read(playbackProvider.notifier)
+                                      .seek(
+                                        Duration(
+                                          milliseconds: (value * 1000).round(),
+                                        ),
+                                      );
+                                }
+                              : null,
                         ),
                       ),
                     ),
-                  const Spacer(),
-                  // Lyrics toggle button
-                  IconButton(
-                    icon: Icon(
-                      Icons.lyrics_outlined,
-                      color: _currentPage == 1
-                          ? colorScheme.primary
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () {
-                      if (_currentPage == 0) {
-                        _switchToLyrics();
-                      } else {
-                        _switchToCover();
-                      }
-                    },
-                    tooltip: 'Lyrics',
-                  ),
-                ],
-              ),
-            ),
 
-            // ── Main content area (swipeable cover / lyrics)
-            SizedBox(
-              height: mediaSectionHeight,
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (page) => setState(() => _currentPage = page),
-                children: [
-                  // Page 0: Cover art
-                  _CoverArtPage(item: item, colorScheme: colorScheme),
-                  // Page 1: Lyrics
-                  _LyricsPage(
-                    state: state,
-                    colorScheme: colorScheme,
-                    onRetry: () =>
-                        ref.read(playbackProvider.notifier).refetchLyrics(),
-                    onSeek: state.seekSupported
-                        ? (ms) => ref
-                              .read(playbackProvider.notifier)
-                              .seek(Duration(milliseconds: ms))
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Page indicator dots
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _PageDot(active: _currentPage == 0, colorScheme: colorScheme),
-                  const SizedBox(width: 6),
-                  _PageDot(active: _currentPage == 1, colorScheme: colorScheme),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // ── Track info
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  Text(
-                    item.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.artist,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  if (item.album.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      item.album,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.7,
-                        ),
+                    // ── Duration labels
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDuration(position),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            _formatDuration(duration),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    SizedBox(height: verticalGap),
+
+                    // ── Playback controls
+                    _PlaybackControls(state: state, compact: isCompactLayout),
+                    SizedBox(height: verticalGap),
                   ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-
-            // ── Quality + Service badge row
-            _QualityServiceRow(item: item, colorScheme: colorScheme),
-            const SizedBox(height: 4),
-
-            // ── Error message
-            if (playbackError != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 4,
-                ),
-                child: Text(
-                  playbackError,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.error,
-                  ),
                 ),
               ),
-
-            // ── Seek slider
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SliderTheme(
-                data: SliderThemeData(
-                  trackHeight: 3,
-                  thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 6,
-                  ),
-                  overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 14,
-                  ),
-                  activeTrackColor: colorScheme.primary,
-                  inactiveTrackColor: colorScheme.primary.withValues(
-                    alpha: 0.15,
-                  ),
-                ),
-                child: Slider(
-                  value: sliderSeconds,
-                  max: maxSeconds > 0 ? maxSeconds : 1,
-                  onChangeStart: state.seekSupported && maxSeconds > 0
-                      ? (value) {
-                          setState(() {
-                            _isScrubbing = true;
-                            _scrubSeconds = value;
-                          });
-                        }
-                      : null,
-                  onChanged: state.seekSupported
-                      ? (value) {
-                          if (!_isScrubbing) {
-                            setState(() {
-                              _isScrubbing = true;
-                            });
-                          }
-                          setState(() {
-                            _scrubSeconds = value;
-                          });
-                        }
-                      : null,
-                  onChangeEnd: state.seekSupported
-                      ? (value) async {
-                          setState(() {
-                            _scrubSeconds = value;
-                            _isScrubbing = false;
-                          });
-                          await ref
-                              .read(playbackProvider.notifier)
-                              .seek(
-                                Duration(milliseconds: (value * 1000).round()),
-                              );
-                        }
-                      : null,
-                ),
-              ),
-            ),
-
-            // ── Duration labels
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _formatDuration(position),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    _formatDuration(duration),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-
-            // ── Playback controls
-            _PlaybackControls(state: state),
-            const SizedBox(height: 4),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -1209,8 +1259,9 @@ class _Chip extends StatelessWidget {
 // ─── Playback Controls ───────────────────────────────────────────────────────
 class _PlaybackControls extends ConsumerWidget {
   final PlaybackState state;
+  final bool compact;
 
-  const _PlaybackControls({required this.state});
+  const _PlaybackControls({required this.state, this.compact = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1218,27 +1269,38 @@ class _PlaybackControls extends ConsumerWidget {
     final notifier = ref.read(playbackProvider.notifier);
     final hasPrev = state.hasPrevious || state.repeatMode == RepeatMode.all;
     final hasNext = state.hasNext || state.repeatMode == RepeatMode.all;
+    final sideIconSize = compact ? 18.0 : 22.0;
+    final skipIconSize = compact ? 28.0 : 32.0;
+    final mainButtonSize = compact ? 54.0 : 64.0;
+    final mainIconSize = compact ? 30.0 : 36.0;
+    final loadingSize = compact ? 24.0 : 28.0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Shuffle
         IconButton(
+          visualDensity: compact
+              ? VisualDensity.compact
+              : VisualDensity.standard,
           icon: Icon(
             Icons.shuffle_rounded,
             color: state.shuffle
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
-            size: 22,
+            size: sideIconSize,
           ),
           onPressed: notifier.toggleShuffle,
           tooltip: 'Shuffle',
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: compact ? 2 : 4),
 
         // Previous
         IconButton(
-          iconSize: 32,
+          iconSize: skipIconSize,
+          visualDensity: compact
+              ? VisualDensity.compact
+              : VisualDensity.standard,
           onPressed: hasPrev ? notifier.skipPrevious : null,
           icon: Icon(
             Icons.skip_previous_rounded,
@@ -1248,19 +1310,19 @@ class _PlaybackControls extends ConsumerWidget {
           ),
           tooltip: 'Previous',
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: compact ? 4 : 8),
 
         // Play / Pause (large)
         SizedBox(
-          width: 64,
-          height: 64,
+          width: mainButtonSize,
+          height: mainButtonSize,
           child: IconButton.filled(
-            iconSize: 36,
+            iconSize: mainIconSize,
             onPressed: notifier.togglePlayPause,
             icon: state.isBuffering || state.isLoading
                 ? SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: loadingSize,
+                    height: loadingSize,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       color: colorScheme.onPrimary,
@@ -1278,11 +1340,14 @@ class _PlaybackControls extends ConsumerWidget {
             tooltip: state.isPlaying ? 'Pause' : 'Play',
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: compact ? 4 : 8),
 
         // Next
         IconButton(
-          iconSize: 32,
+          iconSize: skipIconSize,
+          visualDensity: compact
+              ? VisualDensity.compact
+              : VisualDensity.standard,
           onPressed: hasNext ? notifier.skipNext : null,
           icon: Icon(
             Icons.skip_next_rounded,
@@ -1292,10 +1357,13 @@ class _PlaybackControls extends ConsumerWidget {
           ),
           tooltip: 'Next',
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: compact ? 2 : 4),
 
         // Repeat
         IconButton(
+          visualDensity: compact
+              ? VisualDensity.compact
+              : VisualDensity.standard,
           icon: Icon(
             state.repeatMode == RepeatMode.one
                 ? Icons.repeat_one_rounded
@@ -1303,7 +1371,7 @@ class _PlaybackControls extends ConsumerWidget {
             color: state.repeatMode != RepeatMode.off
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
-            size: 22,
+            size: sideIconSize,
           ),
           onPressed: notifier.cycleRepeatMode,
           tooltip: _repeatTooltip(state.repeatMode),
