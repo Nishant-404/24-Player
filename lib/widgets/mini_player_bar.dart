@@ -201,17 +201,56 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
   late final PageController _pageController;
   bool _isScrubbing = false;
   double _scrubSeconds = 0;
+  String? _lastLyricsPrefetchKey;
+  AppLifecycleListener? _appLifecycleListener;
+  bool _isAppResumed = true;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    final initialState = WidgetsBinding.instance.lifecycleState;
+    _isAppResumed =
+        initialState == null || initialState == AppLifecycleState.resumed;
+    _appLifecycleListener = AppLifecycleListener(
+      onResume: () {
+        _isAppResumed = true;
+        if (!mounted) return;
+        final state = ref.read(playbackProvider);
+        _prefetchLyricsForCurrentTrack(state);
+      },
+      onPause: () => _isAppResumed = false,
+      onHide: () => _isAppResumed = false,
+      onDetach: () => _isAppResumed = false,
+      onInactive: () => _isAppResumed = false,
+    );
   }
 
   @override
   void dispose() {
+    _appLifecycleListener?.dispose();
+    _appLifecycleListener = null;
     _pageController.dispose();
     super.dispose();
+  }
+
+  String _lyricsPrefetchKey(PlaybackItem item) {
+    return '${item.id}|${item.title}|${item.artist}';
+  }
+
+  void _prefetchLyricsForCurrentTrack(PlaybackState state) {
+    if (!_isAppResumed) return;
+    final item = state.currentItem;
+    if (item == null) return;
+
+    final key = _lyricsPrefetchKey(item);
+    if (_lastLyricsPrefetchKey == key) return;
+    _lastLyricsPrefetchKey = key;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(ref.read(playbackProvider.notifier).ensureLyricsLoaded());
+    });
   }
 
   void _switchToLyrics() {
@@ -246,12 +285,14 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
     final playbackError = _localizedPlaybackError(context, state);
     final item = state.currentItem;
     if (item == null) {
+      _lastLyricsPrefetchKey = null;
       // Track stopped, close the player
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) Navigator.of(context).pop();
       });
       return const SizedBox.shrink();
     }
+    _prefetchLyricsForCurrentTrack(state);
 
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;

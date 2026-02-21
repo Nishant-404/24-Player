@@ -1209,8 +1209,6 @@ class PlaybackController extends Notifier<PlaybackState> {
 
     if (!preserveQueue) {
       _clearLyricsForTrackChange(upcomingItem: resolvingItem);
-      // Start lyrics lookup immediately while stream URL is still resolving.
-      unawaited(_fetchLyricsForItem(resolvingItem));
     }
     state = state.copyWith(
       currentItem: resolvingItem,
@@ -1462,8 +1460,6 @@ class PlaybackController extends Notifier<PlaybackState> {
     );
 
     _clearLyricsForTrackChange(upcomingItem: item);
-    // Start lyrics lookup immediately while local source is preparing.
-    unawaited(_fetchLyricsForItem(item));
 
     // Replacing stream playback with local playback should also replace queue,
     // otherwise the old streaming queue remains visible in queue UI.
@@ -1761,8 +1757,6 @@ class PlaybackController extends Notifier<PlaybackState> {
       clearError: true,
     );
     await _savePlaybackSnapshot();
-    // Start lyrics lookup at track-change time, not after playback starts.
-    unawaited(_fetchLyricsForItem(item));
 
     // If the item has a Track but no resolved sourceUri, resolve stream
     if (item.sourceUri.isEmpty && item.track != null) {
@@ -1990,8 +1984,23 @@ class PlaybackController extends Notifier<PlaybackState> {
 
   /// Public method to manually refetch lyrics (e.g. retry button).
   Future<void> refetchLyrics() async {
+    await ensureLyricsLoaded(force: true);
+  }
+
+  /// Load lyrics only when needed (e.g. when lyrics page is visible).
+  Future<void> ensureLyricsLoaded({bool force = false}) async {
     final item = state.currentItem;
     if (item == null) return;
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    if (!force &&
+        lifecycleState != null &&
+        lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    if (!force) {
+      if (state.lyricsLoading) return;
+      if (state.lyrics != null) return;
+    }
     await _fetchLyricsForItem(item);
   }
 
