@@ -65,6 +65,105 @@ class _CsvImportOptions {
   });
 }
 
+_RecentAccessView _buildRecentAccessViewData(
+  List<RecentAccessItem> items,
+  List<DownloadHistoryItem> historyItems,
+  Set<String> hiddenIds,
+) {
+  final albumGroups = <String, _RecentAlbumAggregate>{};
+  for (final h in historyItems) {
+    final artistForKey = (h.albumArtist != null && h.albumArtist!.isNotEmpty)
+        ? h.albumArtist!
+        : h.artistName;
+    final albumKey = '${h.albumName}|$artistForKey';
+    final existing = albumGroups[albumKey];
+    if (existing == null) {
+      albumGroups[albumKey] = _RecentAlbumAggregate(count: 1, mostRecent: h);
+    } else {
+      existing.count++;
+      if (h.downloadedAt.isAfter(existing.mostRecent.downloadedAt)) {
+        existing.mostRecent = h;
+      }
+    }
+  }
+
+  final downloadIds = <String>[];
+  final visibleDownloads = <RecentAccessItem>[];
+  final downloadFilePathByRecentKey = <String, String>{};
+  for (final aggregate in albumGroups.values) {
+    final mostRecent = aggregate.mostRecent;
+    final artistForKey =
+        (mostRecent.albumArtist != null && mostRecent.albumArtist!.isNotEmpty)
+        ? mostRecent.albumArtist!
+        : mostRecent.artistName;
+
+    final isSingleTrack = aggregate.count == 1;
+    final recentId = isSingleTrack
+        ? (mostRecent.spotifyId ?? mostRecent.id)
+        : '${mostRecent.albumName}|$artistForKey';
+    final recent = RecentAccessItem(
+      id: recentId,
+      name: isSingleTrack ? mostRecent.trackName : mostRecent.albumName,
+      subtitle: isSingleTrack ? mostRecent.artistName : artistForKey,
+      imageUrl: mostRecent.coverUrl,
+      type: isSingleTrack ? RecentAccessType.track : RecentAccessType.album,
+      accessedAt: mostRecent.downloadedAt,
+      providerId: 'download',
+    );
+
+    downloadIds.add(recentId);
+    downloadFilePathByRecentKey['${recent.type.name}:${recent.id}'] =
+        mostRecent.filePath;
+    if (!hiddenIds.contains(recentId)) {
+      visibleDownloads.add(recent);
+    }
+  }
+
+  visibleDownloads.sort((a, b) => b.accessedAt.compareTo(a.accessedAt));
+  if (visibleDownloads.length > 10) {
+    visibleDownloads.removeRange(10, visibleDownloads.length);
+  }
+
+  final allItems = <RecentAccessItem>[...items, ...visibleDownloads];
+  allItems.sort((a, b) => b.accessedAt.compareTo(a.accessedAt));
+
+  final seen = <String>{};
+  final uniqueItems = <RecentAccessItem>[];
+  for (final item in allItems) {
+    final key = '${item.type.name}:${item.id}';
+    if (seen.add(key)) {
+      uniqueItems.add(item);
+      if (uniqueItems.length >= 10) {
+        break;
+      }
+    }
+  }
+
+  return _RecentAccessView(
+    uniqueItems: uniqueItems,
+    downloadIds: downloadIds,
+    downloadFilePathByRecentKey: downloadFilePathByRecentKey,
+    hasHiddenDownloads: hiddenIds.isNotEmpty,
+  );
+}
+
+final recentAccessViewProvider = Provider<_RecentAccessView>((ref) {
+  final historyItems = ref.watch(
+    downloadHistoryProvider.select((s) => s.items),
+  );
+  final recentAccessItems = ref.watch(
+    recentAccessProvider.select((s) => s.items),
+  );
+  final hiddenDownloadIds = ref.watch(
+    recentAccessProvider.select((s) => s.hiddenDownloadIds),
+  );
+  return _buildRecentAccessViewData(
+    recentAccessItems,
+    historyItems,
+    hiddenDownloadIds,
+  );
+});
+
 class _HomeTabState extends ConsumerState<HomeTab>
     with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   final _urlController = TextEditingController();
@@ -80,10 +179,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
   static const int _minLiveSearchChars = 3;
   static const Duration _liveSearchDelay = Duration(milliseconds: 800);
 
-  List<DownloadHistoryItem>? _recentAccessHistoryCache;
-  List<RecentAccessItem>? _recentAccessItemsCache;
-  Set<String>? _recentAccessHiddenIdsCache;
-  _RecentAccessView? _recentAccessViewCache;
   bool _embeddedCoverRefreshScheduled = false;
   List<Extension>? _thumbnailSizesExtensionsCache;
   Map<String, (double, double)>? _thumbnailSizesCache;
@@ -770,12 +865,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
     final historyItems = ref.watch(
       downloadHistoryProvider.select((s) => s.items),
     );
-    final recentAccessItems = ref.watch(
-      recentAccessProvider.select((s) => s.items),
-    );
-    final hiddenDownloadIds = ref.watch(
-      recentAccessProvider.select((s) => s.hiddenDownloadIds),
-    );
 
     final recentModeRequested = isShowingRecentAccess || isSearchFocused;
     final showRecentAccess =
@@ -785,11 +874,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
     final hasResults =
         hasSearchInput || hasActualResults || isLoading || showRecentAccess;
     final recentAccessView = showRecentAccess
-        ? _getRecentAccessView(
-            recentAccessItems,
-            historyItems,
-            hiddenDownloadIds,
-          )
+        ? ref.watch(recentAccessViewProvider)
         : null;
 
     final hasExploreContent = exploreSections.isNotEmpty;
@@ -1174,103 +1259,6 @@ class _HomeTabState extends ConsumerState<HomeTab>
     );
   }
 
-  _RecentAccessView _getRecentAccessView(
-    List<RecentAccessItem> items,
-    List<DownloadHistoryItem> historyItems,
-    Set<String> hiddenIds,
-  ) {
-    final cached = _recentAccessViewCache;
-    if (cached != null &&
-        identical(historyItems, _recentAccessHistoryCache) &&
-        identical(items, _recentAccessItemsCache) &&
-        identical(hiddenIds, _recentAccessHiddenIdsCache)) {
-      return cached;
-    }
-
-    final albumGroups = <String, _RecentAlbumAggregate>{};
-    for (final h in historyItems) {
-      final artistForKey = (h.albumArtist != null && h.albumArtist!.isNotEmpty)
-          ? h.albumArtist!
-          : h.artistName;
-      final albumKey = '${h.albumName}|$artistForKey';
-      final existing = albumGroups[albumKey];
-      if (existing == null) {
-        albumGroups[albumKey] = _RecentAlbumAggregate(count: 1, mostRecent: h);
-      } else {
-        existing.count++;
-        if (h.downloadedAt.isAfter(existing.mostRecent.downloadedAt)) {
-          existing.mostRecent = h;
-        }
-      }
-    }
-
-    final downloadIds = <String>[];
-    final visibleDownloads = <RecentAccessItem>[];
-    final downloadFilePathByRecentKey = <String, String>{};
-    for (final aggregate in albumGroups.values) {
-      final mostRecent = aggregate.mostRecent;
-      final artistForKey =
-          (mostRecent.albumArtist != null && mostRecent.albumArtist!.isNotEmpty)
-          ? mostRecent.albumArtist!
-          : mostRecent.artistName;
-
-      final isSingleTrack = aggregate.count == 1;
-      final recentId = isSingleTrack
-          ? (mostRecent.spotifyId ?? mostRecent.id)
-          : '${mostRecent.albumName}|$artistForKey';
-      final recent = RecentAccessItem(
-        id: recentId,
-        name: isSingleTrack ? mostRecent.trackName : mostRecent.albumName,
-        subtitle: isSingleTrack ? mostRecent.artistName : artistForKey,
-        imageUrl: mostRecent.coverUrl,
-        type: isSingleTrack ? RecentAccessType.track : RecentAccessType.album,
-        accessedAt: mostRecent.downloadedAt,
-        providerId: 'download',
-      );
-
-      downloadIds.add(recentId);
-      downloadFilePathByRecentKey['${recent.type.name}:${recent.id}'] =
-          mostRecent.filePath;
-      if (!hiddenIds.contains(recentId)) {
-        visibleDownloads.add(recent);
-      }
-    }
-
-    visibleDownloads.sort((a, b) => b.accessedAt.compareTo(a.accessedAt));
-    if (visibleDownloads.length > 10) {
-      visibleDownloads.removeRange(10, visibleDownloads.length);
-    }
-
-    final allItems = <RecentAccessItem>[...items, ...visibleDownloads];
-    allItems.sort((a, b) => b.accessedAt.compareTo(a.accessedAt));
-
-    final seen = <String>{};
-    final uniqueItems = <RecentAccessItem>[];
-    for (final item in allItems) {
-      final key = '${item.type.name}:${item.id}';
-      if (seen.add(key)) {
-        uniqueItems.add(item);
-        if (uniqueItems.length >= 10) {
-          break;
-        }
-      }
-    }
-
-    final view = _RecentAccessView(
-      uniqueItems: uniqueItems,
-      downloadIds: downloadIds,
-      downloadFilePathByRecentKey: downloadFilePathByRecentKey,
-      hasHiddenDownloads: hiddenIds.isNotEmpty,
-    );
-
-    _recentAccessHistoryCache = historyItems;
-    _recentAccessItemsCache = items;
-    _recentAccessHiddenIdsCache = hiddenIds;
-    _recentAccessViewCache = view;
-
-    return view;
-  }
-
   List<Widget> _buildExploreSections(
     List<ExploreSection> sections,
     String? greeting,
@@ -1511,6 +1499,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
 
   void _showTrackBottomSheet(ExploreItem item) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isStreamingMode = ref.read(settingsProvider).isStreamingMode;
 
     showModalBottomSheet(
       context: context,
@@ -1585,11 +1574,16 @@ class _HomeTabState extends ConsumerState<HomeTab>
             ),
             const Divider(height: 1),
             ListTile(
-              leading: Icon(Icons.download, color: colorScheme.primary),
-              title: Text(context.l10n.downloadTitle),
+              leading: Icon(
+                isStreamingMode ? Icons.play_arrow : Icons.download,
+                color: colorScheme.primary,
+              ),
+              title: Text(
+                isStreamingMode ? 'Play Stream' : context.l10n.downloadTitle,
+              ),
               onTap: () {
                 Navigator.pop(context);
-                _downloadExploreTrack(item);
+                _handleExploreTrackPrimaryAction(item);
               },
             ),
             ListTile(
@@ -1607,7 +1601,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
     );
   }
 
-  Future<void> _downloadExploreTrack(ExploreItem item) async {
+  Future<void> _handleExploreTrackPrimaryAction(ExploreItem item) async {
     final settings = ref.read(settingsProvider);
 
     final track = Track(

@@ -166,6 +166,8 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
   // 0 = cover art view, 1 = lyrics view
   int _currentPage = 0;
   late final PageController _pageController;
+  bool _isScrubbing = false;
+  double _scrubSeconds = 0;
 
   @override
   void initState() {
@@ -232,6 +234,9 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
       0.0,
       maxSeconds > 0 ? maxSeconds : 0.0,
     );
+    final sliderSeconds = _isScrubbing
+        ? _scrubSeconds.clamp(0.0, maxSeconds > 0 ? maxSeconds : 0.0)
+        : currentSeconds;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -429,13 +434,39 @@ class _FullScreenPlayerState extends ConsumerState<_FullScreenPlayer> {
                   ),
                 ),
                 child: Slider(
-                  value: currentSeconds,
+                  value: sliderSeconds,
                   max: maxSeconds > 0 ? maxSeconds : 1,
+                  onChangeStart: state.seekSupported && maxSeconds > 0
+                      ? (value) {
+                          setState(() {
+                            _isScrubbing = true;
+                            _scrubSeconds = value;
+                          });
+                        }
+                      : null,
                   onChanged: state.seekSupported
                       ? (value) {
-                          ref
+                          if (!_isScrubbing) {
+                            setState(() {
+                              _isScrubbing = true;
+                            });
+                          }
+                          setState(() {
+                            _scrubSeconds = value;
+                          });
+                        }
+                      : null,
+                  onChangeEnd: state.seekSupported
+                      ? (value) async {
+                          setState(() {
+                            _scrubSeconds = value;
+                            _isScrubbing = false;
+                          });
+                          await ref
                               .read(playbackProvider.notifier)
-                              .seek(Duration(seconds: value.round()));
+                              .seek(
+                                Duration(milliseconds: (value * 1000).round()),
+                              );
                         }
                       : null,
                 ),

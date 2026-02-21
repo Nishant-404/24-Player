@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:spotiflac_android/models/playback_item.dart';
@@ -212,9 +213,18 @@ class PlaybackController extends Notifier<PlaybackState> {
   Timer? _snapshotSaveTimer;
   _SpotiFLACAudioHandler? _audioHandler;
   var _initialized = false;
-  static const Duration _prefetchThreshold = Duration(seconds: 12);
+  static const Duration _prefetchThresholdFloor = Duration(seconds: 12);
+  static const Duration _prefetchThresholdCeiling = Duration(seconds: 40);
+  static const Duration _prefetchEarlyKickoffPosition = Duration(seconds: 6);
+  static const Duration _prefetchRetryCooldown = Duration(seconds: 3);
+  static const int _maxPrefetchAttemptsPerTrack = 2;
+  static const int _prefetchLatencyWindowSize = 12;
   int? _prefetchingQueueIndex;
   int? _lastPrefetchAttemptIndex;
+  final Map<int, int> _prefetchAttemptCounts = <int, int>{};
+  final Map<int, DateTime> _prefetchLastAttemptAt = <int, DateTime>{};
+  final Map<String, List<int>> _prefetchLatencyByServiceMs =
+      <String, List<int>>{};
 
   // Shuffle order: indices into queue
   List<int> _shuffleOrder = [];
@@ -224,6 +234,7 @@ class PlaybackController extends Notifier<PlaybackState> {
   int? _pendingResumeIndex;
   int _lastProgressSnapshotMs = -1;
   int _lyricsGeneration = 0;
+  AppLifecycleListener? _appLifecycleListener;
 
   @override
   PlaybackState build() {
@@ -239,6 +250,12 @@ class PlaybackController extends Notifier<PlaybackState> {
     unawaited(_configureAudioSession());
     unawaited(_initAudioService());
     unawaited(_restorePlaybackSnapshot());
+    _appLifecycleListener ??= AppLifecycleListener(
+      onInactive: () => unawaited(_savePlaybackSnapshot()),
+      onPause: () => unawaited(_savePlaybackSnapshot()),
+      onDetach: () => unawaited(_savePlaybackSnapshot()),
+      onHide: () => unawaited(_savePlaybackSnapshot()),
+    );
 
     _subscriptions.add(
       _player.playerStateStream.listen((playerState) {
@@ -627,6 +644,32 @@ class PlaybackController extends Notifier<PlaybackState> {
     _shuffleOrder = List.generate(state.queue.length, (i) => i)..shuffle(rng);
   }
 
+  void _regenerateShuffleOrderPreservingCurrentProgress() {
+    final queueLength = state.queue.length;
+    if (queueLength == 0) {
+      _shuffleOrder = [];
+      _shufflePosition = -1;
+      return;
+    }
+
+    final currentIndex = state.currentIndex;
+    if (currentIndex < 0 || currentIndex >= queueLength) {
+      _regenerateShuffleOrder();
+      _shufflePosition = -1;
+      return;
+    }
+
+    final rng = Random();
+    final playedAndCurrent = List<int>.generate(currentIndex + 1, (i) => i);
+    final upcoming = List<int>.generate(
+      queueLength - currentIndex - 1,
+      (i) => currentIndex + i + 1,
+    )..shuffle(rng);
+
+    _shuffleOrder = <int>[...playedAndCurrent, ...upcoming];
+    _shufflePosition = currentIndex;
+  }
+
   List<int> getQueueDisplayOrder() {
     if (state.queue.isEmpty) return const [];
 
@@ -668,6 +711,13 @@ class PlaybackController extends Notifier<PlaybackState> {
   int _startNewPlayRequest() {
     _playRequestEpoch++;
     return _playRequestEpoch;
+  }
+
+  void _resetPrefetchCycleState() {
+    _prefetchingQueueIndex = null;
+    _lastPrefetchAttemptIndex = null;
+    _prefetchAttemptCounts.clear();
+    _prefetchLastAttemptAt.clear();
   }
 
   bool _isPlayRequestCurrent(int epoch) => epoch == _playRequestEpoch;
@@ -849,6 +899,10 @@ class PlaybackController extends Notifier<PlaybackState> {
 
     if (localItem != null && localItem.filePath.isNotEmpty) {
       final localUri = _uriFromPath(localItem.filePath);
+      final localDurationMs =
+          localItem.duration != null && localItem.duration! > 0
+          ? localItem.duration! * 1000
+          : _trackDurationMs(track);
       return PlaybackItem(
         id: localItem.id,
         title: localItem.trackName,
@@ -858,7 +912,7 @@ class PlaybackController extends Notifier<PlaybackState> {
         sourceUri: localUri.toString(),
         isLocal: true,
         service: 'offline',
-        durationMs: localItem.duration ?? track.duration,
+        durationMs: localDurationMs,
         track: track,
       );
     }
@@ -870,9 +924,14 @@ class PlaybackController extends Notifier<PlaybackState> {
       album: track.albumName,
       coverUrl: track.coverUrl ?? '',
       sourceUri: '',
-      durationMs: track.duration,
+      durationMs: _trackDurationMs(track),
       track: track,
     );
+  }
+
+  int _trackDurationMs(Track track) {
+    if (track.duration <= 0) return 0;
+    return track.duration * 1000;
   }
 
   Duration _fallbackDurationForItem(PlaybackItem? item) {
@@ -914,7 +973,7 @@ class PlaybackController extends Notifier<PlaybackState> {
       sourceUri: '',
       isLocal: false,
       service: selectedService,
-      durationMs: track.duration,
+      durationMs: _trackDurationMs(track),
       track: track,
     );
 
@@ -935,7 +994,7 @@ class PlaybackController extends Notifier<PlaybackState> {
       isLoading: true,
       isBuffering: true,
       isPlaying: false,
-      seekSupported: true,
+      seekSupported: selectedService.toLowerCase() != 'youtube',
       position: Duration.zero,
       bufferedPosition: Duration.zero,
       duration: _fallbackDurationForItem(resolvingItem),
@@ -1074,16 +1133,20 @@ class PlaybackController extends Notifier<PlaybackState> {
       sourceUri: persistResolvedUrl ? playbackUrl : '',
       isLocal: false,
       service: (result['service'] as String?) ?? selectedService,
-      durationMs: track.duration,
+      durationMs: _trackDurationMs(track),
       format: playbackFormat,
       bitDepth: resolvedBitDepth,
       sampleRate: resolvedSampleRate,
       bitrate: resolvedBitrate,
       track: track,
     );
+    final resolvedService = ((result['service'] as String?) ?? selectedService)
+        .trim()
+        .toLowerCase();
+    final isYouTubeService = resolvedService == 'youtube';
 
     state = state.copyWith(
-      seekSupported: !(requiresDecryption || usesLiveProxy),
+      seekSupported: !(requiresDecryption || usesLiveProxy || isYouTubeService),
     );
     final effectiveInitialPosition =
         (!requiresDecryption &&
@@ -1159,8 +1222,7 @@ class PlaybackController extends Notifier<PlaybackState> {
     String coverUrl = '',
   }) async {
     final requestEpoch = _startNewPlayRequest();
-    _prefetchingQueueIndex = null;
-    _lastPrefetchAttemptIndex = null;
+    _resetPrefetchCycleState();
     _pendingResumePosition = null;
     _pendingResumeIndex = null;
     final uri = _uriFromPath(path);
@@ -1204,8 +1266,7 @@ class PlaybackController extends Notifier<PlaybackState> {
   // ─── Public: play a list of tracks (set queue) ───────────────────────────
   Future<void> playTrackList(List<Track> tracks, {int startIndex = 0}) async {
     if (tracks.isEmpty) return;
-    _prefetchingQueueIndex = null;
-    _lastPrefetchAttemptIndex = null;
+    _resetPrefetchCycleState();
 
     final items = tracks.map(_buildQueueItemFromTrack).toList(growable: false);
     _pendingResumePosition = null;
@@ -1232,8 +1293,7 @@ class PlaybackController extends Notifier<PlaybackState> {
     Track track,
     List<Track> albumTracks,
   ) async {
-    _prefetchingQueueIndex = null;
-    _lastPrefetchAttemptIndex = null;
+    _resetPrefetchCycleState();
     final items = albumTracks
         .map(_buildQueueItemFromTrack)
         .toList(growable: false);
@@ -1288,8 +1348,7 @@ class PlaybackController extends Notifier<PlaybackState> {
 
   // ─── Public: clear queue ─────────────────────────────────────────────────
   void clearQueue() {
-    _prefetchingQueueIndex = null;
-    _lastPrefetchAttemptIndex = null;
+    _resetPrefetchCycleState();
     _lastProgressSnapshotMs = -1;
     state = state.copyWith(queue: [], currentIndex: -1);
     unawaited(_savePlaybackSnapshot());
@@ -1335,13 +1394,12 @@ class PlaybackController extends Notifier<PlaybackState> {
     state = state.copyWith(shuffle: newShuffle);
 
     if (newShuffle) {
-      _regenerateShuffleOrder();
-      _shufflePosition = _shuffleOrder.indexOf(state.currentIndex);
-      if (_shufflePosition < 0) _shufflePosition = 0;
+      _regenerateShuffleOrderPreservingCurrentProgress();
     } else {
       _shuffleOrder = [];
       _shufflePosition = -1;
     }
+    unawaited(_savePlaybackSnapshot());
   }
 
   // ─── Public: cycle repeat mode ───────────────────────────────────────────
@@ -1370,7 +1428,7 @@ class PlaybackController extends Notifier<PlaybackState> {
   Future<void> seek(Duration position) async {
     if (!state.seekSupported) {
       _setPlaybackError(
-        'Seeking is not supported for this live decrypted stream.',
+        'Seeking is not supported for this stream.',
         type: 'seek_not_supported',
       );
       return;
@@ -1386,9 +1444,9 @@ class PlaybackController extends Notifier<PlaybackState> {
     final lastKnownDuration = state.duration;
     await FFmpegService.stopLiveDecryptedStream();
     await FFmpegService.stopNativeDashManifestPlayback();
+    await FFmpegService.cleanupInactivePreparedNativeDashManifests();
     await _player.stop();
-    _prefetchingQueueIndex = null;
-    _lastPrefetchAttemptIndex = null;
+    _resetPrefetchCycleState();
     _lastProgressSnapshotMs = lastKnownPosition.inMilliseconds;
     _audioHandler?.playbackState.add(
       audio_service.PlaybackState(
@@ -1449,8 +1507,7 @@ class PlaybackController extends Notifier<PlaybackState> {
     if (index < 0 || index >= state.queue.length) return;
 
     final requestEpoch = _startNewPlayRequest();
-    _prefetchingQueueIndex = null;
-    _lastPrefetchAttemptIndex = null;
+    _resetPrefetchCycleState();
     final pendingResumePosition = _pendingResumePositionForIndex(index);
     final item = state.queue[index];
     _clearLyricsForTrackChange(upcomingItem: item);
@@ -1468,7 +1525,7 @@ class PlaybackController extends Notifier<PlaybackState> {
       duration: _fallbackDurationForItem(item),
       clearError: true,
     );
-    unawaited(_savePlaybackSnapshot());
+    await _savePlaybackSnapshot();
     // Start lyrics lookup at track-change time, not after playback starts.
     unawaited(_fetchLyricsForItem(item));
 
@@ -1558,6 +1615,7 @@ class PlaybackController extends Notifier<PlaybackState> {
       return;
     }
     final sourceUrl = uri.toString();
+    await FFmpegService.activatePreparedNativeDashManifest(sourceUrl);
     if (!FFmpegService.isActiveLiveDecryptedUrl(sourceUrl)) {
       await FFmpegService.stopLiveDecryptedStream();
     }
@@ -1822,6 +1880,128 @@ class PlaybackController extends Notifier<PlaybackState> {
     return Uri.file(input);
   }
 
+  String _resolvePrefetchServiceBucket(PlaybackItem item) {
+    final itemService = item.service.trim().toLowerCase();
+    if (_isBuiltInStreamingService(itemService)) {
+      return itemService;
+    }
+
+    final trackSource = (item.track?.source ?? '').trim().toLowerCase();
+    if (_isBuiltInStreamingService(trackSource)) {
+      return trackSource;
+    }
+
+    final defaultService = _resolveService(
+      ref.read(settingsProvider).defaultService,
+    ).toLowerCase();
+    if (_isBuiltInStreamingService(defaultService)) {
+      return defaultService;
+    }
+    return 'other';
+  }
+
+  int _defaultPrefetchResolveLatencyMs(String serviceBucket) {
+    switch (serviceBucket) {
+      case 'tidal':
+        return 16000;
+      case 'amazon':
+        return 15000;
+      case 'qobuz':
+        return 10000;
+      case 'youtube':
+        return 12000;
+      default:
+        return 10000;
+    }
+  }
+
+  int _prefetchSafetyMarginMs(String serviceBucket) {
+    switch (serviceBucket) {
+      case 'tidal':
+        return 9000;
+      case 'amazon':
+        return 7000;
+      case 'qobuz':
+        return 5000;
+      case 'youtube':
+        return 6000;
+      default:
+        return 5000;
+    }
+  }
+
+  int _estimatePrefetchResolveLatencyMs(String serviceBucket) {
+    final samples = _prefetchLatencyByServiceMs[serviceBucket];
+    if (samples == null || samples.isEmpty) {
+      return _defaultPrefetchResolveLatencyMs(serviceBucket);
+    }
+
+    final sorted = [...samples]..sort();
+    final percentileIndex = (((sorted.length - 1) * 0.95).round()).clamp(
+      0,
+      sorted.length - 1,
+    );
+    return sorted[percentileIndex];
+  }
+
+  void _recordPrefetchLatencySample({
+    required String serviceRaw,
+    required int elapsedMs,
+  }) {
+    if (elapsedMs <= 0) return;
+
+    final normalized = serviceRaw.trim().toLowerCase();
+    final bucket = _isBuiltInStreamingService(normalized)
+        ? normalized
+        : 'other';
+    final samples = _prefetchLatencyByServiceMs.putIfAbsent(
+      bucket,
+      () => <int>[],
+    );
+    samples.add(elapsedMs);
+    if (samples.length > _prefetchLatencyWindowSize) {
+      samples.removeRange(0, samples.length - _prefetchLatencyWindowSize);
+    }
+  }
+
+  Duration _adaptivePrefetchThresholdFor(PlaybackItem nextItem) {
+    final serviceBucket = _resolvePrefetchServiceBucket(nextItem);
+    var triggerMs =
+        _estimatePrefetchResolveLatencyMs(serviceBucket) +
+        _prefetchSafetyMarginMs(serviceBucket);
+    if (serviceBucket == 'tidal') {
+      // DASH manifest flow typically needs earlier warmup than direct URLs.
+      triggerMs = max(triggerMs, 22000);
+    }
+    final clamped = triggerMs.clamp(
+      _prefetchThresholdFloor.inMilliseconds,
+      _prefetchThresholdCeiling.inMilliseconds,
+    );
+    return Duration(milliseconds: clamped.toInt());
+  }
+
+  bool _shouldTriggerPrefetchAttempt({
+    required int attempts,
+    required Duration position,
+    required Duration remaining,
+    required Duration threshold,
+  }) {
+    if (attempts >= _maxPrefetchAttemptsPerTrack) {
+      return false;
+    }
+    if (position < const Duration(seconds: 1) || remaining.isNegative) {
+      return false;
+    }
+
+    final inLateWindow = remaining <= threshold;
+    if (attempts == 0) {
+      return inLateWindow || position >= _prefetchEarlyKickoffPosition;
+    }
+
+    // Retry only close to track end to avoid repeated resolver load.
+    return inLateWindow;
+  }
+
   void _maybePrefetchNext(Duration position) {
     if (state.isLoading || state.currentIndex < 0 || state.queue.isEmpty) {
       return;
@@ -1829,16 +2009,13 @@ class PlaybackController extends Notifier<PlaybackState> {
     final duration = state.duration;
     if (duration <= Duration.zero) return;
 
-    final remaining = duration - position;
-    if (remaining > _prefetchThreshold || remaining.isNegative) return;
-
     final nextIndex = _peekNextIndexForPrefetch();
     if (nextIndex == null) return;
-    if (_prefetchingQueueIndex == nextIndex ||
+    if (nextIndex < 0 || nextIndex >= state.queue.length) return;
+    if (_prefetchingQueueIndex == nextIndex &&
         _lastPrefetchAttemptIndex == nextIndex) {
       return;
     }
-    if (nextIndex < 0 || nextIndex >= state.queue.length) return;
 
     final nextItem = state.queue[nextIndex];
     if (nextItem.sourceUri.isNotEmpty ||
@@ -1847,6 +2024,26 @@ class PlaybackController extends Notifier<PlaybackState> {
       return;
     }
 
+    final remaining = duration - position;
+    final adaptiveThreshold = _adaptivePrefetchThresholdFor(nextItem);
+    final attempts = _prefetchAttemptCounts[nextIndex] ?? 0;
+    if (!_shouldTriggerPrefetchAttempt(
+      attempts: attempts,
+      position: position,
+      remaining: remaining,
+      threshold: adaptiveThreshold,
+    )) {
+      return;
+    }
+
+    final lastAttemptAt = _prefetchLastAttemptAt[nextIndex];
+    if (lastAttemptAt != null &&
+        DateTime.now().difference(lastAttemptAt) < _prefetchRetryCooldown) {
+      return;
+    }
+
+    _prefetchAttemptCounts[nextIndex] = attempts + 1;
+    _prefetchLastAttemptAt[nextIndex] = DateTime.now();
     _lastPrefetchAttemptIndex = nextIndex;
     unawaited(_prefetchQueueIndex(nextIndex));
   }
@@ -1882,20 +2079,47 @@ class PlaybackController extends Notifier<PlaybackState> {
     }
 
     _prefetchingQueueIndex = index;
+    final stopwatch = Stopwatch()..start();
     try {
       final streamRequest = _buildStreamRequest(track);
       final result = await PlatformBridge.resolveStreamByStrategy(
         streamRequest.payload,
       );
 
-      if (result['success'] != true ||
-          result['requires_decryption'] == true ||
-          result['requires_proxy'] == true) {
+      if (result['success'] != true) {
         return;
       }
 
+      final requiresDecryption = result['requires_decryption'] == true;
+      final requiresProxy = result['requires_proxy'] == true;
       final rawStreamUrl = (result['stream_url'] as String?)?.trim() ?? '';
-      if (rawStreamUrl.isEmpty || rawStreamUrl.startsWith('MANIFEST:')) return;
+      if (rawStreamUrl.isEmpty) return;
+
+      if (requiresDecryption) {
+        // Live decryption requires a running tunnel session and is too heavy to
+        // prewarm for background queue prefetch.
+        return;
+      }
+
+      String prefetchedSourceUri;
+      String prefetchedFormat = (result['format'] as String?) ?? '';
+      if (requiresProxy || rawStreamUrl.startsWith('MANIFEST:')) {
+        final nativeDashUrl =
+            await FFmpegService.prepareTidalDashManifestForNativePlayback(
+              manifestPayload: rawStreamUrl,
+              registerAsActive: false,
+            );
+        if (nativeDashUrl == null || nativeDashUrl.trim().isEmpty) {
+          return;
+        }
+        prefetchedSourceUri = nativeDashUrl;
+        if (prefetchedFormat.trim().isEmpty) {
+          prefetchedFormat = 'dash';
+        }
+      } else {
+        prefetchedSourceUri = rawStreamUrl;
+      }
+
       if (index >= state.queue.length) return;
 
       final current = state.queue[index];
@@ -1904,17 +2128,24 @@ class PlaybackController extends Notifier<PlaybackState> {
       }
 
       final updatedQueue = [...state.queue];
+      final resolvedService =
+          (result['service'] as String?) ?? streamRequest.selectedService;
       updatedQueue[index] = current.copyWith(
-        sourceUri: rawStreamUrl,
-        service:
-            (result['service'] as String?) ?? streamRequest.selectedService,
-        format: (result['format'] as String?) ?? '',
+        sourceUri: prefetchedSourceUri,
+        service: resolvedService,
+        format: prefetchedFormat,
         bitDepth: (result['bit_depth'] as int?) ?? 0,
         sampleRate: (result['sample_rate'] as int?) ?? 0,
         bitrate: (result['bitrate'] as int?) ?? 0,
       );
       state = state.copyWith(queue: updatedQueue);
-      _log.d('Prefetched stream URL for next track index $index');
+      _prefetchAttemptCounts.remove(index);
+      _prefetchLastAttemptAt.remove(index);
+      _recordPrefetchLatencySample(
+        serviceRaw: resolvedService,
+        elapsedMs: stopwatch.elapsedMilliseconds,
+      );
+      _log.d('Prefetched stream source for next track index $index');
     } catch (e) {
       _log.d('Prefetch skipped for track index $index: $e');
     } finally {
@@ -1949,7 +2180,7 @@ class PlaybackController extends Notifier<PlaybackState> {
         quality: quality,
         source: sourceForResolver,
         deezerId: track.deezerId ?? '',
-        durationMs: track.duration,
+        durationMs: _trackDurationMs(track),
         useExtensions: settings.useExtensionProviders && hasActiveExtensions,
         useFallback: settings.autoFallback,
         songLinkRegion: settings.songLinkRegion,
@@ -2071,6 +2302,8 @@ class PlaybackController extends Notifier<PlaybackState> {
   }
 
   void _disposeInternal() {
+    _appLifecycleListener?.dispose();
+    _appLifecycleListener = null;
     _snapshotSaveTimer?.cancel();
     unawaited(_savePlaybackSnapshot());
     unawaited(FFmpegService.stopLiveDecryptedStream());

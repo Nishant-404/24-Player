@@ -409,6 +409,16 @@ class _QueueTabState extends ConsumerState<QueueTab> {
   String _localFilterQueryCache = '';
   List<LocalLibraryItem> _filteredLocalItemsCache = const [];
   final Map<String, _UnifiedCacheEntry> _unifiedItemsCache = {};
+  final Map<String, _FilterContentData> _filterContentDataCache = {};
+  List<DownloadHistoryItem>? _filterCacheAllHistoryItems;
+  _HistoryStats? _filterCacheHistoryStats;
+  List<LocalLibraryItem>? _filterCacheLocalLibraryItems;
+  LibraryCollectionsState? _filterCacheCollectionState;
+  String _filterCacheSearchQuery = '';
+  String? _filterCacheSource;
+  String? _filterCacheQuality;
+  String? _filterCacheFormat;
+  String _filterCacheSortMode = 'latest';
   // Advanced filters
   String? _filterSource; // null = all, 'downloaded', 'local'
   String? _filterQuality; // null = all, 'hires', 'cd', 'lossy'
@@ -474,6 +484,47 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     _requestFilterRefresh();
   }
 
+  void _invalidateFilterContentCache() {
+    _filterContentDataCache.clear();
+    _filterCacheAllHistoryItems = null;
+    _filterCacheHistoryStats = null;
+    _filterCacheLocalLibraryItems = null;
+    _filterCacheCollectionState = null;
+  }
+
+  void _prepareFilterContentCache({
+    required List<DownloadHistoryItem> allHistoryItems,
+    required _HistoryStats historyStats,
+    required List<LocalLibraryItem> localLibraryItems,
+    required LibraryCollectionsState collectionState,
+  }) {
+    final isCacheValid =
+        identical(_filterCacheAllHistoryItems, allHistoryItems) &&
+        identical(_filterCacheHistoryStats, historyStats) &&
+        identical(_filterCacheLocalLibraryItems, localLibraryItems) &&
+        identical(_filterCacheCollectionState, collectionState) &&
+        _filterCacheSearchQuery == _searchQuery &&
+        _filterCacheSource == _filterSource &&
+        _filterCacheQuality == _filterQuality &&
+        _filterCacheFormat == _filterFormat &&
+        _filterCacheSortMode == _sortMode;
+
+    if (isCacheValid) {
+      return;
+    }
+
+    _filterContentDataCache.clear();
+    _filterCacheAllHistoryItems = allHistoryItems;
+    _filterCacheHistoryStats = historyStats;
+    _filterCacheLocalLibraryItems = localLibraryItems;
+    _filterCacheCollectionState = collectionState;
+    _filterCacheSearchQuery = _searchQuery;
+    _filterCacheSource = _filterSource;
+    _filterCacheQuality = _filterQuality;
+    _filterCacheFormat = _filterFormat;
+    _filterCacheSortMode = _sortMode;
+  }
+
   void _ensureHistoryCaches(
     List<DownloadHistoryItem> items,
     List<LocalLibraryItem> localItems,
@@ -496,6 +547,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
       _filteredLocalItemsCache = const [];
     }
     _unifiedItemsCache.clear();
+    _invalidateFilterContentCache();
 
     if (historyChanged) {
       final validPaths = items
@@ -1224,6 +1276,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
       _filterFormat = null;
       _sortMode = 'latest';
       _unifiedItemsCache.clear();
+      _invalidateFilterContentCache();
     });
   }
 
@@ -1673,6 +1726,7 @@ class _QueueTabState extends ConsumerState<QueueTab> {
                           _filterFormat = tempFormat;
                           _sortMode = tempSortMode;
                           _unifiedItemsCache.clear();
+                          _invalidateFilterContentCache();
                         });
                         Navigator.pop(context);
                       },
@@ -2369,10 +2423,15 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     );
     final albumCount = historyStats.totalAlbumCount;
     final singleCount = historyStats.totalSingleTracks;
-    final filterDataCache = <String, _FilterContentData>{};
+    _prepareFilterContentCache(
+      allHistoryItems: allHistoryItems,
+      historyStats: historyStats,
+      localLibraryItems: localLibraryItems,
+      collectionState: collectionState,
+    );
 
     _FilterContentData getFilterData(String filterMode) {
-      return filterDataCache.putIfAbsent(
+      return _filterContentDataCache.putIfAbsent(
         filterMode,
         () => _computeFilterContentData(
           filterMode: filterMode,
@@ -2388,14 +2447,9 @@ class _QueueTabState extends ConsumerState<QueueTab> {
     }
 
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final selectionItems = _buildUnifiedItemsForSelection(
-      filterMode: historyFilterMode,
-      allHistoryItems: allHistoryItems,
-      albumCounts: historyStats.albumCounts,
-      localLibraryItems: localLibraryItems,
-      localAlbumCounts: historyStats.localAlbumCounts,
-      collectionState: collectionState,
-    );
+    final selectionItems = getFilterData(
+      historyFilterMode,
+    ).filteredUnifiedItems;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncSelectionOverlay(
         items: selectionItems,
@@ -2630,39 +2684,6 @@ class _QueueTabState extends ConsumerState<QueueTab> {
         ],
       ),
     );
-  }
-
-  /// Build unified items list for selection mode
-  List<UnifiedLibraryItem> _buildUnifiedItemsForSelection({
-    required String filterMode,
-    required List<DownloadHistoryItem> allHistoryItems,
-    required Map<String, int> albumCounts,
-    required List<LocalLibraryItem> localLibraryItems,
-    required Map<String, int> localAlbumCounts,
-    required LibraryCollectionsState collectionState,
-  }) {
-    final historyItems = _resolveHistoryItems(
-      filterMode: filterMode,
-      allHistoryItems: allHistoryItems,
-      albumCounts: albumCounts,
-    );
-
-    final unifiedItems = _getUnifiedItems(
-      filterMode: filterMode,
-      historyItems: historyItems,
-      localLibraryItems: localLibraryItems,
-      localAlbumCounts: localAlbumCounts,
-    );
-
-    // Apply advanced filters to match what's displayed
-    final filtered = _applyAdvancedFilters(unifiedItems);
-
-    if (!collectionState.hasPlaylistTracks) return filtered;
-    return filtered
-        .where(
-          (item) => !collectionState.isTrackInAnyPlaylist(item.collectionKey),
-        )
-        .toList(growable: false);
   }
 
   List<UnifiedLibraryItem> _getUnifiedItems({

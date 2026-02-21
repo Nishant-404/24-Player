@@ -44,6 +44,7 @@ class _StoreTabState extends ConsumerState<StoreTab> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(storeProvider);
+    final filteredExtensions = state.filteredExtensions;
     final colorScheme = Theme.of(context).colorScheme;
     final topPadding = normalizedHeaderTopPadding(context);
 
@@ -208,14 +209,14 @@ class _StoreTabState extends ConsumerState<StoreTab> {
               SliverFillRemaining(
                 child: _buildErrorState(state.error!, colorScheme),
               )
-            else if (state.filteredExtensions.isEmpty)
+            else if (filteredExtensions.isEmpty)
               SliverFillRemaining(child: _buildEmptyState(state, colorScheme))
             else ...[
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Text(
-                    '${state.filteredExtensions.length} ${state.filteredExtensions.length == 1 ? 'extension' : 'extensions'}',
+                    '${filteredExtensions.length} ${filteredExtensions.length == 1 ? 'extension' : 'extensions'}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -227,15 +228,12 @@ class _StoreTabState extends ConsumerState<StoreTab> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SettingsGroup(
-                    children: state.filteredExtensions.asMap().entries.map((
-                      entry,
-                    ) {
+                    children: filteredExtensions.asMap().entries.map((entry) {
                       final index = entry.key;
                       final ext = entry.value;
                       return _ExtensionItem(
                         extension: ext,
-                        showDivider:
-                            index < state.filteredExtensions.length - 1,
+                        showDivider: index < filteredExtensions.length - 1,
                         isDownloading: state.downloadingId == ext.id,
                         onInstall: () => _installExtension(ext),
                         onUpdate: () => _updateExtension(ext),
@@ -541,7 +539,10 @@ class _ExtensionItem extends StatelessWidget {
                       if (extension.requiresNewerApp) ...[
                         const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: colorScheme.errorContainer,
                             borderRadius: BorderRadius.circular(4),
@@ -549,14 +550,19 @@ class _ExtensionItem extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.warning_amber_rounded, size: 12, color: colorScheme.onErrorContainer),
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 12,
+                                color: colorScheme.onErrorContainer,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 'Requires v${extension.minAppVersion}+',
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onErrorContainer,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: colorScheme.onErrorContainer,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                               ),
                             ],
                           ),
@@ -565,9 +571,8 @@ class _ExtensionItem extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           extension.description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

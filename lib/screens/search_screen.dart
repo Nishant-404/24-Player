@@ -91,9 +91,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final trackState = ref.watch(trackProvider);
+    final tracks = ref.watch(trackProvider.select((s) => s.tracks));
+    final isLoading = ref.watch(trackProvider.select((s) => s.isLoading));
+    final error = ref.watch(trackProvider.select((s) => s.error));
     final colorScheme = Theme.of(context).colorScheme;
-    final tracks = trackState.tracks;
 
     return Scaffold(
       appBar: AppBar(
@@ -116,15 +117,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       ),
       body: Column(
         children: [
-          if (trackState.isLoading)
-            LinearProgressIndicator(color: colorScheme.primary),
-          if (trackState.error != null)
+          if (isLoading) LinearProgressIndicator(color: colorScheme.primary),
+          if (error != null)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                trackState.error!,
-                style: TextStyle(color: colorScheme.error),
-              ),
+              child: Text(error, style: TextStyle(color: colorScheme.error)),
             ),
           Expanded(
             child: tracks.isEmpty

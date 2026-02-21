@@ -61,6 +61,7 @@ class _TrackOptionsSheet extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final settings = ref.watch(settingsProvider);
     final isStreamingMode = settings.isStreamingMode;
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
 
     final isLoved = ref.watch(
       libraryCollectionsProvider.select((state) => state.isLoved(track)),
@@ -168,62 +169,65 @@ class _TrackOptionsSheet extends ConsumerWidget {
               // Action items (matches _QualityOption style)
               _OptionTile(
                 icon: isStreamingMode
-                    ? Icons.download_rounded
-                    : Icons.play_arrow_rounded,
+                    ? Icons.play_arrow_rounded
+                    : Icons.download_rounded,
                 title: isStreamingMode
-                    ? context.l10n.downloadTitle
-                    : 'Play Stream',
+                    ? 'Play Stream'
+                    : context.l10n.downloadTitle,
                 onTap: () async {
                   Navigator.pop(context);
                   if (isStreamingMode) {
-                    if (settings.askQualityBeforeDownload) {
-                      DownloadServicePicker.show(
-                        context,
-                        trackName: track.name,
-                        artistName: track.artistName,
-                        coverUrl: track.coverUrl,
-                        onSelect: (quality, service) {
-                          ref
-                              .read(downloadQueueProvider.notifier)
-                              .addToQueue(
-                                track,
-                                service,
-                                qualityOverride: quality,
-                              );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                context.l10n.snackbarAddedToQueue(track.name),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    } else {
-                      ref
-                          .read(downloadQueueProvider.notifier)
-                          .addToQueue(track, settings.defaultService);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            context.l10n.snackbarAddedToQueue(track.name),
-                          ),
-                        ),
+                    try {
+                      await ref
+                          .read(playbackProvider.notifier)
+                          .playTrackStream(track);
+                    } catch (e) {
+                      if (!rootContext.mounted) {
+                        return;
+                      }
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
+                        SnackBar(content: Text('Cannot play stream: $e')),
                       );
                     }
                     return;
                   }
 
-                  try {
-                    await ref
-                        .read(playbackProvider.notifier)
-                        .playTrackStream(track);
-                  } catch (e) {
-                    if (!context.mounted) {
+                  if (settings.askQualityBeforeDownload) {
+                    DownloadServicePicker.show(
+                      rootContext,
+                      trackName: track.name,
+                      artistName: track.artistName,
+                      coverUrl: track.coverUrl,
+                      onSelect: (quality, service) {
+                        ref
+                            .read(downloadQueueProvider.notifier)
+                            .addToQueue(
+                              track,
+                              service,
+                              qualityOverride: quality,
+                            );
+                        ScaffoldMessenger.of(rootContext).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              rootContext.l10n.snackbarAddedToQueue(track.name),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  } else {
+                    ref
+                        .read(downloadQueueProvider.notifier)
+                        .addToQueue(track, settings.defaultService);
+                    if (!rootContext.mounted) {
                       return;
                     }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Cannot play stream: $e')),
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          rootContext.l10n.snackbarAddedToQueue(track.name),
+                        ),
+                      ),
                     );
                   }
                 },

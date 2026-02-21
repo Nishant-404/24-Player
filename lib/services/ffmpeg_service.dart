@@ -26,6 +26,7 @@ class FFmpegService {
   static String? _activeLiveTempInputPath;
   static String? _activeNativeDashManifestPath;
   static String? _activeNativeDashManifestUrl;
+  static final Set<String> _preparedNativeDashManifestPaths = <String>{};
 
   static String _buildOutputPath(String inputPath, String extension) {
     final normalizedExt = extension.startsWith('.') ? extension : '.$extension';
@@ -343,6 +344,7 @@ class FFmpegService {
 
   static Future<String?> prepareTidalDashManifestForNativePlayback({
     required String manifestPayload,
+    bool registerAsActive = true,
   }) async {
     final rawPayload = manifestPayload.trim();
     if (rawPayload.isEmpty) return null;
@@ -357,12 +359,34 @@ class FFmpegService {
       return null;
     }
 
-    await stopNativeDashManifestPlayback();
-
     final manifestUrl = Uri.file(manifestPath).toString();
-    _activeNativeDashManifestPath = manifestPath;
-    _activeNativeDashManifestUrl = manifestUrl;
+    _preparedNativeDashManifestPaths.add(manifestPath);
+    if (registerAsActive) {
+      await activatePreparedNativeDashManifest(manifestUrl);
+    }
     return manifestUrl;
+  }
+
+  static Future<void> activatePreparedNativeDashManifest(String url) async {
+    final normalized = url.trim();
+    if (normalized.isEmpty) return;
+
+    final manifestPath = _nativeDashManifestPathFromUrl(normalized);
+    if (manifestPath == null ||
+        !_preparedNativeDashManifestPaths.contains(manifestPath)) {
+      return;
+    }
+
+    final previousPath = _activeNativeDashManifestPath;
+    _activeNativeDashManifestPath = manifestPath;
+    _activeNativeDashManifestUrl = Uri.file(manifestPath).toString();
+
+    if (previousPath != null &&
+        previousPath.isNotEmpty &&
+        previousPath != manifestPath) {
+      _preparedNativeDashManifestPaths.remove(previousPath);
+      await _deleteNativeDashManifestFile(previousPath);
+    }
   }
 
   static Future<void> stopNativeDashManifestPlayback() async {
@@ -371,8 +395,38 @@ class FFmpegService {
     _activeNativeDashManifestUrl = null;
 
     if (manifestPath == null || manifestPath.isEmpty) return;
+    _preparedNativeDashManifestPaths.remove(manifestPath);
+    await _deleteNativeDashManifestFile(manifestPath);
+  }
+
+  static Future<void> cleanupInactivePreparedNativeDashManifests() async {
+    final activePath = _activeNativeDashManifestPath;
+    final stalePaths = _preparedNativeDashManifestPaths
+        .where((path) => path != activePath)
+        .toList(growable: false);
+
+    for (final path in stalePaths) {
+      _preparedNativeDashManifestPaths.remove(path);
+      await _deleteNativeDashManifestFile(path);
+    }
+  }
+
+  static String? _nativeDashManifestPathFromUrl(String url) {
     try {
-      final file = File(manifestPath);
+      final uri = Uri.parse(url);
+      if (uri.scheme.toLowerCase() != 'file') {
+        return null;
+      }
+      final path = uri.toFilePath();
+      return path.trim().isEmpty ? null : path;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> _deleteNativeDashManifestFile(String path) async {
+    try {
+      final file = File(path);
       if (await file.exists()) {
         await file.delete();
       }

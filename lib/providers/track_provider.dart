@@ -880,6 +880,7 @@ class TrackNotifier extends Notifier<TrackState> {
   }
 
   Track _parseTrack(Map<String, dynamic> data) {
+    final durationMs = _extractDurationMs(data);
     return Track(
       id: data['spotify_id'] as String? ?? '',
       name: data['name'] as String? ?? '',
@@ -888,7 +889,7 @@ class TrackNotifier extends Notifier<TrackState> {
       albumArtist: data['album_artist'] as String?,
       coverUrl: data['images'] as String?,
       isrc: data['isrc'] as String?,
-      duration: ((data['duration_ms'] as int? ?? 0) / 1000).round(),
+      duration: (durationMs / 1000).round(),
       trackNumber: data['track_number'] as int?,
       discNumber: data['disc_number'] as int?,
       releaseDate: data['release_date'] as String?,
@@ -896,13 +897,7 @@ class TrackNotifier extends Notifier<TrackState> {
   }
 
   Track _parseSearchTrack(Map<String, dynamic> data, {String? source}) {
-    int durationMs = 0;
-    final durationValue = data['duration_ms'];
-    if (durationValue is int) {
-      durationMs = durationValue;
-    } else if (durationValue is double) {
-      durationMs = durationValue.toInt();
-    }
+    final durationMs = _extractDurationMs(data);
 
     final itemType = data['item_type']?.toString();
 
@@ -925,6 +920,32 @@ class TrackNotifier extends Notifier<TrackState> {
       albumType: data['album_type']?.toString(),
       itemType: itemType,
     );
+  }
+
+  int _extractDurationMs(Map<String, dynamic> data) {
+    final durationMsRaw = data['duration_ms'];
+    if (durationMsRaw is num && durationMsRaw > 0) {
+      return durationMsRaw.toInt();
+    }
+    if (durationMsRaw is String) {
+      final parsed = num.tryParse(durationMsRaw.trim());
+      if (parsed != null && parsed > 0) {
+        return parsed.toInt();
+      }
+    }
+
+    final durationSecRaw = data['duration'];
+    if (durationSecRaw is num && durationSecRaw > 0) {
+      return (durationSecRaw * 1000).toInt();
+    }
+    if (durationSecRaw is String) {
+      final parsed = num.tryParse(durationSecRaw.trim());
+      if (parsed != null && parsed > 0) {
+        return (parsed * 1000).toInt();
+      }
+    }
+
+    return 0;
   }
 
   ArtistAlbum _parseArtistAlbum(Map<String, dynamic> data) {

@@ -702,10 +702,13 @@ class _ProgressUpdate {
 
 class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
   Timer? _progressTimer;
+  Timer? _progressStreamBootstrapTimer;
   Timer? _queuePersistDebounce;
+  StreamSubscription<Map<String, dynamic>>? _progressStreamSub;
   int _downloadCount = 0;
   static const _cleanupInterval = 50;
   static const _progressPollingInterval = Duration(milliseconds: 800);
+  static const _idleProgressPollEveryTicks = 3;
   static const _queueSchedulingInterval = Duration(milliseconds: 250);
   static const _queuePersistDebounceDuration = Duration(milliseconds: 350);
   static const _bytesUiStep = 104857; // ~0.1 MiB, matches one-decimal MB UI.
@@ -718,6 +721,9 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
   final Set<String> _ensuredDirs = {};
   int _progressPollingErrorCount = 0;
   bool _isProgressPollingInFlight = false;
+  int _idleProgressPollTick = 0;
+  bool _hasReceivedProgressStreamEvent = false;
+  bool _usingProgressStream = false;
   String? _lastServiceTrackName;
   String? _lastServiceArtistName;
   int _lastServicePercent = -1;
@@ -788,7 +794,11 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
     ref.onDispose(() {
       _progressTimer?.cancel();
+      _progressStreamBootstrapTimer?.cancel();
+      _progressStreamSub?.cancel();
       _progressTimer = null;
+      _progressStreamBootstrapTimer = null;
+      _progressStreamSub = null;
       if (_queuePersistDebounce?.isActive == true) {
         _queuePersistDebounce?.cancel();
         unawaited(_flushQueueToStorage());
@@ -895,212 +905,104 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
   void _startMultiProgressPolling() {
     _progressTimer?.cancel();
+    _progressStreamBootstrapTimer?.cancel();
+    _progressStreamBootstrapTimer = null;
+    _progressStreamSub?.cancel();
+    _progressStreamSub = null;
+    _hasReceivedProgressStreamEvent = false;
+    _usingProgressStream = false;
+    _idleProgressPollTick = 0;
+
+    if (Platform.isAndroid || Platform.isIOS) {
+      _attachDownloadProgressStream();
+      return;
+    }
+
+    _startMultiProgressPollingTimer();
+  }
+
+  void _attachDownloadProgressStream() {
+    _progressStreamSub = PlatformBridge.downloadProgressStream().listen(
+      (allProgress) {
+        _hasReceivedProgressStreamEvent = true;
+        _usingProgressStream = true;
+        _progressStreamBootstrapTimer?.cancel();
+        _progressStreamBootstrapTimer = null;
+        if (_isProgressPollingInFlight) return;
+        _isProgressPollingInFlight = true;
+        try {
+          _processAllDownloadProgress(allProgress);
+          _progressPollingErrorCount = 0;
+        } catch (e) {
+          _progressPollingErrorCount++;
+          if (_progressPollingErrorCount <= 3) {
+            _log.w('Progress stream processing failed: $e');
+          }
+        } finally {
+          _isProgressPollingInFlight = false;
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (_usingProgressStream) {
+          _log.w(
+            'Download progress stream failed, fallback to polling: $error',
+          );
+        }
+        _progressStreamSub?.cancel();
+        _progressStreamSub = null;
+        _usingProgressStream = false;
+        _progressStreamBootstrapTimer?.cancel();
+        _progressStreamBootstrapTimer = null;
+        _startMultiProgressPollingTimer();
+      },
+      cancelOnError: false,
+    );
+
+    _progressStreamBootstrapTimer = Timer(const Duration(seconds: 3), () {
+      if (_hasReceivedProgressStreamEvent) {
+        return;
+      }
+      _log.w('Download progress stream timeout, fallback to polling');
+      _progressStreamSub?.cancel();
+      _progressStreamSub = null;
+      _usingProgressStream = false;
+      _startMultiProgressPollingTimer();
+    });
+  }
+
+  void _startMultiProgressPollingTimer() {
+    _progressTimer?.cancel();
     _progressTimer = Timer.periodic(_progressPollingInterval, (timer) async {
       if (_isProgressPollingInFlight) return;
       _isProgressPollingInFlight = true;
       try {
-        final allProgress = await PlatformBridge.getAllDownloadProgress();
-        final items = allProgress['items'] as Map<String, dynamic>? ?? {};
         final currentItems = state.items;
-        final itemsById = <String, DownloadItem>{};
-        final itemIndexById = <String, int>{};
-        int queuedCount = 0;
-        int downloadingCount = 0;
-        DownloadItem? firstDownloading;
-        for (int i = 0; i < currentItems.length; i++) {
-          final item = currentItems[i];
-          itemsById[item.id] = item;
-          itemIndexById[item.id] = i;
-          if (item.status == DownloadStatus.downloading) {
-            downloadingCount++;
-            firstDownloading ??= item;
-          }
-          if (item.status == DownloadStatus.queued ||
-              item.status == DownloadStatus.downloading) {
-            queuedCount++;
-          }
-        }
-        final progressUpdates = <String, _ProgressUpdate>{};
+        final hasQueuedItems = currentItems.any(
+          (item) => item.status == DownloadStatus.queued,
+        );
+        final hasActiveItems = currentItems.any(
+          (item) =>
+              item.status == DownloadStatus.downloading ||
+              item.status == DownloadStatus.finalizing,
+        );
 
-        bool hasFinalizingItem = false;
-        String? finalizingTrackName;
-        String? finalizingArtistName;
-
-        for (final entry in items.entries) {
-          final itemId = entry.key;
-          final localItem = itemsById[itemId];
-          if (localItem == null) {
-            continue;
-          }
-          if (localItem.status == DownloadStatus.skipped) {
-            PlatformBridge.clearItemProgress(itemId).catchError((_) {});
-            continue;
-          }
-          if (localItem.status == DownloadStatus.completed ||
-              localItem.status == DownloadStatus.failed) {
-            continue;
-          }
-          final itemProgress = entry.value as Map<String, dynamic>;
-          final bytesReceived = itemProgress['bytes_received'] as int? ?? 0;
-          final bytesTotal = itemProgress['bytes_total'] as int? ?? 0;
-          final speedMBps =
-              (itemProgress['speed_mbps'] as num?)?.toDouble() ?? 0.0;
-          final isDownloading =
-              itemProgress['is_downloading'] as bool? ?? false;
-          final status = itemProgress['status'] as String? ?? 'downloading';
-
-          if (status == 'finalizing' && bytesTotal > 0) {
-            progressUpdates[itemId] = const _ProgressUpdate(
-              status: DownloadStatus.finalizing,
-              progress: 1.0,
-            );
-            hasFinalizingItem = true;
-            finalizingTrackName = localItem.track.name;
-            finalizingArtistName = localItem.track.artistName;
-            continue;
+        if (!hasActiveItems) {
+          if (state.isPaused || !hasQueuedItems) {
+            _idleProgressPollTick = 0;
+            return;
           }
 
-          final progressFromBackend =
-              (itemProgress['progress'] as num?)?.toDouble() ?? 0.0;
-
-          if (isDownloading) {
-            double percentage = 0.0;
-            if (bytesTotal > 0) {
-              percentage = bytesReceived / bytesTotal;
-            } else {
-              percentage = progressFromBackend;
-            }
-            final normalizedProgress = _normalizeProgressForUi(percentage);
-            final normalizedSpeed = _normalizeSpeedForUi(speedMBps);
-            final normalizedBytes = _normalizeBytesForUi(bytesReceived);
-
-            progressUpdates[itemId] = _ProgressUpdate(
-              status: DownloadStatus.downloading,
-              progress: normalizedProgress,
-              speedMBps: normalizedSpeed,
-              bytesReceived: normalizedBytes,
-            );
-
-            if (LogBuffer.loggingEnabled) {
-              final mbReceived = bytesReceived / (1024 * 1024);
-              final mbTotal = bytesTotal / (1024 * 1024);
-              if (bytesTotal > 0) {
-                _log.d(
-                  'Progress [$itemId]: ${(percentage * 100).toStringAsFixed(1)}% (${mbReceived.toStringAsFixed(2)}/${mbTotal.toStringAsFixed(2)} MB) @ ${speedMBps.toStringAsFixed(2)} MB/s',
-                );
-              } else {
-                _log.d(
-                  'Progress [$itemId]: ${(percentage * 100).toStringAsFixed(1)}% (DASH segments/unknown size) @ ${speedMBps.toStringAsFixed(2)} MB/s',
-                );
-              }
-            }
+          _idleProgressPollTick =
+              (_idleProgressPollTick + 1) % _idleProgressPollEveryTicks;
+          if (_idleProgressPollTick != 0) {
+            return;
           }
+        } else {
+          _idleProgressPollTick = 0;
         }
 
-        if (progressUpdates.isNotEmpty) {
-          var updatedItems = currentItems;
-          bool changed = false;
-
-          for (final entry in progressUpdates.entries) {
-            final index = itemIndexById[entry.key];
-            if (index == null) continue;
-            final current = updatedItems[index];
-            if (current.status == DownloadStatus.skipped ||
-                current.status == DownloadStatus.completed ||
-                current.status == DownloadStatus.failed) {
-              continue;
-            }
-            final update = entry.value;
-            final next = current.copyWith(
-              status: update.status,
-              progress: update.progress,
-              speedMBps: update.speedMBps ?? current.speedMBps,
-              bytesReceived: update.bytesReceived ?? current.bytesReceived,
-            );
-            if (current.status != next.status ||
-                current.progress != next.progress ||
-                current.speedMBps != next.speedMBps ||
-                current.bytesReceived != next.bytesReceived) {
-              if (!changed) {
-                updatedItems = List<DownloadItem>.from(updatedItems);
-                changed = true;
-              }
-              updatedItems[index] = next;
-            }
-          }
-
-          if (changed) {
-            state = state.copyWith(items: updatedItems);
-          }
-        }
-
-        if (hasFinalizingItem && finalizingTrackName != null) {
-          final safeArtistName = finalizingArtistName ?? '';
-          if (finalizingTrackName != _lastFinalizingTrackName ||
-              safeArtistName != _lastFinalizingArtistName) {
-            _notificationService.showDownloadFinalizing(
-              trackName: finalizingTrackName,
-              artistName: safeArtistName,
-            );
-            _lastFinalizingTrackName = finalizingTrackName;
-            _lastFinalizingArtistName = safeArtistName;
-          }
-          return;
-        }
-        _lastFinalizingTrackName = null;
-        _lastFinalizingArtistName = null;
-
-        if (items.isNotEmpty) {
-          final firstEntry = items.entries.first;
-          final firstProgress = firstEntry.value as Map<String, dynamic>;
-          final bytesReceived = firstProgress['bytes_received'] as int? ?? 0;
-          final bytesTotal = firstProgress['bytes_total'] as int? ?? 0;
-
-          if (downloadingCount > 0 && firstDownloading != null) {
-            final trackName = downloadingCount == 1
-                ? firstDownloading.track.name
-                : '$downloadingCount downloads';
-            final artistName = downloadingCount == 1
-                ? firstDownloading.track.artistName
-                : 'Downloading...';
-
-            int notifProgress = bytesReceived;
-            int notifTotal = bytesTotal;
-
-            if (bytesTotal <= 0) {
-              final progressPercent =
-                  (firstProgress['progress'] as num?)?.toDouble() ?? 0.0;
-              notifProgress = (progressPercent * 100).toInt();
-              notifTotal = 100;
-            }
-
-            final safeNotifTotal = notifTotal > 0 ? notifTotal : 1;
-            if (_shouldUpdateProgressNotification(
-              trackName: trackName,
-              artistName: artistName,
-              progress: notifProgress,
-              total: safeNotifTotal,
-              queueCount: queuedCount,
-            )) {
-              _notificationService.showDownloadProgress(
-                trackName: trackName,
-                artistName: artistName,
-                progress: notifProgress,
-                total: safeNotifTotal,
-              );
-            }
-
-            if (Platform.isAndroid) {
-              _maybeUpdateAndroidDownloadService(
-                trackName: firstDownloading.track.name,
-                artistName: firstDownloading.track.artistName,
-                progress: notifProgress,
-                total: safeNotifTotal,
-                queueCount: queuedCount,
-              );
-            }
-          }
-        }
+        final allProgress = await PlatformBridge.getAllDownloadProgress();
+        _processAllDownloadProgress(allProgress);
         _progressPollingErrorCount = 0;
       } catch (e) {
         _progressPollingErrorCount++;
@@ -1111,6 +1013,221 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
         _isProgressPollingInFlight = false;
       }
     });
+  }
+
+  void _processAllDownloadProgress(Map<String, dynamic> allProgress) {
+    final rawItems = allProgress['items'];
+    final items = rawItems is Map
+        ? rawItems.map((key, value) => MapEntry(key.toString(), value))
+        : const <String, dynamic>{};
+    final currentItems = state.items;
+    final itemsById = <String, DownloadItem>{};
+    final itemIndexById = <String, int>{};
+    int queuedCount = 0;
+    int downloadingCount = 0;
+    DownloadItem? firstDownloading;
+    for (int i = 0; i < currentItems.length; i++) {
+      final item = currentItems[i];
+      itemsById[item.id] = item;
+      itemIndexById[item.id] = i;
+      if (item.status == DownloadStatus.downloading) {
+        downloadingCount++;
+        firstDownloading ??= item;
+      }
+      if (item.status == DownloadStatus.queued ||
+          item.status == DownloadStatus.downloading) {
+        queuedCount++;
+      }
+    }
+    final progressUpdates = <String, _ProgressUpdate>{};
+
+    bool hasFinalizingItem = false;
+    String? finalizingTrackName;
+    String? finalizingArtistName;
+
+    for (final entry in items.entries) {
+      final itemId = entry.key;
+      final localItem = itemsById[itemId];
+      if (localItem == null) {
+        continue;
+      }
+      if (localItem.status == DownloadStatus.skipped) {
+        PlatformBridge.clearItemProgress(itemId).catchError((_) {});
+        continue;
+      }
+      if (localItem.status == DownloadStatus.completed ||
+          localItem.status == DownloadStatus.failed) {
+        continue;
+      }
+      final rawItemProgress = entry.value;
+      if (rawItemProgress is! Map) {
+        continue;
+      }
+      final itemProgress = Map<String, dynamic>.from(rawItemProgress);
+      final bytesReceived =
+          (itemProgress['bytes_received'] as num?)?.toInt() ?? 0;
+      final bytesTotal = (itemProgress['bytes_total'] as num?)?.toInt() ?? 0;
+      final speedMBps = (itemProgress['speed_mbps'] as num?)?.toDouble() ?? 0.0;
+      final isDownloading = itemProgress['is_downloading'] as bool? ?? false;
+      final status = itemProgress['status'] as String? ?? 'downloading';
+
+      if (status == 'finalizing' && bytesTotal > 0) {
+        progressUpdates[itemId] = const _ProgressUpdate(
+          status: DownloadStatus.finalizing,
+          progress: 1.0,
+        );
+        hasFinalizingItem = true;
+        finalizingTrackName = localItem.track.name;
+        finalizingArtistName = localItem.track.artistName;
+        continue;
+      }
+
+      final progressFromBackend =
+          (itemProgress['progress'] as num?)?.toDouble() ?? 0.0;
+
+      if (isDownloading) {
+        double percentage = 0.0;
+        if (bytesTotal > 0) {
+          percentage = bytesReceived / bytesTotal;
+        } else {
+          percentage = progressFromBackend;
+        }
+        final normalizedProgress = _normalizeProgressForUi(percentage);
+        final normalizedSpeed = _normalizeSpeedForUi(speedMBps);
+        final normalizedBytes = _normalizeBytesForUi(bytesReceived);
+
+        progressUpdates[itemId] = _ProgressUpdate(
+          status: DownloadStatus.downloading,
+          progress: normalizedProgress,
+          speedMBps: normalizedSpeed,
+          bytesReceived: normalizedBytes,
+        );
+
+        if (LogBuffer.loggingEnabled) {
+          final mbReceived = bytesReceived / (1024 * 1024);
+          final mbTotal = bytesTotal / (1024 * 1024);
+          if (bytesTotal > 0) {
+            _log.d(
+              'Progress [$itemId]: ${(percentage * 100).toStringAsFixed(1)}% (${mbReceived.toStringAsFixed(2)}/${mbTotal.toStringAsFixed(2)} MB) @ ${speedMBps.toStringAsFixed(2)} MB/s',
+            );
+          } else {
+            _log.d(
+              'Progress [$itemId]: ${(percentage * 100).toStringAsFixed(1)}% (DASH segments/unknown size) @ ${speedMBps.toStringAsFixed(2)} MB/s',
+            );
+          }
+        }
+      }
+    }
+
+    if (progressUpdates.isNotEmpty) {
+      var updatedItems = currentItems;
+      bool changed = false;
+
+      for (final entry in progressUpdates.entries) {
+        final index = itemIndexById[entry.key];
+        if (index == null) continue;
+        final current = updatedItems[index];
+        if (current.status == DownloadStatus.skipped ||
+            current.status == DownloadStatus.completed ||
+            current.status == DownloadStatus.failed) {
+          continue;
+        }
+        final update = entry.value;
+        final next = current.copyWith(
+          status: update.status,
+          progress: update.progress,
+          speedMBps: update.speedMBps ?? current.speedMBps,
+          bytesReceived: update.bytesReceived ?? current.bytesReceived,
+        );
+        if (current.status != next.status ||
+            current.progress != next.progress ||
+            current.speedMBps != next.speedMBps ||
+            current.bytesReceived != next.bytesReceived) {
+          if (!changed) {
+            updatedItems = List<DownloadItem>.from(updatedItems);
+            changed = true;
+          }
+          updatedItems[index] = next;
+        }
+      }
+
+      if (changed) {
+        state = state.copyWith(items: updatedItems);
+      }
+    }
+
+    if (hasFinalizingItem && finalizingTrackName != null) {
+      final safeArtistName = finalizingArtistName ?? '';
+      if (finalizingTrackName != _lastFinalizingTrackName ||
+          safeArtistName != _lastFinalizingArtistName) {
+        _notificationService.showDownloadFinalizing(
+          trackName: finalizingTrackName,
+          artistName: safeArtistName,
+        );
+        _lastFinalizingTrackName = finalizingTrackName;
+        _lastFinalizingArtistName = safeArtistName;
+      }
+      return;
+    }
+    _lastFinalizingTrackName = null;
+    _lastFinalizingArtistName = null;
+
+    if (items.isNotEmpty) {
+      final firstEntry = items.entries.first;
+      final rawFirstProgress = firstEntry.value;
+      if (rawFirstProgress is! Map) {
+        return;
+      }
+      final firstProgress = Map<String, dynamic>.from(rawFirstProgress);
+      final bytesReceived =
+          (firstProgress['bytes_received'] as num?)?.toInt() ?? 0;
+      final bytesTotal = (firstProgress['bytes_total'] as num?)?.toInt() ?? 0;
+
+      if (downloadingCount > 0 && firstDownloading != null) {
+        final trackName = downloadingCount == 1
+            ? firstDownloading.track.name
+            : '$downloadingCount downloads';
+        final artistName = downloadingCount == 1
+            ? firstDownloading.track.artistName
+            : 'Downloading...';
+
+        int notifProgress = bytesReceived;
+        int notifTotal = bytesTotal;
+
+        if (bytesTotal <= 0) {
+          final progressPercent =
+              (firstProgress['progress'] as num?)?.toDouble() ?? 0.0;
+          notifProgress = (progressPercent * 100).toInt();
+          notifTotal = 100;
+        }
+
+        final safeNotifTotal = notifTotal > 0 ? notifTotal : 1;
+        if (_shouldUpdateProgressNotification(
+          trackName: trackName,
+          artistName: artistName,
+          progress: notifProgress,
+          total: safeNotifTotal,
+          queueCount: queuedCount,
+        )) {
+          _notificationService.showDownloadProgress(
+            trackName: trackName,
+            artistName: artistName,
+            progress: notifProgress,
+            total: safeNotifTotal,
+          );
+        }
+
+        if (Platform.isAndroid) {
+          _maybeUpdateAndroidDownloadService(
+            trackName: firstDownloading.track.name,
+            artistName: firstDownloading.track.artistName,
+            progress: notifProgress,
+            total: safeNotifTotal,
+            queueCount: queuedCount,
+          );
+        }
+      }
+    }
   }
 
   void _maybeUpdateAndroidDownloadService({
@@ -1156,9 +1273,16 @@ class DownloadQueueNotifier extends Notifier<DownloadQueueState> {
 
   void _stopProgressPolling() {
     _progressTimer?.cancel();
+    _progressStreamBootstrapTimer?.cancel();
+    _progressStreamSub?.cancel();
     _progressTimer = null;
+    _progressStreamBootstrapTimer = null;
+    _progressStreamSub = null;
     _progressPollingErrorCount = 0;
     _isProgressPollingInFlight = false;
+    _idleProgressPollTick = 0;
+    _hasReceivedProgressStreamEvent = false;
+    _usingProgressStream = false;
     _lastServiceTrackName = null;
     _lastServiceArtistName = null;
     _lastServicePercent = -1;

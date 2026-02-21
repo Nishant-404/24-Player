@@ -13,11 +13,15 @@ import io.flutter.embedding.android.RenderMode
 import io.flutter.embedding.android.TransparencyMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterShellArgs
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import gobackend.Gobackend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -29,11 +33,22 @@ import java.util.Locale
 
 class MainActivity: AudioServiceFragmentActivity() {
     private val CHANNEL = "com.zarz.spotiflac/backend"
+    private val DOWNLOAD_PROGRESS_STREAM_CHANNEL =
+        "com.zarz.spotiflac/download_progress_stream"
+    private val LIBRARY_SCAN_PROGRESS_STREAM_CHANNEL =
+        "com.zarz.spotiflac/library_scan_progress_stream"
+    private val STREAM_POLLING_INTERVAL_MS = 800L
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var pendingSafTreeResult: MethodChannel.Result? = null
     private val safScanLock = Any()
     private val safDirLock = Any()
     private var safScanProgress = SafScanProgress()
+    private var downloadProgressStreamJob: Job? = null
+    private var downloadProgressEventSink: EventChannel.EventSink? = null
+    private var lastDownloadProgressPayload: String? = null
+    private var libraryScanProgressStreamJob: Job? = null
+    private var libraryScanProgressEventSink: EventChannel.EventSink? = null
+    private var lastLibraryScanProgressPayload: String? = null
     @Volatile private var safScanCancel = false
     @Volatile private var safScanActive = false
     private val safTreeLauncher = registerForActivityResult(
@@ -378,6 +393,78 @@ class MainActivity: AudioServiceFragmentActivity() {
         obj.put("progress_pct", snapshot.progressPct)
         obj.put("is_complete", snapshot.isComplete)
         return obj.toString()
+    }
+
+    private fun readLibraryScanProgressJsonForStream(): String {
+        return if (safScanActive) {
+            safProgressToJson()
+        } else {
+            Gobackend.getLibraryScanProgressJSON()
+        }
+    }
+
+    private fun startDownloadProgressStream(sink: EventChannel.EventSink) {
+        stopDownloadProgressStream()
+        downloadProgressEventSink = sink
+        lastDownloadProgressPayload = null
+        downloadProgressStreamJob = scope.launch {
+            while (isActive && downloadProgressEventSink === sink) {
+                try {
+                    val payload = withContext(Dispatchers.IO) {
+                        Gobackend.getAllDownloadProgress()
+                    }
+                    if (payload != lastDownloadProgressPayload) {
+                        lastDownloadProgressPayload = payload
+                        sink.success(payload)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w(
+                        "SpotiFLAC",
+                        "Download progress stream poll failed: ${e.message}",
+                    )
+                }
+                delay(STREAM_POLLING_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun stopDownloadProgressStream() {
+        downloadProgressStreamJob?.cancel()
+        downloadProgressStreamJob = null
+        downloadProgressEventSink = null
+        lastDownloadProgressPayload = null
+    }
+
+    private fun startLibraryScanProgressStream(sink: EventChannel.EventSink) {
+        stopLibraryScanProgressStream()
+        libraryScanProgressEventSink = sink
+        lastLibraryScanProgressPayload = null
+        libraryScanProgressStreamJob = scope.launch {
+            while (isActive && libraryScanProgressEventSink === sink) {
+                try {
+                    val payload = withContext(Dispatchers.IO) {
+                        readLibraryScanProgressJsonForStream()
+                    }
+                    if (payload != lastLibraryScanProgressPayload) {
+                        lastLibraryScanProgressPayload = payload
+                        sink.success(payload)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w(
+                        "SpotiFLAC",
+                        "Library scan progress stream poll failed: ${e.message}",
+                    )
+                }
+                delay(STREAM_POLLING_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun stopLibraryScanProgressStream() {
+        libraryScanProgressStreamJob?.cancel()
+        libraryScanProgressStreamJob = null
+        libraryScanProgressEventSink = null
+        lastLibraryScanProgressPayload = null
     }
 
     private fun resolveSafFile(treeUriStr: String, relativeDir: String, fileName: String): String {
@@ -1258,10 +1345,51 @@ class MainActivity: AudioServiceFragmentActivity() {
         setIntent(intent)
     }
 
+    override fun onDestroy() {
+        stopDownloadProgressStream()
+        stopLibraryScanProgressStream()
+        super.onDestroy()
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val messenger = flutterEngine.dartExecutor.binaryMessenger
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        EventChannel(
+            messenger,
+            DOWNLOAD_PROGRESS_STREAM_CHANNEL,
+        ).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    if (events != null) {
+                        startDownloadProgressStream(events)
+                    }
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    stopDownloadProgressStream()
+                }
+            },
+        )
+
+        EventChannel(
+            messenger,
+            LIBRARY_SCAN_PROGRESS_STREAM_CHANNEL,
+        ).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    if (events != null) {
+                        startLibraryScanProgressStream(events)
+                    }
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    stopLibraryScanProgressStream()
+                }
+            },
+        )
+
+        MethodChannel(messenger, CHANNEL).setMethodCallHandler { call, result ->
             scope.launch {
                 try {
                     when (call.method) {

@@ -247,7 +247,8 @@ class _LibraryTracksFolderScreenState
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final localState = ref.watch(localLibraryProvider);
+    ref.watch(localLibraryProvider.select((s) => s.items));
+    final localState = ref.read(localLibraryProvider);
     final UserPlaylistCollection? playlist;
     final List<CollectionTrackEntry> entries;
 
