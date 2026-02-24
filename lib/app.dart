@@ -75,11 +75,27 @@ class SpotiFLACApp extends ConsumerWidget {
 
     return DynamicColorWrapper(
       builder: (lightTheme, darkTheme, themeMode) {
+        // We create a "Purple Override" for the themes
+        final purpleLightTheme = lightTheme.copyWith(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF9900CC), // Your brand purple
+            brightness: Brightness.light,
+          ),
+        );
+
+        final purpleDarkTheme = darkTheme.copyWith(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF9900CC), // Your brand purple
+            brightness: Brightness.dark,
+          ),
+        );
+
         return MaterialApp.router(
-          title: 'SpotiFLAC',
+          title: 'Purple Streamer',
           debugShowCheckedModeBanner: false,
-          theme: lightTheme,
-          darkTheme: darkTheme,
+          // Use the tinted versions instead of the raw dynamic ones
+          theme: purpleLightTheme,
+          darkTheme: purpleDarkTheme,
           themeMode: themeMode,
           scrollBehavior: scrollBehavior,
           themeAnimationDuration: const Duration(milliseconds: 300),

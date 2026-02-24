@@ -2495,7 +2495,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get libraryStorageAccessMessage =>
-      'SpotiFLAC needs storage access to scan your music library. Please grant permission in settings.';
+      'Purple Streamer needs storage access to scan your music library. Please grant permission in settings.';
 
   @override
   String get libraryFolderNotExist => 'Selected folder does not exist';
@@ -2611,7 +2611,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get storageSwitchToAppMessage =>
-      'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/SpotiFLAC folder.';
+      'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/Purple Streamer folder.';
 
   @override
   String get storageSwitchExistingDownloads => 'Existing Downloads';
@@ -2663,7 +2663,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get storageModeInfo => 'Your files are stored in multiple locations';
 
   @override
-  String get tutorialWelcomeTitle => 'Welcome to SpotiFLAC!';
+  String get tutorialWelcomeTitle => 'Welcome to Purple Streamer!';
 
   @override
   String get tutorialWelcomeDesc =>
@@ -3280,10 +3280,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewSubtitle =>
-      'SpotiFLAC has evolved — here\'s what changed since 3.x';
+      'Purple Streamer has evolved — here\'s what changed since 3.x';
 
   @override
-  String get whatsNewWelcomeTitle => 'SpotiFLAC Mobile 4.0';
+  String get whatsNewWelcomeTitle => 'Purple Streamer Mobile 1.2';
 
   @override
   String get whatsNewWelcomeDesc =>
@@ -3431,7 +3431,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewReadyMessage =>
-      'You\'re all set — enjoy the new SpotiFLAC!';
+      'You\'re all set — enjoy the new Purple Streamer!';
 
   @override
   String get whatsNewGetStarted => 'Let\'s Go';

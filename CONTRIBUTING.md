@@ -1,6 +1,6 @@
-# Contributing to SpotiFLAC
+# Contributing to Purple Streamer
 
-First off, thank you for considering contributing to SpotiFLAC! 🎉
+First off, thank you for considering contributing to Purple Streamer! 🎉
 
 This document provides guidelines and steps for contributing. Following these guidelines helps maintain code quality and ensures a smooth collaboration process.
 
@@ -26,7 +26,7 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 ### Reporting Bugs
 
-Before creating bug reports, please check the [existing issues](https://github.com/zarzet/SpotiFLAC-Mobile/issues) to avoid duplicates.
+
 
 When creating a bug report, please use the bug report template and include:
 
@@ -77,13 +77,13 @@ Translation files are located in `lib/l10n/arb/`.
 
 1. **Clone your fork**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/SpotiFLAC-Mobile.git
-   cd SpotiFLAC-Mobile
+   git clone https://github.com/YOUR_USERNAME/Purple Streamer.git
+   cd Purple Streamer
    ```
 
 2. **Add upstream remote**
    ```bash
-   git remote add upstream https://github.com/zarzet/SpotiFLAC-Mobile.git
+   git remote add upstream https://github.com/nishant-404/Purple Streamer.git
    ```
 
 3. **Install dependencies**
@@ -262,7 +262,6 @@ chore(deps): update flutter_riverpod to 3.1.0
 
 If you have questions, feel free to:
 
-- Open a [Discussion](https://github.com/zarzet/SpotiFLAC-Mobile/discussions)
-- Check existing [Issues](https://github.com/zarzet/SpotiFLAC-Mobile/issues)
+
 
 Thank you for contributing! 💚

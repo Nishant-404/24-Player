@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'SpotiFLAC';
+  String get appName => 'Purple Streamer';
 
   @override
   String get appDescription =>
@@ -433,7 +433,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutMobileDeveloper => 'Mobile version developer';
 
   @override
-  String get aboutOriginalCreator => 'Creator of the original SpotiFLAC';
+  String get aboutOriginalCreator => 'Creator of the original Purple Streamer';
 
   @override
   String get aboutLogoArtist =>
@@ -621,7 +621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMetadataOpenFolder => 'Open Folder';
 
   @override
-  String get setupTitle => 'Welcome to SpotiFLAC';
+  String get setupTitle => 'Welcome to Purple Streamer';
 
   @override
   String get setupSubtitle => 'Let\'s get you started';
@@ -659,7 +659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupStorageAccessMessage =>
-      'SpotiFLAC needs \"All files access\" permission to save music files to your chosen folder.';
+      'Purple Streamer needs \"All files access\" permission to save music files to your chosen folder.';
 
   @override
   String get setupStorageAccessMessageAndroid11 =>
@@ -749,7 +749,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupStorageDescription =>
-      'SpotiFLAC needs storage permission to save your downloaded music files.';
+      'Purple Streamer needs storage permission to save your downloaded music files.';
 
   @override
   String get setupNotificationGranted => 'Notification Permission Granted!';
@@ -1028,7 +1028,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackbarFileNotFound => 'File not found';
 
   @override
-  String get snackbarSelectExtFile => 'Please select a .spotiflac-ext file';
+  String get snackbarSelectExtFile =>
+      'Please select a .Purple Streamer-ext file';
 
   @override
   String get snackbarProviderPrioritySaved => 'Provider priority saved';
@@ -1852,7 +1853,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get extensionsNoExtensionsSubtitle =>
-      'Install .spotiflac-ext files to add new providers';
+      'Install .Purple Streamer-ext files to add new providers';
 
   @override
   String get extensionsInstallButton => 'Install Extension';
@@ -2495,7 +2496,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryStorageAccessMessage =>
-      'SpotiFLAC needs storage access to scan your music library. Please grant permission in settings.';
+      'Purple Streamer needs storage access to scan your music library. Please grant permission in settings.';
 
   @override
   String get libraryFolderNotExist => 'Selected folder does not exist';
@@ -2611,7 +2612,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storageSwitchToAppMessage =>
-      'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/SpotiFLAC folder.';
+      'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/Purple Streamer folder.';
 
   @override
   String get storageSwitchExistingDownloads => 'Existing Downloads';
@@ -2663,7 +2664,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageModeInfo => 'Your files are stored in multiple locations';
 
   @override
-  String get tutorialWelcomeTitle => 'Welcome to SpotiFLAC!';
+  String get tutorialWelcomeTitle => 'Welcome to Purple Streamer!';
 
   @override
   String get tutorialWelcomeDesc =>
@@ -3232,7 +3233,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupModeSelectionDescription =>
-      'How would you like to use SpotiFLAC? You can always change this later in Settings.';
+      'How would you like to use Purple Streamer? You can always change this later in Settings.';
 
   @override
   String get setupModeDownloaderTitle => 'Downloader';
@@ -3279,10 +3280,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewSubtitle =>
-      'SpotiFLAC has evolved — here\'s what changed since 3.x';
+      'Purple Streamer has evolved — here\'s what changed since 3.x';
 
   @override
-  String get whatsNewWelcomeTitle => 'SpotiFLAC Mobile 4.0';
+  String get whatsNewWelcomeTitle => 'Purple Streamer Mobile 1.2';
 
   @override
   String get whatsNewWelcomeDesc =>
@@ -3430,7 +3431,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewReadyMessage =>
-      'You\'re all set — enjoy the new SpotiFLAC!';
+      'You\'re all set — enjoy the new Purple Streamer!';
 
   @override
   String get whatsNewGetStarted => 'Let\'s Go';

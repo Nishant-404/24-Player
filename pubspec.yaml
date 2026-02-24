@@ -79,17 +79,7 @@ dev_dependencies:
   json_serializable: ^6.11.2
   flutter_launcher_icons: ^0.14.3
 
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "icon.png"
-  image_path_android: "icon_android.png"
-  adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "icon_foreground_android.png"
-  adaptive_icon_foreground_inset: 16
-  ios_content_mode: scaleAspectFill
-  remove_alpha_ios: true
-  background_color_ios: "#000000"
+
 
 flutter:
   uses-material-design: true
@@ -97,3 +87,10 @@ flutter:
 
   assets:
     - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#12011a"  # Deep dark purple to match
+  adaptive_icon_foreground: "assets/icon.png"

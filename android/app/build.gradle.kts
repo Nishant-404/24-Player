@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.zarz.spotiflac"
+        applicationId = "com.nisha.purplestreamer"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

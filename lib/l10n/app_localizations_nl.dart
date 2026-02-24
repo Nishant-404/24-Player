@@ -3280,10 +3280,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get whatsNewSubtitle =>
-      'SpotiFLAC has evolved — here\'s what changed since 3.x';
+      'Purple Streamer has evolved — here\'s what changed since 3.x';
 
   @override
-  String get whatsNewWelcomeTitle => 'SpotiFLAC Mobile 4.0';
+  String get whatsNewWelcomeTitle => 'Purple Streamer Mobile 1.2';
 
   @override
   String get whatsNewWelcomeDesc =>
@@ -3431,7 +3431,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get whatsNewReadyMessage =>
-      'You\'re all set — enjoy the new SpotiFLAC!';
+      'You\'re all set — enjoy the new Purple Streamer!';
 
   @override
   String get whatsNewGetStarted => 'Let\'s Go';

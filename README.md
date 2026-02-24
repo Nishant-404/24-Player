@@ -31,7 +31,7 @@ Extensions allow the community to add new music sources and features without wai
 ### Installing Extensions
 1. Go to **Store** tab in the app
 2. Browse and install extensions with one tap
-3. Or download a `.spotiflac-ext` file and install manually via **Settings > Extensions**
+3. Or download a `.Purple Streamer-ext` file and install manually via **Settings > Extensions**
 4. Configure extension settings if needed
 5. Set provider priority in **Settings > Extensions > Provider Priority**
 
@@ -69,18 +69,18 @@ A: Yes, the app is open source and you can verify the code yourself. Each releas
 A: Some countries have restricted access to certain streaming service APIs. If downloads are failing, try using a VPN to connect through a different region.
 
 
-### Want to support SpotiFLAC-Mobile?
+### Want to support Purple Streamer?
 
 _If this software is useful and brings you value, consider supporting the project. Your support helps keep development going._
 
-[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/zarzet)
+
 
 
 ## Disclaimer
 
 This project is for **educational and private use only**. The developer does not condone or encourage copyright infringement.
 
-**SpotiFLAC** is a third-party tool and is not affiliated with, endorsed by, or connected to Tidal, Qobuz, Amazon Music, Deezer, or any other streaming service.
+**Purple Streamer** is a third-party tool and is not affiliated with, endorsed by, or connected to Tidal, Qobuz, Amazon Music, Deezer, or any other streaming service.
 
 The application is purely a user interface that facilitates communication between your device and existing third-party services.
 
