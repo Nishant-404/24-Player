@@ -55,6 +55,13 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   }
 
   Future<void> _fetchTracksIfNeeded() async {
+    // --- THE TRAP ---
+    debugPrint('\n=========================================');
+    debugPrint('🚨 PLAYLIST SCREEN OPENED FROM RECENTS 🚨');
+    debugPrint('Raw ID passed to screen: "${widget.playlistId}"');
+    debugPrint('Tracks already loaded: ${widget.tracks.length}');
+    debugPrint('=========================================\n');
+    // ----------------
     if (widget.tracks.isNotEmpty || widget.playlistId == null) return;
 
     setState(() {
@@ -67,7 +74,17 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       dynamic result;
 
       // Clean the ID
-      String rawId = pId.contains(':') ? pId.split(':').last : pId;
+      // Bulletproof ID extraction
+      String rawId = pId;
+      if (rawId.startsWith('http')) {
+        // If it's a full web link, extract just the final ID part
+        // e.g. https://open.spotify.com/playlist/12345?si=abc -> 12345
+        rawId = Uri.parse(rawId).pathSegments.last;
+      } else if (rawId.contains(':')) {
+        // If it's a URI, extract the last part
+        // e.g. spotify:playlist:12345 -> 12345
+        rawId = rawId.split(':').last;
+      }
 
       // 1. Try Spotify First (Constructing URL safely to bypass filters)
       try {

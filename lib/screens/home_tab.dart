@@ -607,14 +607,30 @@ class _HomeTabState extends ConsumerState<HomeTab>
     }
 
     if (trackState.playlistName != null && trackState.tracks.isNotEmpty) {
+
+      // 1. Intercept the URL from the search bar to extract the true ID
+      String realId = trackState.playlistName!;
+      final searchText = _urlController.text.trim();
+
+      if (searchText.startsWith('http')) {
+        try {
+          // Extracts '12345' from 'https://spotify.com/playlist/12345'
+          realId = Uri.parse(searchText).pathSegments.last;
+        } catch (_) {}
+      } else if (searchText.contains(':')) {
+        // Extracts '12345' from 'spotify:playlist:12345'
+        realId = searchText.split(':').last;
+      }
+
+      // 2. Save the true ID to the Recents database
       ref
           .read(recentAccessProvider.notifier)
           .recordPlaylistAccess(
-            id: trackState.playlistName!,
-            name: trackState.playlistName!,
-            imageUrl: trackState.coverUrl,
-            providerId: trackState.searchExtensionId ?? 'spotify',
-          );
+        id: realId,
+        name: trackState.playlistName!,
+        imageUrl: trackState.coverUrl,
+        providerId: trackState.searchExtensionId ?? 'spotify',
+      );
 
       Navigator.push(
         context,
@@ -623,6 +639,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
             playlistName: trackState.playlistName!,
             coverUrl: trackState.coverUrl,
             tracks: trackState.tracks,
+            playlistId: realId, // Pass the true ID to the screen
           ),
         ),
       );
