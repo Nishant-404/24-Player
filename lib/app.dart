@@ -1,0 +1,116 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twentyfour_player/screens/main_shell.dart';
+import 'package:twentyfour_player/screens/setup_screen.dart';
+import 'package:twentyfour_player/screens/tutorial_screen.dart';
+import 'package:twentyfour_player/screens/whats_new_screen.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/theme/dynamic_color_wrapper.dart';
+import 'package:twentyfour_player/l10n/app_localizations.dart';
+
+final _routerProvider = Provider<GoRouter>((ref) {
+  final isFirstLaunch = ref.watch(
+    settingsProvider.select((s) => s.isFirstLaunch),
+  );
+  final hasCompletedTutorial = ref.watch(
+    settingsProvider.select((s) => s.hasCompletedTutorial),
+  );
+  final hasSeenWhatsNew = ref.watch(
+    settingsProvider.select((s) => s.hasSeenWhatsNew),
+  );
+
+  // Determine initial location based on app state
+  String initialLocation;
+  if (isFirstLaunch) {
+    initialLocation = '/setup';
+  } else if (!hasCompletedTutorial) {
+    initialLocation = '/tutorial';
+  } else if (!hasSeenWhatsNew) {
+    initialLocation = '/whats-new';
+  } else {
+    initialLocation = '/';
+  }
+
+  return GoRouter(
+    initialLocation: initialLocation,
+    routes: [
+      GoRoute(path: '/', builder: (context, state) => const MainShell()),
+      GoRoute(path: '/setup', builder: (context, state) => const SetupScreen()),
+      GoRoute(
+        path: '/tutorial',
+        builder: (context, state) => const TutorialScreen(),
+      ),
+      GoRoute(
+        path: '/whats-new',
+        builder: (context, state) => const WhatsNewScreen(),
+      ),
+    ],
+  );
+});
+
+class SpotiFLACApp extends ConsumerWidget {
+  final bool disableOverscrollEffects;
+
+  const SpotiFLACApp({super.key, this.disableOverscrollEffects = false});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(_routerProvider);
+    final localeString = ref.watch(settingsProvider.select((s) => s.locale));
+    final scrollBehavior = disableOverscrollEffects
+        ? const MaterialScrollBehavior().copyWith(overscroll: false)
+        : null;
+
+    Locale? locale;
+    if (localeString != 'system') {
+      if (localeString.contains('_')) {
+        final parts = localeString.split('_');
+        locale = Locale(parts[0], parts[1]);
+      } else {
+        locale = Locale(localeString);
+      }
+    }
+
+    return DynamicColorWrapper(
+      builder: (lightTheme, darkTheme, themeMode) {
+        // We create a "Purple Override" for the themes
+        final purpleLightTheme = lightTheme.copyWith(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF9900CC), // Your brand purple
+            brightness: Brightness.light,
+          ),
+        );
+
+        final purpleDarkTheme = darkTheme.copyWith(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF9900CC), // Your brand purple
+            brightness: Brightness.dark,
+          ),
+        );
+
+        return MaterialApp.router(
+          title: '24-Player',
+          debugShowCheckedModeBanner: false,
+          // Use the tinted versions instead of the raw dynamic ones
+          theme: purpleLightTheme,
+          darkTheme: purpleDarkTheme,
+          themeMode: themeMode,
+          scrollBehavior: scrollBehavior,
+          themeAnimationDuration: const Duration(milliseconds: 300),
+          themeAnimationCurve: Curves.easeInOut,
+          routerConfig: router,
+          locale: locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        );
+      },
+    );
+  }
+}

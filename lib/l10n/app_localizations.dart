@@ -1,0 +1,6113 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_de.dart';
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
+import 'app_localizations_id.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_ko.dart';
+import 'app_localizations_nl.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_tr.dart';
+import 'app_localizations_zh.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
+    Locale('en'),
+    Locale('es'),
+    Locale('es', 'ES'),
+    Locale('fr'),
+    Locale('hi'),
+    Locale('id'),
+    Locale('ja'),
+    Locale('ko'),
+    Locale('nl'),
+    Locale('pt'),
+    Locale('pt', 'PT'),
+    Locale('ru'),
+    Locale('tr'),
+    Locale('zh'),
+    Locale('zh', 'CN'),
+    Locale('zh', 'TW'),
+  ];
+
+  /// App name - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'24-Player'**
+  String get appName;
+
+  /// App description shown in about page
+  ///
+  /// In en, this message translates to:
+  /// **'Download Spotify tracks in lossless quality from Tidal, Qobuz, and Amazon Music.'**
+  String get appDescription;
+
+  /// Bottom navigation - Home tab
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// Bottom navigation - Library tab
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// Bottom navigation - History tab (legacy)
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get navHistory;
+
+  /// Bottom navigation - Settings tab
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// Bottom navigation - Extension store tab
+  ///
+  /// In en, this message translates to:
+  /// **'Store'**
+  String get navStore;
+
+  /// Home screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeTitle;
+
+  /// Placeholder text in search box
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Spotify URL or search...'**
+  String get homeSearchHint;
+
+  /// Placeholder when extension search is active
+  ///
+  /// In en, this message translates to:
+  /// **'Search with {extensionName}...'**
+  String homeSearchHintExtension(String extensionName);
+
+  /// Subtitle shown below search box
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Spotify link or search by name'**
+  String get homeSubtitle;
+
+  /// Info text about supported URL types
+  ///
+  /// In en, this message translates to:
+  /// **'Supports: Track, Album, Playlist, Artist URLs'**
+  String get homeSupports;
+
+  /// Section header for recent searches
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get homeRecent;
+
+  /// History screen title
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
+
+  /// Tab showing active downloads count
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading ({count})'**
+  String historyDownloading(int count);
+
+  /// Tab showing completed downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get historyDownloaded;
+
+  /// Filter chip - show all items
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get historyFilterAll;
+
+  /// Filter chip - show albums only
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get historyFilterAlbums;
+
+  /// Filter chip - show singles only
+  ///
+  /// In en, this message translates to:
+  /// **'Singles'**
+  String get historyFilterSingles;
+
+  /// Track count with plural form
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track} other{{count} tracks}}'**
+  String historyTracksCount(int count);
+
+  /// Album count with plural form
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 album} other{{count} albums}}'**
+  String historyAlbumsCount(int count);
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No download history'**
+  String get historyNoDownloads;
+
+  /// Empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded tracks will appear here'**
+  String get historyNoDownloadsSubtitle;
+
+  /// Empty state when filtering albums
+  ///
+  /// In en, this message translates to:
+  /// **'No album downloads'**
+  String get historyNoAlbums;
+
+  /// Empty state subtitle for albums filter
+  ///
+  /// In en, this message translates to:
+  /// **'Download multiple tracks from an album to see them here'**
+  String get historyNoAlbumsSubtitle;
+
+  /// Empty state when filtering singles
+  ///
+  /// In en, this message translates to:
+  /// **'No single downloads'**
+  String get historyNoSingles;
+
+  /// Empty state subtitle for singles filter
+  ///
+  /// In en, this message translates to:
+  /// **'Single track downloads will appear here'**
+  String get historyNoSinglesSubtitle;
+
+  /// Search bar placeholder in history
+  ///
+  /// In en, this message translates to:
+  /// **'Search history...'**
+  String get historySearchHint;
+
+  /// Settings screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// Settings section - download options
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get settingsDownload;
+
+  /// Settings section - visual customization
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// Settings section - app options
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get settingsOptions;
+
+  /// Settings section - extension management
+  ///
+  /// In en, this message translates to:
+  /// **'Extensions'**
+  String get settingsExtensions;
+
+  /// Settings section - app info
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// Download settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get downloadTitle;
+
+  /// Setting for download folder
+  ///
+  /// In en, this message translates to:
+  /// **'Download Location'**
+  String get downloadLocation;
+
+  /// Subtitle for download location
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where to save files'**
+  String get downloadLocationSubtitle;
+
+  /// Shown when using default folder
+  ///
+  /// In en, this message translates to:
+  /// **'Default location'**
+  String get downloadLocationDefault;
+
+  /// Setting for preferred download service (Tidal/Qobuz/Amazon)
+  ///
+  /// In en, this message translates to:
+  /// **'Default Service'**
+  String get downloadDefaultService;
+
+  /// Subtitle for default service
+  ///
+  /// In en, this message translates to:
+  /// **'Service used for downloads'**
+  String get downloadDefaultServiceSubtitle;
+
+  /// Setting for audio quality
+  ///
+  /// In en, this message translates to:
+  /// **'Default Quality'**
+  String get downloadDefaultQuality;
+
+  /// Toggle to show quality picker
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Quality Before Download'**
+  String get downloadAskQuality;
+
+  /// Subtitle for ask quality toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Show quality picker for each download'**
+  String get downloadAskQualitySubtitle;
+
+  /// Setting for output filename pattern
+  ///
+  /// In en, this message translates to:
+  /// **'Filename Format'**
+  String get downloadFilenameFormat;
+
+  /// Setting for folder structure
+  ///
+  /// In en, this message translates to:
+  /// **'Folder Organization'**
+  String get downloadFolderOrganization;
+
+  /// Toggle to separate single tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Separate Singles'**
+  String get downloadSeparateSingles;
+
+  /// Subtitle for separate singles toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Put single tracks in a separate folder'**
+  String get downloadSeparateSinglesSubtitle;
+
+  /// Audio quality option - highest available
+  ///
+  /// In en, this message translates to:
+  /// **'Best Available'**
+  String get qualityBest;
+
+  /// Audio quality option - FLAC lossless
+  ///
+  /// In en, this message translates to:
+  /// **'FLAC'**
+  String get qualityFlac;
+
+  /// Audio quality option - 320kbps MP3
+  ///
+  /// In en, this message translates to:
+  /// **'320 kbps'**
+  String get quality320;
+
+  /// Audio quality option - 128kbps MP3
+  ///
+  /// In en, this message translates to:
+  /// **'128 kbps'**
+  String get quality128;
+
+  /// Appearance settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearanceTitle;
+
+  /// Theme mode setting
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get appearanceTheme;
+
+  /// Follow system theme
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get appearanceThemeSystem;
+
+  /// Light theme
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get appearanceThemeLight;
+
+  /// Dark theme
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get appearanceThemeDark;
+
+  /// Material You dynamic colors
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Color'**
+  String get appearanceDynamicColor;
+
+  /// Subtitle for dynamic color
+  ///
+  /// In en, this message translates to:
+  /// **'Use colors from your wallpaper'**
+  String get appearanceDynamicColorSubtitle;
+
+  /// Custom accent color picker
+  ///
+  /// In en, this message translates to:
+  /// **'Accent Color'**
+  String get appearanceAccentColor;
+
+  /// Layout style for history
+  ///
+  /// In en, this message translates to:
+  /// **'History View'**
+  String get appearanceHistoryView;
+
+  /// List layout option
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get appearanceHistoryViewList;
+
+  /// Grid layout option
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get appearanceHistoryViewGrid;
+
+  /// Options settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get optionsTitle;
+
+  /// Section for search provider settings
+  ///
+  /// In en, this message translates to:
+  /// **'Search Source'**
+  String get optionsSearchSource;
+
+  /// Main search provider setting
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Provider'**
+  String get optionsPrimaryProvider;
+
+  /// Subtitle for primary provider
+  ///
+  /// In en, this message translates to:
+  /// **'Service used when searching by track name.'**
+  String get optionsPrimaryProviderSubtitle;
+
+  /// Shows active extension name
+  ///
+  /// In en, this message translates to:
+  /// **'Using extension: {extensionName}'**
+  String optionsUsingExtension(String extensionName);
+
+  /// Hint to switch back to built-in providers
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Deezer or Spotify to switch back from extension'**
+  String get optionsSwitchBack;
+
+  /// Auto-retry with other services
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Fallback'**
+  String get optionsAutoFallback;
+
+  /// Subtitle for auto fallback
+  ///
+  /// In en, this message translates to:
+  /// **'Try other services if download fails'**
+  String get optionsAutoFallbackSubtitle;
+
+  /// Toggle to skip to the next queue track when current track stream resolution fails
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Skip Unavailable Tracks'**
+  String get optionsAutoSkipUnavailableTracks;
+
+  /// Subtitle when auto skip on resolve failure is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically skip to the next queue track when a stream cannot be resolved.'**
+  String get optionsAutoSkipUnavailableTracksSubtitleOn;
+
+  /// Subtitle when auto skip on resolve failure is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Stop on failed track resolution and show an error.'**
+  String get optionsAutoSkipUnavailableTracksSubtitleOff;
+
+  /// Tap behavior mode for track lists
+  ///
+  /// In en, this message translates to:
+  /// **'Interaction Mode'**
+  String get optionsInteractionMode;
+
+  /// Interaction mode where taps queue downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Downloader Mode'**
+  String get modeDownloader;
+
+  /// Subtitle for downloader interaction mode
+  ///
+  /// In en, this message translates to:
+  /// **'Tap tracks to add them to download queue'**
+  String get modeDownloaderSubtitle;
+
+  /// Interaction mode where taps start playback
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming Mode'**
+  String get modeStreaming;
+
+  /// Subtitle for streaming interaction mode
+  ///
+  /// In en, this message translates to:
+  /// **'Tap tracks to play instantly'**
+  String get modeStreamingSubtitle;
+
+  /// Enable extension download providers
+  ///
+  /// In en, this message translates to:
+  /// **'Use Extension Providers'**
+  String get optionsUseExtensionProviders;
+
+  /// Status when extension providers enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Extensions will be tried first'**
+  String get optionsUseExtensionProvidersOn;
+
+  /// Status when extension providers disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Using built-in providers only'**
+  String get optionsUseExtensionProvidersOff;
+
+  /// Embed lyrics in audio files
+  ///
+  /// In en, this message translates to:
+  /// **'Embed Lyrics'**
+  String get optionsEmbedLyrics;
+
+  /// Subtitle for embed lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Embed synced lyrics into FLAC files'**
+  String get optionsEmbedLyricsSubtitle;
+
+  /// Download highest quality album art
+  ///
+  /// In en, this message translates to:
+  /// **'Max Quality Cover'**
+  String get optionsMaxQualityCover;
+
+  /// Subtitle for max quality cover
+  ///
+  /// In en, this message translates to:
+  /// **'Download highest resolution cover art'**
+  String get optionsMaxQualityCoverSubtitle;
+
+  /// Number of parallel downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Concurrent Downloads'**
+  String get optionsConcurrentDownloads;
+
+  /// Download one at a time
+  ///
+  /// In en, this message translates to:
+  /// **'Sequential (1 at a time)'**
+  String get optionsConcurrentSequential;
+
+  /// Multiple parallel downloads
+  ///
+  /// In en, this message translates to:
+  /// **'{count} parallel downloads'**
+  String optionsConcurrentParallel(int count);
+
+  /// Warning about rate limits
+  ///
+  /// In en, this message translates to:
+  /// **'Parallel downloads may trigger rate limiting'**
+  String get optionsConcurrentWarning;
+
+  /// Show/hide store tab
+  ///
+  /// In en, this message translates to:
+  /// **'Extension Store'**
+  String get optionsExtensionStore;
+
+  /// Subtitle for extension store toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Show Store tab in navigation'**
+  String get optionsExtensionStoreSubtitle;
+
+  /// Auto update check toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Updates'**
+  String get optionsCheckUpdates;
+
+  /// Subtitle for update check
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when new version is available'**
+  String get optionsCheckUpdatesSubtitle;
+
+  /// Stable vs preview releases
+  ///
+  /// In en, this message translates to:
+  /// **'Update Channel'**
+  String get optionsUpdateChannel;
+
+  /// Only stable updates
+  ///
+  /// In en, this message translates to:
+  /// **'Stable releases only'**
+  String get optionsUpdateChannelStable;
+
+  /// Include beta/preview updates
+  ///
+  /// In en, this message translates to:
+  /// **'Get preview releases'**
+  String get optionsUpdateChannelPreview;
+
+  /// Warning about preview channel
+  ///
+  /// In en, this message translates to:
+  /// **'Preview may contain bugs or incomplete features'**
+  String get optionsUpdateChannelWarning;
+
+  /// Delete all download history
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Download History'**
+  String get optionsClearHistory;
+
+  /// Subtitle for clear history
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all downloaded tracks from history'**
+  String get optionsClearHistorySubtitle;
+
+  /// Enable verbose logs for debugging
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Logging'**
+  String get optionsDetailedLogging;
+
+  /// Status when logging enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed logs are being recorded'**
+  String get optionsDetailedLoggingOn;
+
+  /// Status when logging disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Enable for bug reports'**
+  String get optionsDetailedLoggingOff;
+
+  /// Spotify API credentials setting
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify Credentials'**
+  String get optionsSpotifyCredentials;
+
+  /// Shows configured client ID preview
+  ///
+  /// In en, this message translates to:
+  /// **'Client ID: {clientId}...'**
+  String optionsSpotifyCredentialsConfigured(String clientId);
+
+  /// Prompt to set up credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Required - tap to configure'**
+  String get optionsSpotifyCredentialsRequired;
+
+  /// Info about Spotify API requirement
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify requires your own API credentials. Get them free from developer.spotify.com'**
+  String get optionsSpotifyWarning;
+
+  /// Warning about Spotify API deprecation
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify search will be deprecated on March 3, 2026 due to Spotify API changes. Please switch to Deezer.'**
+  String get optionsSpotifyDeprecationWarning;
+
+  /// Extensions page title
+  ///
+  /// In en, this message translates to:
+  /// **'Extensions'**
+  String get extensionsTitle;
+
+  /// Section header for installed extensions
+  ///
+  /// In en, this message translates to:
+  /// **'Installed Extensions'**
+  String get extensionsInstalled;
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No extensions installed'**
+  String get extensionsNone;
+
+  /// Empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Install extensions from the Store tab'**
+  String get extensionsNoneSubtitle;
+
+  /// Extension status - active
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get extensionsEnabled;
+
+  /// Extension status - inactive
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get extensionsDisabled;
+
+  /// Extension version display
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String extensionsVersion(String version);
+
+  /// Extension author credit
+  ///
+  /// In en, this message translates to:
+  /// **'by {author}'**
+  String extensionsAuthor(String author);
+
+  /// Uninstall extension button
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall'**
+  String get extensionsUninstall;
+
+  /// Use extension for search
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Search Provider'**
+  String get extensionsSetAsSearch;
+
+  /// Store screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Extension Store'**
+  String get storeTitle;
+
+  /// Store search placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Search extensions...'**
+  String get storeSearch;
+
+  /// Install extension button
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get storeInstall;
+
+  /// Already installed badge
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get storeInstalled;
+
+  /// Update available button
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get storeUpdate;
+
+  /// About page title
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutTitle;
+
+  /// Section for contributors
+  ///
+  /// In en, this message translates to:
+  /// **'Contributors'**
+  String get aboutContributors;
+
+  /// Role description for mobile dev
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile version developer'**
+  String get aboutMobileDeveloper;
+
+  /// Role description for original creator
+  ///
+  /// In en, this message translates to:
+  /// **'Creator of the original 24-Player'**
+  String get aboutOriginalCreator;
+
+  /// Role description for logo artist
+  ///
+  /// In en, this message translates to:
+  /// **'The talented artist who created our beautiful app logo!'**
+  String get aboutLogoArtist;
+
+  /// Section for translators
+  ///
+  /// In en, this message translates to:
+  /// **'Translators'**
+  String get aboutTranslators;
+
+  /// Section for special thanks
+  ///
+  /// In en, this message translates to:
+  /// **'Special Thanks'**
+  String get aboutSpecialThanks;
+
+  /// Section for external links
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get aboutLinks;
+
+  /// Link to mobile GitHub repo
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile source code'**
+  String get aboutMobileSource;
+
+  /// Link to PC GitHub repo
+  ///
+  /// In en, this message translates to:
+  /// **'PC source code'**
+  String get aboutPCSource;
+
+  /// Link to report bugs
+  ///
+  /// In en, this message translates to:
+  /// **'Report an issue'**
+  String get aboutReportIssue;
+
+  /// Subtitle for report issue
+  ///
+  /// In en, this message translates to:
+  /// **'Report any problems you encounter'**
+  String get aboutReportIssueSubtitle;
+
+  /// Link to suggest features
+  ///
+  /// In en, this message translates to:
+  /// **'Feature request'**
+  String get aboutFeatureRequest;
+
+  /// Subtitle for feature request
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest new features for the app'**
+  String get aboutFeatureRequestSubtitle;
+
+  /// Link to Telegram channel
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram Channel'**
+  String get aboutTelegramChannel;
+
+  /// Subtitle for Telegram channel
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements and updates'**
+  String get aboutTelegramChannelSubtitle;
+
+  /// Link to Telegram chat group
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram Community'**
+  String get aboutTelegramChat;
+
+  /// Subtitle for Telegram chat
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with other users'**
+  String get aboutTelegramChatSubtitle;
+
+  /// Section for social links
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get aboutSocial;
+
+  /// Section for support/donation links
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get aboutSupport;
+
+  /// Section for app info
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get aboutApp;
+
+  /// Version info label
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get aboutVersion;
+
+  /// Credit description for binimum
+  ///
+  /// In en, this message translates to:
+  /// **'The creator of QQDL & HiFi API. Without this API, Tidal downloads wouldn\'t exist!'**
+  String get aboutBinimumDesc;
+
+  /// Credit description for sachinsenal0x64
+  ///
+  /// In en, this message translates to:
+  /// **'The original HiFi project creator. The foundation of Tidal integration!'**
+  String get aboutSachinsenalDesc;
+
+  /// Credit description for sjdonado
+  ///
+  /// In en, this message translates to:
+  /// **'Creator of I Don\'t Have Spotify (IDHS). The fallback link resolver that saves the day!'**
+  String get aboutSjdonadoDesc;
+
+  /// Name of Amazon API service - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'DoubleDouble'**
+  String get aboutDoubleDouble;
+
+  /// Credit for DoubleDouble API
+  ///
+  /// In en, this message translates to:
+  /// **'Amazing API for Amazon Music downloads. Thank you for making it free!'**
+  String get aboutDoubleDoubleDesc;
+
+  /// Name of Qobuz API service - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'DAB Music'**
+  String get aboutDabMusic;
+
+  /// Credit for DAB Music API
+  ///
+  /// In en, this message translates to:
+  /// **'The best Qobuz streaming API. Hi-Res downloads wouldn\'t be possible without this!'**
+  String get aboutDabMusicDesc;
+
+  /// Name of SpotiSaver API service - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'SpotiSaver'**
+  String get aboutSpotiSaver;
+
+  /// Credit for SpotiSaver API
+  ///
+  /// In en, this message translates to:
+  /// **'Tidal Hi-Res FLAC streaming endpoints. A key piece of the lossless puzzle!'**
+  String get aboutSpotiSaverDesc;
+
+  /// App description in header card
+  ///
+  /// In en, this message translates to:
+  /// **'Download Spotify tracks in lossless quality from Tidal, Qobuz, and Amazon Music.'**
+  String get aboutAppDescription;
+
+  /// Album screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get albumTitle;
+
+  /// Album track count
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track} other{{count} tracks}}'**
+  String albumTracks(int count);
+
+  /// Button to download all tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Download All'**
+  String get albumDownloadAll;
+
+  /// Button to download remaining tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Download Remaining'**
+  String get albumDownloadRemaining;
+
+  /// Playlist screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist'**
+  String get playlistTitle;
+
+  /// Artist screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get artistTitle;
+
+  /// Section header for artist albums
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get artistAlbums;
+
+  /// Section header for singles/EPs
+  ///
+  /// In en, this message translates to:
+  /// **'Singles & EPs'**
+  String get artistSingles;
+
+  /// Section header for compilations
+  ///
+  /// In en, this message translates to:
+  /// **'Compilations'**
+  String get artistCompilations;
+
+  /// Artist release count
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 release} other{{count} releases}}'**
+  String artistReleases(int count);
+
+  /// Section header for popular/top tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get artistPopular;
+
+  /// Monthly listener count display
+  ///
+  /// In en, this message translates to:
+  /// **'{count} monthly listeners'**
+  String artistMonthlyListeners(String count);
+
+  /// Track metadata screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Track Info'**
+  String get trackMetadataTitle;
+
+  /// Metadata field - artist name
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get trackMetadataArtist;
+
+  /// Metadata field - album name
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get trackMetadataAlbum;
+
+  /// Metadata field - track length
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get trackMetadataDuration;
+
+  /// Metadata field - audio quality
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get trackMetadataQuality;
+
+  /// Metadata field - file location
+  ///
+  /// In en, this message translates to:
+  /// **'File Path'**
+  String get trackMetadataPath;
+
+  /// Metadata field - download date
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get trackMetadataDownloadedAt;
+
+  /// Metadata field - download service used
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get trackMetadataService;
+
+  /// Action button - play track
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get trackMetadataPlay;
+
+  /// Action button - share track
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get trackMetadataShare;
+
+  /// Action button - delete track
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get trackMetadataDelete;
+
+  /// Action button - download again
+  ///
+  /// In en, this message translates to:
+  /// **'Re-download'**
+  String get trackMetadataRedownload;
+
+  /// Action button - open containing folder
+  ///
+  /// In en, this message translates to:
+  /// **'Open Folder'**
+  String get trackMetadataOpenFolder;
+
+  /// Setup wizard title
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to 24-Player'**
+  String get setupTitle;
+
+  /// Setup wizard subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s get you started'**
+  String get setupSubtitle;
+
+  /// Storage permission step title
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Permission'**
+  String get setupStoragePermission;
+
+  /// Explanation for storage permission
+  ///
+  /// In en, this message translates to:
+  /// **'Required to save downloaded files'**
+  String get setupStoragePermissionSubtitle;
+
+  /// Status when permission granted
+  ///
+  /// In en, this message translates to:
+  /// **'Permission granted'**
+  String get setupStoragePermissionGranted;
+
+  /// Status when permission denied
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get setupStoragePermissionDenied;
+
+  /// Button to request permission
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Permission'**
+  String get setupGrantPermission;
+
+  /// Download folder step title
+  ///
+  /// In en, this message translates to:
+  /// **'Download Location'**
+  String get setupDownloadLocation;
+
+  /// Button to pick folder
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Folder'**
+  String get setupChooseFolder;
+
+  /// Continue to next step button
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get setupContinue;
+
+  /// Skip current step button
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get setupSkip;
+
+  /// Title when storage access needed
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Access Required'**
+  String get setupStorageAccessRequired;
+
+  /// Explanation for storage access
+  ///
+  /// In en, this message translates to:
+  /// **'24-Player needs \"All files access\" permission to save music files to your chosen folder.'**
+  String get setupStorageAccessMessage;
+
+  /// Android 11+ specific explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Android 11+ requires \"All files access\" permission to save files to your chosen download folder.'**
+  String get setupStorageAccessMessageAndroid11;
+
+  /// Button to open system settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get setupOpenSettings;
+
+  /// Error when permission denied
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied. Please grant all permissions to continue.'**
+  String get setupPermissionDeniedMessage;
+
+  /// Generic permission required title
+  ///
+  /// In en, this message translates to:
+  /// **'{permissionType} Permission Required'**
+  String setupPermissionRequired(String permissionType);
+
+  /// Generic permission required message
+  ///
+  /// In en, this message translates to:
+  /// **'{permissionType} permission is required for the best experience. You can change this later in Settings.'**
+  String setupPermissionRequiredMessage(String permissionType);
+
+  /// Folder selection step title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Download Folder'**
+  String get setupSelectDownloadFolder;
+
+  /// Dialog title for default folder
+  ///
+  /// In en, this message translates to:
+  /// **'Use Default Folder?'**
+  String get setupUseDefaultFolder;
+
+  /// Prompt when no folder selected
+  ///
+  /// In en, this message translates to:
+  /// **'No folder selected. Would you like to use the default Music folder?'**
+  String get setupNoFolderSelected;
+
+  /// Button to use default folder
+  ///
+  /// In en, this message translates to:
+  /// **'Use Default'**
+  String get setupUseDefault;
+
+  /// Download location dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Download Location'**
+  String get setupDownloadLocationTitle;
+
+  /// iOS-specific folder info
+  ///
+  /// In en, this message translates to:
+  /// **'On iOS, downloads are saved to the app\'s Documents folder. You can access them via the Files app.'**
+  String get setupDownloadLocationIosMessage;
+
+  /// iOS documents folder option
+  ///
+  /// In en, this message translates to:
+  /// **'App Documents Folder'**
+  String get setupAppDocumentsFolder;
+
+  /// Subtitle for documents folder
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended - accessible via Files app'**
+  String get setupAppDocumentsFolderSubtitle;
+
+  /// iOS file picker option
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Files'**
+  String get setupChooseFromFiles;
+
+  /// Subtitle for file picker
+  ///
+  /// In en, this message translates to:
+  /// **'Select iCloud or other location'**
+  String get setupChooseFromFilesSubtitle;
+
+  /// iOS folder selection warning
+  ///
+  /// In en, this message translates to:
+  /// **'iOS limitation: Empty folders cannot be selected. Choose a folder with at least one file.'**
+  String get setupIosEmptyFolderWarning;
+
+  /// Error when user selects iCloud Drive on iOS
+  ///
+  /// In en, this message translates to:
+  /// **'iCloud Drive is not supported. Please use the app Documents folder.'**
+  String get setupIcloudNotSupported;
+
+  /// App tagline in setup
+  ///
+  /// In en, this message translates to:
+  /// **'Download Spotify tracks in FLAC'**
+  String get setupDownloadInFlac;
+
+  /// Setup step indicator - storage
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get setupStepStorage;
+
+  /// Setup step indicator - notification
+  ///
+  /// In en, this message translates to:
+  /// **'Notification'**
+  String get setupStepNotification;
+
+  /// Setup step indicator - folder
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get setupStepFolder;
+
+  /// Setup step indicator - Spotify API
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get setupStepSpotify;
+
+  /// Setup step indicator - permission
+  ///
+  /// In en, this message translates to:
+  /// **'Permission'**
+  String get setupStepPermission;
+
+  /// Success message for storage permission
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Permission Granted!'**
+  String get setupStorageGranted;
+
+  /// Title when storage permission needed
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Permission Required'**
+  String get setupStorageRequired;
+
+  /// Explanation for storage permission
+  ///
+  /// In en, this message translates to:
+  /// **'24-Player needs storage permission to save your downloaded music files.'**
+  String get setupStorageDescription;
+
+  /// Success message for notification permission
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Permission Granted!'**
+  String get setupNotificationGranted;
+
+  /// Button to enable notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Notifications'**
+  String get setupNotificationEnable;
+
+  /// Explanation for notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when downloads complete or require attention.'**
+  String get setupNotificationDescription;
+
+  /// Success message for folder selection
+  ///
+  /// In en, this message translates to:
+  /// **'Download Folder Selected!'**
+  String get setupFolderSelected;
+
+  /// Button to choose folder
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Download Folder'**
+  String get setupFolderChoose;
+
+  /// Explanation for folder selection
+  ///
+  /// In en, this message translates to:
+  /// **'Select a folder where your downloaded music will be saved.'**
+  String get setupFolderDescription;
+
+  /// Button to change selected folder
+  ///
+  /// In en, this message translates to:
+  /// **'Change Folder'**
+  String get setupChangeFolder;
+
+  /// Button to select folder
+  ///
+  /// In en, this message translates to:
+  /// **'Select Folder'**
+  String get setupSelectFolder;
+
+  /// Spotify API step title
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify API (Optional)'**
+  String get setupSpotifyApiOptional;
+
+  /// Explanation for Spotify API
+  ///
+  /// In en, this message translates to:
+  /// **'Add your Spotify API credentials for better search results and access to Spotify-exclusive content.'**
+  String get setupSpotifyApiDescription;
+
+  /// Toggle to enable Spotify API
+  ///
+  /// In en, this message translates to:
+  /// **'Use Spotify API'**
+  String get setupUseSpotifyApi;
+
+  /// Prompt to enter credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your credentials below'**
+  String get setupEnterCredentialsBelow;
+
+  /// Status when using Deezer
+  ///
+  /// In en, this message translates to:
+  /// **'Using Deezer (no account needed)'**
+  String get setupUsingDeezer;
+
+  /// Placeholder for client ID field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Spotify Client ID'**
+  String get setupEnterClientId;
+
+  /// Placeholder for client secret field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Spotify Client Secret'**
+  String get setupEnterClientSecret;
+
+  /// Info about getting Spotify credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Get your free API credentials from the Spotify Developer Dashboard.'**
+  String get setupGetFreeCredentials;
+
+  /// Button to enable notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Notifications'**
+  String get setupEnableNotifications;
+
+  /// Message after completing a step
+  ///
+  /// In en, this message translates to:
+  /// **'You can now proceed to the next step.'**
+  String get setupProceedToNextStep;
+
+  /// Info about notification usage
+  ///
+  /// In en, this message translates to:
+  /// **'You will receive download progress notifications.'**
+  String get setupNotificationProgressDescription;
+
+  /// Detailed notification explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified about download progress and completion. This helps you track downloads when the app is in background.'**
+  String get setupNotificationBackgroundDescription;
+
+  /// Skip button text
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get setupSkipForNow;
+
+  /// Back button text
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get setupBack;
+
+  /// Next button text
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get setupNext;
+
+  /// Final setup button
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get setupGetStarted;
+
+  /// Skip setup and start app
+  ///
+  /// In en, this message translates to:
+  /// **'Skip & Start'**
+  String get setupSkipAndStart;
+
+  /// Instruction for file access permission
+  ///
+  /// In en, this message translates to:
+  /// **'Please enable \"Allow access to manage all files\" in the next screen.'**
+  String get setupAllowAccessToManageFiles;
+
+  /// Link text for Spotify developer portal
+  ///
+  /// In en, this message translates to:
+  /// **'Get credentials from developer.spotify.com'**
+  String get setupGetCredentialsFromSpotify;
+
+  /// Dialog button - cancel action
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get dialogCancel;
+
+  /// Dialog button - confirm/acknowledge
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get dialogOk;
+
+  /// Dialog button - save changes
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get dialogSave;
+
+  /// Dialog button - delete item
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dialogDelete;
+
+  /// Dialog button - retry action
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get dialogRetry;
+
+  /// Dialog button - close dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dialogClose;
+
+  /// Dialog button - confirm yes
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get dialogYes;
+
+  /// Dialog button - confirm no
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get dialogNo;
+
+  /// Dialog button - clear items
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get dialogClear;
+
+  /// Dialog button - confirm action
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get dialogConfirm;
+
+  /// Dialog button - action completed
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get dialogDone;
+
+  /// Dialog button - import data
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get dialogImport;
+
+  /// Dialog button - discard changes
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get dialogDiscard;
+
+  /// Dialog button - remove item
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get dialogRemove;
+
+  /// Dialog button - uninstall extension
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall'**
+  String get dialogUninstall;
+
+  /// Dialog title - unsaved changes warning
+  ///
+  /// In en, this message translates to:
+  /// **'Discard Changes?'**
+  String get dialogDiscardChanges;
+
+  /// Dialog message - unsaved changes
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Do you want to discard them?'**
+  String get dialogUnsavedChanges;
+
+  /// Dialog title - download error
+  ///
+  /// In en, this message translates to:
+  /// **'Download Failed'**
+  String get dialogDownloadFailed;
+
+  /// Label for track name in error dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Track:'**
+  String get dialogTrackLabel;
+
+  /// Label for artist name in error dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Artist:'**
+  String get dialogArtistLabel;
+
+  /// Label for error message
+  ///
+  /// In en, this message translates to:
+  /// **'Error:'**
+  String get dialogErrorLabel;
+
+  /// Dialog title - clear all items
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get dialogClearAll;
+
+  /// Dialog message - clear downloads confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all downloads?'**
+  String get dialogClearAllDownloads;
+
+  /// Dialog title - delete file confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from device?'**
+  String get dialogRemoveFromDevice;
+
+  /// Dialog title - uninstall extension
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Extension'**
+  String get dialogRemoveExtension;
+
+  /// Dialog message - uninstall confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove this extension? This cannot be undone.'**
+  String get dialogRemoveExtensionMessage;
+
+  /// Dialog title - uninstall extension
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall Extension?'**
+  String get dialogUninstallExtension;
+
+  /// Dialog message - uninstall specific extension
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove {extensionName}?'**
+  String dialogUninstallExtensionMessage(String extensionName);
+
+  /// Dialog title - clear download history
+  ///
+  /// In en, this message translates to:
+  /// **'Clear History'**
+  String get dialogClearHistoryTitle;
+
+  /// Dialog message - clear history confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all download history? This cannot be undone.'**
+  String get dialogClearHistoryMessage;
+
+  /// Dialog title - delete selected items
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get dialogDeleteSelectedTitle;
+
+  /// Dialog message - delete selected tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} {count, plural, =1{track} other{tracks}} from history?\n\nThis will also delete the files from storage.'**
+  String dialogDeleteSelectedMessage(int count);
+
+  /// Dialog title - import CSV playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Import Playlist'**
+  String get dialogImportPlaylistTitle;
+
+  /// Dialog message - import playlist confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} tracks in CSV. Add them to download queue?'**
+  String dialogImportPlaylistMessage(int count);
+
+  /// Label shown in quality picker for CSV import
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks from CSV'**
+  String csvImportTracks(int count);
+
+  /// Snackbar - track added to download queue
+  ///
+  /// In en, this message translates to:
+  /// **'Added \"{trackName}\" to queue'**
+  String snackbarAddedToQueue(String trackName);
+
+  /// Snackbar - multiple tracks added to queue
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} tracks to queue'**
+  String snackbarAddedTracksToQueue(int count);
+
+  /// Snackbar - track already exists
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" already downloaded'**
+  String snackbarAlreadyDownloaded(String trackName);
+
+  /// Snackbar - track already exists in local library
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" already exists in your library'**
+  String snackbarAlreadyInLibrary(String trackName);
+
+  /// Snackbar - history deleted
+  ///
+  /// In en, this message translates to:
+  /// **'History cleared'**
+  String get snackbarHistoryCleared;
+
+  /// Snackbar - Spotify credentials saved
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials saved'**
+  String get snackbarCredentialsSaved;
+
+  /// Snackbar - Spotify credentials removed
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials cleared'**
+  String get snackbarCredentialsCleared;
+
+  /// Snackbar - tracks deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} {count, plural, =1{track} other{tracks}}'**
+  String snackbarDeletedTracks(int count);
+
+  /// Snackbar - file open error
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open file: {error}'**
+  String snackbarCannotOpenFile(String error);
+
+  /// Snackbar - validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill all fields'**
+  String get snackbarFillAllFields;
+
+  /// Snackbar action - view download queue
+  ///
+  /// In en, this message translates to:
+  /// **'View Queue'**
+  String get snackbarViewQueue;
+
+  /// Snackbar - loading error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load: {error}'**
+  String snackbarFailedToLoad(String error);
+
+  /// Snackbar - URL copied
+  ///
+  /// In en, this message translates to:
+  /// **'{platform} URL copied to clipboard'**
+  String snackbarUrlCopied(String platform);
+
+  /// Snackbar - file doesn't exist
+  ///
+  /// In en, this message translates to:
+  /// **'File not found'**
+  String get snackbarFileNotFound;
+
+  /// Snackbar - wrong file type selected
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a .24-Player-ext file'**
+  String get snackbarSelectExtFile;
+
+  /// Snackbar - provider order saved
+  ///
+  /// In en, this message translates to:
+  /// **'Provider priority saved'**
+  String get snackbarProviderPrioritySaved;
+
+  /// Snackbar - metadata provider order saved
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata provider priority saved'**
+  String get snackbarMetadataProviderSaved;
+
+  /// Snackbar - extension installed successfully
+  ///
+  /// In en, this message translates to:
+  /// **'{extensionName} installed.'**
+  String snackbarExtensionInstalled(String extensionName);
+
+  /// Snackbar - extension updated successfully
+  ///
+  /// In en, this message translates to:
+  /// **'{extensionName} updated.'**
+  String snackbarExtensionUpdated(String extensionName);
+
+  /// Snackbar - extension install error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to install extension'**
+  String get snackbarFailedToInstall;
+
+  /// Snackbar - extension update error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update extension'**
+  String get snackbarFailedToUpdate;
+
+  /// Error title - too many requests
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Limited'**
+  String get errorRateLimited;
+
+  /// Error message - rate limit explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment before searching again.'**
+  String get errorRateLimitedMessage;
+
+  /// Error message - loading failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load {item}'**
+  String errorFailedToLoad(String item);
+
+  /// Error - search returned no results
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks found'**
+  String get errorNoTracksFound;
+
+  /// Error - seek disabled for live decrypted stream
+  ///
+  /// In en, this message translates to:
+  /// **'Seeking is not supported for this live stream'**
+  String get errorSeekNotSupported;
+
+  /// Error - extension source not available
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot load {item}: missing extension source'**
+  String errorMissingExtensionSource(String item);
+
+  /// Download status - waiting in queue
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get statusQueued;
+
+  /// Download status - in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get statusDownloading;
+
+  /// Download status - writing metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing'**
+  String get statusFinalizing;
+
+  /// Download status - finished
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// Download status - error occurred
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get statusFailed;
+
+  /// Download status - already exists
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get statusSkipped;
+
+  /// Download status - paused
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get statusPaused;
+
+  /// Action button - pause download
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get actionPause;
+
+  /// Action button - resume download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get actionResume;
+
+  /// Action button - cancel operation
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
+
+  /// Action button - stop operation
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get actionStop;
+
+  /// Action button - enter selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get actionSelect;
+
+  /// Action button - select all items
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get actionSelectAll;
+
+  /// Action button - deselect all
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect'**
+  String get actionDeselect;
+
+  /// Action button - paste from clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get actionPaste;
+
+  /// Action button - import CSV file
+  ///
+  /// In en, this message translates to:
+  /// **'Import CSV'**
+  String get actionImportCsv;
+
+  /// Action button - delete Spotify credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Credentials'**
+  String get actionRemoveCredentials;
+
+  /// Action button - save Spotify credentials
+  ///
+  /// In en, this message translates to:
+  /// **'Save Credentials'**
+  String get actionSaveCredentials;
+
+  /// Selection count indicator
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectionSelected(int count);
+
+  /// Status - all items selected
+  ///
+  /// In en, this message translates to:
+  /// **'All tracks selected'**
+  String get selectionAllSelected;
+
+  /// Hint - how to select items
+  ///
+  /// In en, this message translates to:
+  /// **'Tap tracks to select'**
+  String get selectionTapToSelect;
+
+  /// Delete button with count
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} {count, plural, =1{track} other{tracks}}'**
+  String selectionDeleteTracks(int count);
+
+  /// Placeholder when nothing selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select tracks to delete'**
+  String get selectionSelectToDelete;
+
+  /// Progress indicator - loading track info
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching metadata... {current}/{total}'**
+  String progressFetchingMetadata(int current, int total);
+
+  /// Progress indicator - parsing CSV file
+  ///
+  /// In en, this message translates to:
+  /// **'Reading CSV...'**
+  String get progressReadingCsv;
+
+  /// Search result category - songs
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get searchSongs;
+
+  /// Search result category - artists
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get searchArtists;
+
+  /// Search result category - albums
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get searchAlbums;
+
+  /// Search result category - playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get searchPlaylists;
+
+  /// Tooltip - play button
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get tooltipPlay;
+
+  /// Tooltip - cancel button
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get tooltipCancel;
+
+  /// Tooltip - stop button
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get tooltipStop;
+
+  /// Tooltip - retry button
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get tooltipRetry;
+
+  /// Tooltip - remove button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get tooltipRemove;
+
+  /// Tooltip - clear button
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get tooltipClear;
+
+  /// Tooltip - paste button
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get tooltipPaste;
+
+  /// Setting title - filename pattern
+  ///
+  /// In en, this message translates to:
+  /// **'Filename Format'**
+  String get filenameFormat;
+
+  /// Preview of filename pattern
+  ///
+  /// In en, this message translates to:
+  /// **'Preview: {preview}'**
+  String filenameFormatPreview(String preview);
+
+  /// Label for placeholder list
+  ///
+  /// In en, this message translates to:
+  /// **'Available placeholders:'**
+  String get filenameAvailablePlaceholders;
+
+  /// Default filename format hint
+  ///
+  /// In en, this message translates to:
+  /// **'{artist} - {title}'**
+  String filenameHint(Object artist, Object title);
+
+  /// Toggle label for showing advanced filename tags
+  ///
+  /// In en, this message translates to:
+  /// **'Show advanced tags'**
+  String get filenameShowAdvancedTags;
+
+  /// Description for advanced filename tag toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Enable formatted tags for track padding and date patterns'**
+  String get filenameShowAdvancedTagsDescription;
+
+  /// Setting title - folder structure
+  ///
+  /// In en, this message translates to:
+  /// **'Folder Organization'**
+  String get folderOrganization;
+
+  /// Folder option - flat structure
+  ///
+  /// In en, this message translates to:
+  /// **'No organization'**
+  String get folderOrganizationNone;
+
+  /// Folder option - artist folders
+  ///
+  /// In en, this message translates to:
+  /// **'By Artist'**
+  String get folderOrganizationByArtist;
+
+  /// Folder option - album folders
+  ///
+  /// In en, this message translates to:
+  /// **'By Album'**
+  String get folderOrganizationByAlbum;
+
+  /// Folder option - nested folders
+  ///
+  /// In en, this message translates to:
+  /// **'Artist/Album'**
+  String get folderOrganizationByArtistAlbum;
+
+  /// Folder organization sheet description
+  ///
+  /// In en, this message translates to:
+  /// **'Organize downloaded files into folders'**
+  String get folderOrganizationDescription;
+
+  /// Subtitle for no organization option
+  ///
+  /// In en, this message translates to:
+  /// **'All files in download folder'**
+  String get folderOrganizationNoneSubtitle;
+
+  /// Subtitle for artist folder option
+  ///
+  /// In en, this message translates to:
+  /// **'Separate folder for each artist'**
+  String get folderOrganizationByArtistSubtitle;
+
+  /// Subtitle for album folder option
+  ///
+  /// In en, this message translates to:
+  /// **'Separate folder for each album'**
+  String get folderOrganizationByAlbumSubtitle;
+
+  /// Subtitle for nested folder option
+  ///
+  /// In en, this message translates to:
+  /// **'Nested folders for artist and album'**
+  String get folderOrganizationByArtistAlbumSubtitle;
+
+  /// Update dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Update Available'**
+  String get updateAvailable;
+
+  /// Update available message
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available'**
+  String updateNewVersion(String version);
+
+  /// Update button - download update
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get updateDownload;
+
+  /// Update button - dismiss
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// Link to changelog
+  ///
+  /// In en, this message translates to:
+  /// **'Changelog'**
+  String get updateChangelog;
+
+  /// Update status - initializing
+  ///
+  /// In en, this message translates to:
+  /// **'Starting download...'**
+  String get updateStartingDownload;
+
+  /// Update error title
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get updateDownloadFailed;
+
+  /// Update error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download update'**
+  String get updateFailedMessage;
+
+  /// Update subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is ready'**
+  String get updateNewVersionReady;
+
+  /// Label for current version
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get updateCurrent;
+
+  /// Label for new version
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get updateNew;
+
+  /// Update status - downloading
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading...'**
+  String get updateDownloading;
+
+  /// Changelog section title
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get updateWhatsNew;
+
+  /// Update button - download and install
+  ///
+  /// In en, this message translates to:
+  /// **'Download & Install'**
+  String get updateDownloadInstall;
+
+  /// Update button - skip this version
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t remind'**
+  String get updateDontRemind;
+
+  /// Setting title - download provider order
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Priority'**
+  String get providerPriority;
+
+  /// Subtitle for provider priority
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder download providers'**
+  String get providerPrioritySubtitle;
+
+  /// Provider priority page title
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Priority'**
+  String get providerPriorityTitle;
+
+  /// Provider priority page description
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder download providers. The app will try providers from top to bottom when downloading tracks.'**
+  String get providerPriorityDescription;
+
+  /// Info tip about fallback behavior
+  ///
+  /// In en, this message translates to:
+  /// **'If a track is not available on the first provider, the app will automatically try the next one.'**
+  String get providerPriorityInfo;
+
+  /// Label for built-in providers (Tidal/Qobuz/Amazon)
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in'**
+  String get providerBuiltIn;
+
+  /// Label for extension-provided providers
+  ///
+  /// In en, this message translates to:
+  /// **'Extension'**
+  String get providerExtension;
+
+  /// Setting title - metadata provider order
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Provider Priority'**
+  String get metadataProviderPriority;
+
+  /// Subtitle for metadata priority
+  ///
+  /// In en, this message translates to:
+  /// **'Order used when fetching track metadata'**
+  String get metadataProviderPrioritySubtitle;
+
+  /// Metadata priority page title
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Priority'**
+  String get metadataProviderPriorityTitle;
+
+  /// Metadata priority page description
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder metadata providers. The app will try providers from top to bottom when searching for tracks and fetching metadata.'**
+  String get metadataProviderPriorityDescription;
+
+  /// Info tip about rate limits
+  ///
+  /// In en, this message translates to:
+  /// **'Deezer has no rate limits and is recommended as primary. Spotify may rate limit after many requests.'**
+  String get metadataProviderPriorityInfo;
+
+  /// Deezer provider description
+  ///
+  /// In en, this message translates to:
+  /// **'No rate limits'**
+  String get metadataNoRateLimits;
+
+  /// Spotify provider description
+  ///
+  /// In en, this message translates to:
+  /// **'May rate limit'**
+  String get metadataMayRateLimit;
+
+  /// Logs screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get logTitle;
+
+  /// Action - copy logs to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Logs'**
+  String get logCopy;
+
+  /// Action - delete all logs
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Logs'**
+  String get logClear;
+
+  /// Action - share logs file
+  ///
+  /// In en, this message translates to:
+  /// **'Share Logs'**
+  String get logShare;
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No logs yet'**
+  String get logEmpty;
+
+  /// Snackbar - logs copied
+  ///
+  /// In en, this message translates to:
+  /// **'Logs copied to clipboard'**
+  String get logCopied;
+
+  /// Log search placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Search logs...'**
+  String get logSearchHint;
+
+  /// Filter by log level
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get logFilterLevel;
+
+  /// Filter section title
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get logFilterSection;
+
+  /// Share button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Share logs'**
+  String get logShareLogs;
+
+  /// Clear button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Clear logs'**
+  String get logClearLogs;
+
+  /// Clear logs dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Logs'**
+  String get logClearLogsTitle;
+
+  /// Clear logs confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all logs?'**
+  String get logClearLogsMessage;
+
+  /// Error category - ISP blocking
+  ///
+  /// In en, this message translates to:
+  /// **'ISP BLOCKING DETECTED'**
+  String get logIspBlocking;
+
+  /// Error category - rate limiting
+  ///
+  /// In en, this message translates to:
+  /// **'RATE LIMITED'**
+  String get logRateLimited;
+
+  /// Error category - network issues
+  ///
+  /// In en, this message translates to:
+  /// **'NETWORK ERROR'**
+  String get logNetworkError;
+
+  /// Error category - missing tracks
+  ///
+  /// In en, this message translates to:
+  /// **'TRACK NOT FOUND'**
+  String get logTrackNotFound;
+
+  /// Filter dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Filter logs by severity'**
+  String get logFilterBySeverity;
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No logs yet'**
+  String get logNoLogsYet;
+
+  /// Empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Logs will appear here as you use the app'**
+  String get logNoLogsYetSubtitle;
+
+  /// Section header for error summary
+  ///
+  /// In en, this message translates to:
+  /// **'Issue Summary'**
+  String get logIssueSummary;
+
+  /// ISP blocking explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Your ISP may be blocking access to download services'**
+  String get logIspBlockingDescription;
+
+  /// ISP blocking fix suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Try using a VPN or change DNS to 1.1.1.1 or 8.8.8.8'**
+  String get logIspBlockingSuggestion;
+
+  /// Rate limit explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests to the service'**
+  String get logRateLimitedDescription;
+
+  /// Rate limit fix suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Wait a few minutes before trying again'**
+  String get logRateLimitedSuggestion;
+
+  /// Network error explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Connection issues detected'**
+  String get logNetworkErrorDescription;
+
+  /// Network error fix suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection'**
+  String get logNetworkErrorSuggestion;
+
+  /// Track not found explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Some tracks could not be found on download services'**
+  String get logTrackNotFoundDescription;
+
+  /// Track not found explanation
+  ///
+  /// In en, this message translates to:
+  /// **'The track may not be available in lossless quality'**
+  String get logTrackNotFoundSuggestion;
+
+  /// Error count display
+  ///
+  /// In en, this message translates to:
+  /// **'Total errors: {count}'**
+  String logTotalErrors(int count);
+
+  /// Affected domains display
+  ///
+  /// In en, this message translates to:
+  /// **'Affected: {domains}'**
+  String logAffected(String domains);
+
+  /// Log count with filter active
+  ///
+  /// In en, this message translates to:
+  /// **'Entries ({count} filtered)'**
+  String logEntriesFiltered(int count);
+
+  /// Total log count
+  ///
+  /// In en, this message translates to:
+  /// **'Entries ({count})'**
+  String logEntries(int count);
+
+  /// Credentials dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify Credentials'**
+  String get credentialsTitle;
+
+  /// Credentials dialog explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Client ID and Secret to use your own Spotify application quota.'**
+  String get credentialsDescription;
+
+  /// Client ID field label - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Client ID'**
+  String get credentialsClientId;
+
+  /// Client ID placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Client ID'**
+  String get credentialsClientIdHint;
+
+  /// Client Secret field label - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Client Secret'**
+  String get credentialsClientSecret;
+
+  /// Client Secret placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Client Secret'**
+  String get credentialsClientSecretHint;
+
+  /// Update channel - stable releases
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get channelStable;
+
+  /// Update channel - beta/preview releases
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get channelPreview;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Search Source'**
+  String get sectionSearchSource;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get sectionDownload;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get sectionPerformance;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get sectionApp;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get sectionData;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Debug'**
+  String get sectionDebug;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get sectionService;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Audio Quality'**
+  String get sectionAudioQuality;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'File Settings'**
+  String get sectionFileSettings;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get sectionLyrics;
+
+  /// Setting - how to save lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics Mode'**
+  String get lyricsMode;
+
+  /// Lyrics mode picker description
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how lyrics are saved with your downloads'**
+  String get lyricsModeDescription;
+
+  /// Lyrics mode option - embed in audio file
+  ///
+  /// In en, this message translates to:
+  /// **'Embed in file'**
+  String get lyricsModeEmbed;
+
+  /// Subtitle for embed option
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics stored inside FLAC metadata'**
+  String get lyricsModeEmbedSubtitle;
+
+  /// Lyrics mode option - separate LRC file
+  ///
+  /// In en, this message translates to:
+  /// **'External .lrc file'**
+  String get lyricsModeExternal;
+
+  /// Subtitle for external option
+  ///
+  /// In en, this message translates to:
+  /// **'Separate .lrc file for players like Samsung Music'**
+  String get lyricsModeExternalSubtitle;
+
+  /// Lyrics mode option - embed and external
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get lyricsModeBoth;
+
+  /// Subtitle for both option
+  ///
+  /// In en, this message translates to:
+  /// **'Embed and save .lrc file'**
+  String get lyricsModeBothSubtitle;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get sectionColor;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get sectionTheme;
+
+  /// Settings section header
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get sectionLayout;
+
+  /// Settings section header for language
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get sectionLanguage;
+
+  /// Language setting title
+  ///
+  /// In en, this message translates to:
+  /// **'App Language'**
+  String get appearanceLanguage;
+
+  /// Language setting subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred language'**
+  String get appearanceLanguageSubtitle;
+
+  /// Appearance settings description
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, colors, display'**
+  String get settingsAppearanceSubtitle;
+
+  /// Download settings description
+  ///
+  /// In en, this message translates to:
+  /// **'Service, quality, filename format'**
+  String get settingsDownloadSubtitle;
+
+  /// Options settings description
+  ///
+  /// In en, this message translates to:
+  /// **'Fallback, lyrics, cover art, updates'**
+  String get settingsOptionsSubtitle;
+
+  /// Extensions settings description
+  ///
+  /// In en, this message translates to:
+  /// **'Manage download providers'**
+  String get settingsExtensionsSubtitle;
+
+  /// Logs settings description
+  ///
+  /// In en, this message translates to:
+  /// **'View app logs for debugging'**
+  String get settingsLogsSubtitle;
+
+  /// Status when opening shared URL
+  ///
+  /// In en, this message translates to:
+  /// **'Loading shared link...'**
+  String get loadingSharedLink;
+
+  /// Exit confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
+  /// Section header for track list
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks'**
+  String get tracksHeader;
+
+  /// Download all button with count
+  ///
+  /// In en, this message translates to:
+  /// **'Download All ({count})'**
+  String downloadAllCount(int count);
+
+  /// Play all button with count
+  ///
+  /// In en, this message translates to:
+  /// **'Play All ({count})'**
+  String playAllCount(int count);
+
+  /// Track count display
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track} other{{count} tracks}}'**
+  String tracksCount(int count);
+
+  /// Action - copy file path
+  ///
+  /// In en, this message translates to:
+  /// **'Copy file path'**
+  String get trackCopyFilePath;
+
+  /// Action - delete downloaded file
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from device'**
+  String get trackRemoveFromDevice;
+
+  /// Action - fetch lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Load Lyrics'**
+  String get trackLoadLyrics;
+
+  /// Tab title - track metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata'**
+  String get trackMetadata;
+
+  /// Tab title - file information
+  ///
+  /// In en, this message translates to:
+  /// **'File Info'**
+  String get trackFileInfo;
+
+  /// Tab title - lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get trackLyrics;
+
+  /// Error - file doesn't exist
+  ///
+  /// In en, this message translates to:
+  /// **'File not found'**
+  String get trackFileNotFound;
+
+  /// Action - open track in Deezer app
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Deezer'**
+  String get trackOpenInDeezer;
+
+  /// Action - open track in Spotify app
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Spotify'**
+  String get trackOpenInSpotify;
+
+  /// Metadata label - track title
+  ///
+  /// In en, this message translates to:
+  /// **'Track name'**
+  String get trackTrackName;
+
+  /// Metadata label - artist name
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get trackArtist;
+
+  /// Metadata label - album artist
+  ///
+  /// In en, this message translates to:
+  /// **'Album artist'**
+  String get trackAlbumArtist;
+
+  /// Metadata label - album name
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get trackAlbum;
+
+  /// Metadata label - track number
+  ///
+  /// In en, this message translates to:
+  /// **'Track number'**
+  String get trackTrackNumber;
+
+  /// Metadata label - disc number
+  ///
+  /// In en, this message translates to:
+  /// **'Disc number'**
+  String get trackDiscNumber;
+
+  /// Metadata label - track length
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get trackDuration;
+
+  /// Metadata label - audio quality
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality'**
+  String get trackAudioQuality;
+
+  /// Metadata label - release date
+  ///
+  /// In en, this message translates to:
+  /// **'Release date'**
+  String get trackReleaseDate;
+
+  /// Metadata label - music genre
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get trackGenre;
+
+  /// Metadata label - record label
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get trackLabel;
+
+  /// Metadata label - copyright information
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright'**
+  String get trackCopyright;
+
+  /// Metadata label - download date
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get trackDownloaded;
+
+  /// Action - copy lyrics to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy lyrics'**
+  String get trackCopyLyrics;
+
+  /// Message when lyrics not found
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics not available for this track'**
+  String get trackLyricsNotAvailable;
+
+  /// Message when lyrics request times out
+  ///
+  /// In en, this message translates to:
+  /// **'Request timed out. Try again later.'**
+  String get trackLyricsTimeout;
+
+  /// Message when lyrics loading fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load lyrics'**
+  String get trackLyricsLoadFailed;
+
+  /// Action - embed lyrics into audio file
+  ///
+  /// In en, this message translates to:
+  /// **'Embed Lyrics'**
+  String get trackEmbedLyrics;
+
+  /// Snackbar - lyrics saved to file
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics embedded successfully'**
+  String get trackLyricsEmbedded;
+
+  /// Message when track is instrumental (no lyrics)
+  ///
+  /// In en, this message translates to:
+  /// **'Instrumental track'**
+  String get trackInstrumental;
+
+  /// Snackbar - content copied
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get trackCopiedToClipboard;
+
+  /// Delete confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from device?'**
+  String get trackDeleteConfirmTitle;
+
+  /// Delete confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the downloaded file and remove it from your history.'**
+  String get trackDeleteConfirmMessage;
+
+  /// Error opening file
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open: {message}'**
+  String trackCannotOpen(String message);
+
+  /// Relative date - today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dateToday;
+
+  /// Relative date - yesterday
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get dateYesterday;
+
+  /// Relative date - days ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String dateDaysAgo(int count);
+
+  /// Relative date - weeks ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count} weeks ago'**
+  String dateWeeksAgo(int count);
+
+  /// Relative date - months ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count} months ago'**
+  String dateMonthsAgo(int count);
+
+  /// Download mode - one at a time
+  ///
+  /// In en, this message translates to:
+  /// **'Sequential'**
+  String get concurrentSequential;
+
+  /// Download mode - 2 simultaneous
+  ///
+  /// In en, this message translates to:
+  /// **'2 Parallel'**
+  String get concurrentParallel2;
+
+  /// Download mode - 3 simultaneous
+  ///
+  /// In en, this message translates to:
+  /// **'3 Parallel'**
+  String get concurrentParallel3;
+
+  /// Tooltip for failed download
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see error details'**
+  String get tapToSeeError;
+
+  /// Store filter - all extensions
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get storeFilterAll;
+
+  /// Store filter - metadata providers
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata'**
+  String get storeFilterMetadata;
+
+  /// Store filter - download providers
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get storeFilterDownload;
+
+  /// Store filter - utility extensions
+  ///
+  /// In en, this message translates to:
+  /// **'Utility'**
+  String get storeFilterUtility;
+
+  /// Store filter - lyrics providers
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get storeFilterLyrics;
+
+  /// Store filter - integrations
+  ///
+  /// In en, this message translates to:
+  /// **'Integration'**
+  String get storeFilterIntegration;
+
+  /// Button to clear all filters
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get storeClearFilters;
+
+  /// Empty state when no extensions match filters
+  ///
+  /// In en, this message translates to:
+  /// **'No extensions found'**
+  String get storeNoResults;
+
+  /// Extension capability - provider priority
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Priority'**
+  String get extensionProviderPriority;
+
+  /// Button to install extension
+  ///
+  /// In en, this message translates to:
+  /// **'Install Extension'**
+  String get extensionInstallButton;
+
+  /// Default search provider option
+  ///
+  /// In en, this message translates to:
+  /// **'Default (Deezer/Spotify)'**
+  String get extensionDefaultProvider;
+
+  /// Subtitle for default provider
+  ///
+  /// In en, this message translates to:
+  /// **'Use built-in search'**
+  String get extensionDefaultProviderSubtitle;
+
+  /// Extension detail - author
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get extensionAuthor;
+
+  /// Extension detail - unique ID
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get extensionId;
+
+  /// Extension detail - error message
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get extensionError;
+
+  /// Section header - extension features
+  ///
+  /// In en, this message translates to:
+  /// **'Capabilities'**
+  String get extensionCapabilities;
+
+  /// Capability - provides metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Provider'**
+  String get extensionMetadataProvider;
+
+  /// Capability - provides downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Download Provider'**
+  String get extensionDownloadProvider;
+
+  /// Capability - provides lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics Provider'**
+  String get extensionLyricsProvider;
+
+  /// Capability - handles URLs
+  ///
+  /// In en, this message translates to:
+  /// **'URL Handler'**
+  String get extensionUrlHandler;
+
+  /// Capability - quality selection
+  ///
+  /// In en, this message translates to:
+  /// **'Quality Options'**
+  String get extensionQualityOptions;
+
+  /// Capability - post-processing
+  ///
+  /// In en, this message translates to:
+  /// **'Post-Processing Hooks'**
+  String get extensionPostProcessingHooks;
+
+  /// Section header - required permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get extensionPermissions;
+
+  /// Section header - extension settings
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get extensionSettings;
+
+  /// Button to uninstall extension
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Extension'**
+  String get extensionRemoveButton;
+
+  /// Extension detail - last update
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get extensionUpdated;
+
+  /// Extension detail - minimum app version
+  ///
+  /// In en, this message translates to:
+  /// **'Min App Version'**
+  String get extensionMinAppVersion;
+
+  /// Capability - custom track matching algorithm
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Track Matching'**
+  String get extensionCustomTrackMatching;
+
+  /// Capability - post-download processing
+  ///
+  /// In en, this message translates to:
+  /// **'Post-Processing'**
+  String get extensionPostProcessing;
+
+  /// Post-processing hooks count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hook(s) available'**
+  String extensionHooksAvailable(int count);
+
+  /// URL patterns count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pattern(s)'**
+  String extensionPatternsCount(int count);
+
+  /// Track matching strategy name
+  ///
+  /// In en, this message translates to:
+  /// **'Strategy: {strategy}'**
+  String extensionStrategy(String strategy);
+
+  /// Section header - provider priority
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Priority'**
+  String get extensionsProviderPrioritySection;
+
+  /// Section header - installed extensions
+  ///
+  /// In en, this message translates to:
+  /// **'Installed Extensions'**
+  String get extensionsInstalledSection;
+
+  /// Empty state - no extensions
+  ///
+  /// In en, this message translates to:
+  /// **'No extensions installed'**
+  String get extensionsNoExtensions;
+
+  /// Empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Install .24-Player-ext files to add new providers'**
+  String get extensionsNoExtensionsSubtitle;
+
+  /// Button to install extension from file
+  ///
+  /// In en, this message translates to:
+  /// **'Install Extension'**
+  String get extensionsInstallButton;
+
+  /// Security warning about extensions
+  ///
+  /// In en, this message translates to:
+  /// **'Extensions can add new metadata and download providers. Only install extensions from trusted sources.'**
+  String get extensionsInfoTip;
+
+  /// Success message after install
+  ///
+  /// In en, this message translates to:
+  /// **'Extension installed successfully'**
+  String get extensionsInstalledSuccess;
+
+  /// Setting - download provider order
+  ///
+  /// In en, this message translates to:
+  /// **'Download Priority'**
+  String get extensionsDownloadPriority;
+
+  /// Subtitle for download priority
+  ///
+  /// In en, this message translates to:
+  /// **'Set download service order'**
+  String get extensionsDownloadPrioritySubtitle;
+
+  /// Empty state - no download providers
+  ///
+  /// In en, this message translates to:
+  /// **'No extensions with download provider'**
+  String get extensionsNoDownloadProvider;
+
+  /// Setting - metadata provider order
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata Priority'**
+  String get extensionsMetadataPriority;
+
+  /// Subtitle for metadata priority
+  ///
+  /// In en, this message translates to:
+  /// **'Set search & metadata source order'**
+  String get extensionsMetadataPrioritySubtitle;
+
+  /// Empty state - no metadata providers
+  ///
+  /// In en, this message translates to:
+  /// **'No extensions with metadata provider'**
+  String get extensionsNoMetadataProvider;
+
+  /// Setting - search provider selection
+  ///
+  /// In en, this message translates to:
+  /// **'Search Provider'**
+  String get extensionsSearchProvider;
+
+  /// Empty state - no search providers
+  ///
+  /// In en, this message translates to:
+  /// **'No extensions with custom search'**
+  String get extensionsNoCustomSearch;
+
+  /// Search provider setting description
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which service to use for searching tracks'**
+  String get extensionsSearchProviderDescription;
+
+  /// Label for custom search provider
+  ///
+  /// In en, this message translates to:
+  /// **'Custom search'**
+  String get extensionsCustomSearch;
+
+  /// Error message when extension fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading extension'**
+  String get extensionsErrorLoading;
+
+  /// Quality option - CD quality FLAC
+  ///
+  /// In en, this message translates to:
+  /// **'FLAC Lossless'**
+  String get qualityFlacLossless;
+
+  /// Technical spec for lossless
+  ///
+  /// In en, this message translates to:
+  /// **'16-bit / 44.1kHz'**
+  String get qualityFlacLosslessSubtitle;
+
+  /// Quality option - high resolution FLAC
+  ///
+  /// In en, this message translates to:
+  /// **'Hi-Res FLAC'**
+  String get qualityHiResFlac;
+
+  /// Technical spec for hi-res
+  ///
+  /// In en, this message translates to:
+  /// **'24-bit / up to 96kHz'**
+  String get qualityHiResFlacSubtitle;
+
+  /// Quality option - maximum resolution FLAC
+  ///
+  /// In en, this message translates to:
+  /// **'Hi-Res FLAC Max'**
+  String get qualityHiResFlacMax;
+
+  /// Technical spec for hi-res max
+  ///
+  /// In en, this message translates to:
+  /// **'24-bit / up to 192kHz'**
+  String get qualityHiResFlacMaxSubtitle;
+
+  /// Quality option - lossy format (MP3/Opus)
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy'**
+  String get qualityLossy;
+
+  /// Technical spec for lossy MP3
+  ///
+  /// In en, this message translates to:
+  /// **'MP3 320kbps (converted from FLAC)'**
+  String get qualityLossyMp3Subtitle;
+
+  /// Technical spec for lossy Opus
+  ///
+  /// In en, this message translates to:
+  /// **'Opus 128kbps (converted from FLAC)'**
+  String get qualityLossyOpusSubtitle;
+
+  /// Setting - enable lossy quality option
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Lossy Option'**
+  String get enableLossyOption;
+
+  /// Subtitle when lossy is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy quality option is available'**
+  String get enableLossyOptionSubtitleOn;
+
+  /// Subtitle when lossy is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads FLAC then converts to lossy format'**
+  String get enableLossyOptionSubtitleOff;
+
+  /// Setting - choose lossy format
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy Format'**
+  String get lossyFormat;
+
+  /// Description for lossy format picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the lossy format for conversion'**
+  String get lossyFormatDescription;
+
+  /// MP3 format description
+  ///
+  /// In en, this message translates to:
+  /// **'320kbps, best compatibility'**
+  String get lossyFormatMp3Subtitle;
+
+  /// Opus format description
+  ///
+  /// In en, this message translates to:
+  /// **'128kbps, better quality at smaller size'**
+  String get lossyFormatOpusSubtitle;
+
+  /// Note about quality availability
+  ///
+  /// In en, this message translates to:
+  /// **'Actual quality depends on track availability from the service'**
+  String get qualityNote;
+
+  /// Note for YouTube service explaining lossy-only quality
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube provides lossy audio only. Not part of lossless fallback.'**
+  String get youtubeQualityNote;
+
+  /// Title for YouTube Opus bitrate setting
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube Opus Bitrate'**
+  String get youtubeOpusBitrateTitle;
+
+  /// Title for YouTube MP3 bitrate setting
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube MP3 Bitrate'**
+  String get youtubeMp3BitrateTitle;
+
+  /// Subtitle showing current bitrate and valid range
+  ///
+  /// In en, this message translates to:
+  /// **'{bitrate}kbps ({min}-{max})'**
+  String youtubeBitrateSubtitle(int bitrate, int min, int max);
+
+  /// Helper text for manual YouTube bitrate input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter custom bitrate ({min}-{max} kbps)'**
+  String youtubeBitrateInputHelp(int min, int max);
+
+  /// Label for YouTube bitrate input field
+  ///
+  /// In en, this message translates to:
+  /// **'Bitrate (kbps)'**
+  String get youtubeBitrateFieldLabel;
+
+  /// Validation error for invalid YouTube bitrate input
+  ///
+  /// In en, this message translates to:
+  /// **'Bitrate must be between {min} and {max} kbps'**
+  String youtubeBitrateValidationError(int min, int max);
+
+  /// Setting - show quality picker
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Before Download'**
+  String get downloadAskBeforeDownload;
+
+  /// Setting - download folder
+  ///
+  /// In en, this message translates to:
+  /// **'Download Directory'**
+  String get downloadDirectory;
+
+  /// Setting - separate folder for singles
+  ///
+  /// In en, this message translates to:
+  /// **'Separate Singles Folder'**
+  String get downloadSeparateSinglesFolder;
+
+  /// Setting - album folder organization
+  ///
+  /// In en, this message translates to:
+  /// **'Album Folder Structure'**
+  String get downloadAlbumFolderStructure;
+
+  /// Setting - choose whether artist folders use Album Artist or Track Artist
+  ///
+  /// In en, this message translates to:
+  /// **'Use Album Artist for folders'**
+  String get downloadUseAlbumArtistForFolders;
+
+  /// Subtitle when Album Artist is used for folder naming
+  ///
+  /// In en, this message translates to:
+  /// **'Artist folders use Album Artist when available'**
+  String get downloadUseAlbumArtistForFoldersAlbumSubtitle;
+
+  /// Subtitle when Track Artist is used for folder naming
+  ///
+  /// In en, this message translates to:
+  /// **'Artist folders use Track Artist only'**
+  String get downloadUseAlbumArtistForFoldersTrackSubtitle;
+
+  /// Setting - strip featured artists from folder name
+  ///
+  /// In en, this message translates to:
+  /// **'Primary artist only for folders'**
+  String get downloadUsePrimaryArtistOnly;
+
+  /// Subtitle when primary artist only is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Featured artists removed from folder name (e.g. Justin Bieber, Quavo → Justin Bieber)'**
+  String get downloadUsePrimaryArtistOnlyEnabled;
+
+  /// Subtitle when primary artist only is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Full artist string used for folder name'**
+  String get downloadUsePrimaryArtistOnlyDisabled;
+
+  /// Setting - output file format
+  ///
+  /// In en, this message translates to:
+  /// **'Save Format'**
+  String get downloadSaveFormat;
+
+  /// Dialog title - choose download service
+  ///
+  /// In en, this message translates to:
+  /// **'Select Service'**
+  String get downloadSelectService;
+
+  /// Dialog title - choose audio quality
+  ///
+  /// In en, this message translates to:
+  /// **'Select Quality'**
+  String get downloadSelectQuality;
+
+  /// Label - download source
+  ///
+  /// In en, this message translates to:
+  /// **'Download From'**
+  String get downloadFrom;
+
+  /// Label - default quality setting
+  ///
+  /// In en, this message translates to:
+  /// **'Default Quality'**
+  String get downloadDefaultQualityLabel;
+
+  /// Quality option - highest available
+  ///
+  /// In en, this message translates to:
+  /// **'Best available'**
+  String get downloadBestAvailable;
+
+  /// Folder option - no organization
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get folderNone;
+
+  /// Subtitle for no folder organization
+  ///
+  /// In en, this message translates to:
+  /// **'Save all files directly to download folder'**
+  String get folderNoneSubtitle;
+
+  /// Folder option - by artist
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get folderArtist;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Artist Name/filename'**
+  String get folderArtistSubtitle;
+
+  /// Folder option - by album
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get folderAlbum;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Album Name/filename'**
+  String get folderAlbumSubtitle;
+
+  /// Folder option - nested
+  ///
+  /// In en, this message translates to:
+  /// **'Artist/Album'**
+  String get folderArtistAlbum;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Artist Name/Album Name/filename'**
+  String get folderArtistAlbumSubtitle;
+
+  /// Service name - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Tidal'**
+  String get serviceTidal;
+
+  /// Service name - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Qobuz'**
+  String get serviceQobuz;
+
+  /// Service name - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Amazon'**
+  String get serviceAmazon;
+
+  /// Service name - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Deezer'**
+  String get serviceDeezer;
+
+  /// Service name - DO NOT TRANSLATE
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify'**
+  String get serviceSpotify;
+
+  /// Theme option - pure black
+  ///
+  /// In en, this message translates to:
+  /// **'AMOLED Dark'**
+  String get appearanceAmoledDark;
+
+  /// Subtitle for AMOLED dark
+  ///
+  /// In en, this message translates to:
+  /// **'Pure black background'**
+  String get appearanceAmoledDarkSubtitle;
+
+  /// Color picker dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Accent Color'**
+  String get appearanceChooseAccentColor;
+
+  /// Theme picker dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Mode'**
+  String get appearanceChooseTheme;
+
+  /// Queue screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Download Queue'**
+  String get queueTitle;
+
+  /// Button - clear all queue items
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get queueClearAll;
+
+  /// Clear queue confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all downloads?'**
+  String get queueClearAllMessage;
+
+  /// Button - export failed downloads to TXT
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get queueExportFailed;
+
+  /// Success message after exporting failed downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Failed downloads exported to TXT file'**
+  String get queueExportFailedSuccess;
+
+  /// Action to clear failed downloads after export
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Failed'**
+  String get queueExportFailedClear;
+
+  /// Error message when export fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to export downloads'**
+  String get queueExportFailedError;
+
+  /// Setting toggle for auto-export
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-export failed downloads'**
+  String get settingsAutoExportFailed;
+
+  /// Subtitle for auto-export setting
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed downloads to TXT file automatically'**
+  String get settingsAutoExportFailedSubtitle;
+
+  /// Setting for network type preference
+  ///
+  /// In en, this message translates to:
+  /// **'Download Network'**
+  String get settingsDownloadNetwork;
+
+  /// Network option - use any connection
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi + Mobile Data'**
+  String get settingsDownloadNetworkAny;
+
+  /// Network option - only use WiFi
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi Only'**
+  String get settingsDownloadNetworkWifiOnly;
+
+  /// Subtitle explaining network preference
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which network to use for downloads. When set to WiFi Only, downloads will pause on mobile data.'**
+  String get settingsDownloadNetworkSubtitle;
+
+  /// Empty queue state title
+  ///
+  /// In en, this message translates to:
+  /// **'No downloads in queue'**
+  String get queueEmpty;
+
+  /// Empty queue state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Add tracks from the home screen'**
+  String get queueEmptySubtitle;
+
+  /// Button - clear finished downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Clear completed'**
+  String get queueClearCompleted;
+
+  /// Error dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Download Failed'**
+  String get queueDownloadFailed;
+
+  /// Label in error dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Track:'**
+  String get queueTrackLabel;
+
+  /// Label in error dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Artist:'**
+  String get queueArtistLabel;
+
+  /// Label in error dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Error:'**
+  String get queueErrorLabel;
+
+  /// Fallback error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get queueUnknownError;
+
+  /// Album folder option
+  ///
+  /// In en, this message translates to:
+  /// **'Artist / Album'**
+  String get albumFolderArtistAlbum;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Albums/Artist Name/Album Name/'**
+  String get albumFolderArtistAlbumSubtitle;
+
+  /// Album folder option with year
+  ///
+  /// In en, this message translates to:
+  /// **'Artist / [Year] Album'**
+  String get albumFolderArtistYearAlbum;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Albums/Artist Name/[2005] Album Name/'**
+  String get albumFolderArtistYearAlbumSubtitle;
+
+  /// Album folder option
+  ///
+  /// In en, this message translates to:
+  /// **'Album Only'**
+  String get albumFolderAlbumOnly;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Albums/Album Name/'**
+  String get albumFolderAlbumOnlySubtitle;
+
+  /// Album folder option with year
+  ///
+  /// In en, this message translates to:
+  /// **'[Year] Album'**
+  String get albumFolderYearAlbum;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Albums/[2005] Album Name/'**
+  String get albumFolderYearAlbumSubtitle;
+
+  /// Album folder option with singles inside artist
+  ///
+  /// In en, this message translates to:
+  /// **'Artist / Album + Singles'**
+  String get albumFolderArtistAlbumSingles;
+
+  /// Folder structure example
+  ///
+  /// In en, this message translates to:
+  /// **'Artist/Album/ and Artist/Singles/'**
+  String get albumFolderArtistAlbumSinglesSubtitle;
+
+  /// Button - delete selected tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get downloadedAlbumDeleteSelected;
+
+  /// Delete confirmation with count
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} {count, plural, =1{track} other{tracks}} from this album?\n\nThis will also delete the files from storage.'**
+  String downloadedAlbumDeleteMessage(int count);
+
+  /// Section header for tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks'**
+  String get downloadedAlbumTracksHeader;
+
+  /// Downloaded tracks count badge
+  ///
+  /// In en, this message translates to:
+  /// **'{count} downloaded'**
+  String downloadedAlbumDownloadedCount(int count);
+
+  /// Selection count indicator
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String downloadedAlbumSelectedCount(int count);
+
+  /// Status - all items selected
+  ///
+  /// In en, this message translates to:
+  /// **'All tracks selected'**
+  String get downloadedAlbumAllSelected;
+
+  /// Selection hint
+  ///
+  /// In en, this message translates to:
+  /// **'Tap tracks to select'**
+  String get downloadedAlbumTapToSelect;
+
+  /// Delete button text with count
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} {count, plural, =1{track} other{tracks}}'**
+  String downloadedAlbumDeleteCount(int count);
+
+  /// Placeholder when nothing selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select tracks to delete'**
+  String get downloadedAlbumSelectToDelete;
+
+  /// Header for disc separator in multi-disc albums
+  ///
+  /// In en, this message translates to:
+  /// **'Disc {discNumber}'**
+  String downloadedAlbumDiscHeader(int discNumber);
+
+  /// Extension capability - utility functions
+  ///
+  /// In en, this message translates to:
+  /// **'Utility Functions'**
+  String get utilityFunctions;
+
+  /// Recent access item type - artist
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get recentTypeArtist;
+
+  /// Recent access item type - album
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get recentTypeAlbum;
+
+  /// Recent access item type - song/track
+  ///
+  /// In en, this message translates to:
+  /// **'Song'**
+  String get recentTypeSong;
+
+  /// Recent access item type - playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist'**
+  String get recentTypePlaylist;
+
+  /// Empty state text for recent access list
+  ///
+  /// In en, this message translates to:
+  /// **'No recent items yet'**
+  String get recentEmpty;
+
+  /// Button label to unhide hidden downloads in recent access
+  ///
+  /// In en, this message translates to:
+  /// **'Show All Downloads'**
+  String get recentShowAllDownloads;
+
+  /// Snackbar message when tapping playlist in recent access
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist: {name}'**
+  String recentPlaylistInfo(String name);
+
+  /// Generic error message format
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorGeneric(String message);
+
+  /// Button - download artist discography
+  ///
+  /// In en, this message translates to:
+  /// **'Download Discography'**
+  String get discographyDownload;
+
+  /// Button - play artist discography
+  ///
+  /// In en, this message translates to:
+  /// **'Play Discography'**
+  String get discographyPlay;
+
+  /// Option - download entire discography
+  ///
+  /// In en, this message translates to:
+  /// **'Download All'**
+  String get discographyDownloadAll;
+
+  /// Option - play entire discography
+  ///
+  /// In en, this message translates to:
+  /// **'Play All'**
+  String get discographyPlayAll;
+
+  /// Subtitle showing total tracks and albums
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks from {albumCount} releases'**
+  String discographyDownloadAllSubtitle(int count, int albumCount);
+
+  /// Option - download only albums
+  ///
+  /// In en, this message translates to:
+  /// **'Albums Only'**
+  String get discographyAlbumsOnly;
+
+  /// Subtitle showing album tracks count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks from {albumCount} albums'**
+  String discographyAlbumsOnlySubtitle(int count, int albumCount);
+
+  /// Option - download only singles
+  ///
+  /// In en, this message translates to:
+  /// **'Singles & EPs Only'**
+  String get discographySinglesOnly;
+
+  /// Subtitle showing singles tracks count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks from {albumCount} singles'**
+  String discographySinglesOnlySubtitle(int count, int albumCount);
+
+  /// Option - manually select albums to download
+  ///
+  /// In en, this message translates to:
+  /// **'Select Albums...'**
+  String get discographySelectAlbums;
+
+  /// Subtitle for select albums option
+  ///
+  /// In en, this message translates to:
+  /// **'Choose specific albums or singles'**
+  String get discographySelectAlbumsSubtitle;
+
+  /// Progress - fetching album tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching tracks...'**
+  String get discographyFetchingTracks;
+
+  /// Progress - fetching specific album
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching {current} of {total}...'**
+  String discographyFetchingAlbum(int current, int total);
+
+  /// Selection count badge
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String discographySelectedCount(int count);
+
+  /// Button - download selected albums
+  ///
+  /// In en, this message translates to:
+  /// **'Download Selected'**
+  String get discographyDownloadSelected;
+
+  /// Button - play selected albums
+  ///
+  /// In en, this message translates to:
+  /// **'Play Selected'**
+  String get discographyPlaySelected;
+
+  /// Snackbar - tracks added from discography
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} tracks to queue'**
+  String discographyAddedToQueue(int count);
+
+  /// Snackbar - with skipped tracks count
+  ///
+  /// In en, this message translates to:
+  /// **'{added} added, {skipped} already downloaded'**
+  String discographySkippedDownloaded(int added, int skipped);
+
+  /// Error - no albums found for artist
+  ///
+  /// In en, this message translates to:
+  /// **'No albums available'**
+  String get discographyNoAlbums;
+
+  /// Error - some albums failed to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to fetch some albums'**
+  String get discographyFailedToFetch;
+
+  /// Section header for storage access settings
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Access'**
+  String get sectionStorageAccess;
+
+  /// Toggle for MANAGE_EXTERNAL_STORAGE permission
+  ///
+  /// In en, this message translates to:
+  /// **'All Files Access'**
+  String get allFilesAccess;
+
+  /// Subtitle when all files access is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Can write to any folder'**
+  String get allFilesAccessEnabledSubtitle;
+
+  /// Subtitle when all files access is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Limited to media folders only'**
+  String get allFilesAccessDisabledSubtitle;
+
+  /// Description explaining when to enable all files access
+  ///
+  /// In en, this message translates to:
+  /// **'Enable this if you encounter write errors when saving to custom folders. Android 13+ restricts access to certain directories by default.'**
+  String get allFilesAccessDescription;
+
+  /// Message when permission is permanently denied
+  ///
+  /// In en, this message translates to:
+  /// **'Permission was denied. Please enable \'All files access\' manually in system settings.'**
+  String get allFilesAccessDeniedMessage;
+
+  /// Snackbar message when user disables all files access
+  ///
+  /// In en, this message translates to:
+  /// **'All Files Access disabled. The app will use limited storage access.'**
+  String get allFilesAccessDisabledMessage;
+
+  /// Settings menu item - local library
+  ///
+  /// In en, this message translates to:
+  /// **'Local Library'**
+  String get settingsLocalLibrary;
+
+  /// Subtitle for local library settings
+  ///
+  /// In en, this message translates to:
+  /// **'Scan music & detect duplicates'**
+  String get settingsLocalLibrarySubtitle;
+
+  /// Settings menu item - cache management
+  ///
+  /// In en, this message translates to:
+  /// **'Storage & Cache'**
+  String get settingsCache;
+
+  /// Subtitle for cache management menu
+  ///
+  /// In en, this message translates to:
+  /// **'View size and clear cached data'**
+  String get settingsCacheSubtitle;
+
+  /// Library settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Local Library'**
+  String get libraryTitle;
+
+  /// Section header for library status
+  ///
+  /// In en, this message translates to:
+  /// **'Library Status'**
+  String get libraryStatus;
+
+  /// Section header for scan settings
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Settings'**
+  String get libraryScanSettings;
+
+  /// Toggle to enable library scanning
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Local Library'**
+  String get libraryEnableLocalLibrary;
+
+  /// Subtitle for enable toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Scan and track your existing music'**
+  String get libraryEnableLocalLibrarySubtitle;
+
+  /// Folder selection setting
+  ///
+  /// In en, this message translates to:
+  /// **'Library Folder'**
+  String get libraryFolder;
+
+  /// Placeholder when no folder selected
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to select folder'**
+  String get libraryFolderHint;
+
+  /// Toggle for duplicate indicator in search
+  ///
+  /// In en, this message translates to:
+  /// **'Show Duplicate Indicator'**
+  String get libraryShowDuplicateIndicator;
+
+  /// Subtitle for duplicate indicator toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Show when searching for existing tracks'**
+  String get libraryShowDuplicateIndicatorSubtitle;
+
+  /// Section header for library actions
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get libraryActions;
+
+  /// Button to start library scan
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Library'**
+  String get libraryScan;
+
+  /// Subtitle for scan button
+  ///
+  /// In en, this message translates to:
+  /// **'Scan for audio files'**
+  String get libraryScanSubtitle;
+
+  /// Message when trying to scan without folder
+  ///
+  /// In en, this message translates to:
+  /// **'Select a folder first'**
+  String get libraryScanSelectFolderFirst;
+
+  /// Button to remove entries for missing files
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup Missing Files'**
+  String get libraryCleanupMissingFiles;
+
+  /// Subtitle for cleanup button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove entries for files that no longer exist'**
+  String get libraryCleanupMissingFilesSubtitle;
+
+  /// Button to clear all library entries
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Library'**
+  String get libraryClear;
+
+  /// Subtitle for clear button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all scanned tracks'**
+  String get libraryClearSubtitle;
+
+  /// Dialog title for clear confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Library'**
+  String get libraryClearConfirmTitle;
+
+  /// Dialog message for clear confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove all scanned tracks from your library. Your actual music files will not be deleted.'**
+  String get libraryClearConfirmMessage;
+
+  /// Section header for about info
+  ///
+  /// In en, this message translates to:
+  /// **'About Local Library'**
+  String get libraryAbout;
+
+  /// Description of local library feature
+  ///
+  /// In en, this message translates to:
+  /// **'Scans your existing music collection to detect duplicates when downloading. Supports FLAC, M4A, MP3, Opus, and OGG formats. Metadata is read from file tags when available.'**
+  String get libraryAboutDescription;
+
+  /// Track count in library
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks'**
+  String libraryTracksCount(int count);
+
+  /// Unit label for tracks count (without the number itself)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{track} other{tracks}}'**
+  String libraryTracksUnit(int count);
+
+  /// Last scan time display
+  ///
+  /// In en, this message translates to:
+  /// **'Last scanned: {time}'**
+  String libraryLastScanned(String time);
+
+  /// Shown when library has never been scanned
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get libraryLastScannedNever;
+
+  /// Status during scan
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning...'**
+  String get libraryScanning;
+
+  /// Scan progress display
+  ///
+  /// In en, this message translates to:
+  /// **'{progress}% of {total} files'**
+  String libraryScanProgress(String progress, int total);
+
+  /// Badge shown on tracks that exist in local library
+  ///
+  /// In en, this message translates to:
+  /// **'In Library'**
+  String get libraryInLibrary;
+
+  /// Snackbar after cleanup
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count} missing files from library'**
+  String libraryRemovedMissingFiles(int count);
+
+  /// Snackbar after clearing library
+  ///
+  /// In en, this message translates to:
+  /// **'Library cleared'**
+  String get libraryCleared;
+
+  /// Dialog title for storage permission
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Access Required'**
+  String get libraryStorageAccessRequired;
+
+  /// Dialog message for storage permission
+  ///
+  /// In en, this message translates to:
+  /// **'24-Player needs storage access to scan your music library. Please grant permission in settings.'**
+  String get libraryStorageAccessMessage;
+
+  /// Error when folder doesn't exist
+  ///
+  /// In en, this message translates to:
+  /// **'Selected folder does not exist'**
+  String get libraryFolderNotExist;
+
+  /// Badge for tracks downloaded via 24-Player
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get librarySourceDownloaded;
+
+  /// Badge for tracks from local library scan
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get librarySourceLocal;
+
+  /// Filter chip - show all library items
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryFilterAll;
+
+  /// Filter chip - show only downloaded items
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get libraryFilterDownloaded;
+
+  /// Filter chip - show only local library items
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get libraryFilterLocal;
+
+  /// Filter bottom sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get libraryFilterTitle;
+
+  /// Reset all filters button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get libraryFilterReset;
+
+  /// Apply filters button
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get libraryFilterApply;
+
+  /// Filter section - source type
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get libraryFilterSource;
+
+  /// Filter section - audio quality
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get libraryFilterQuality;
+
+  /// Filter option - high resolution audio
+  ///
+  /// In en, this message translates to:
+  /// **'Hi-Res (24bit)'**
+  String get libraryFilterQualityHiRes;
+
+  /// Filter option - CD quality audio
+  ///
+  /// In en, this message translates to:
+  /// **'CD (16bit)'**
+  String get libraryFilterQualityCD;
+
+  /// Filter option - lossy compressed audio
+  ///
+  /// In en, this message translates to:
+  /// **'Lossy'**
+  String get libraryFilterQualityLossy;
+
+  /// Filter section - file format
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get libraryFilterFormat;
+
+  /// Filter section - date range
+  ///
+  /// In en, this message translates to:
+  /// **'Date Added'**
+  String get libraryFilterDate;
+
+  /// Filter option - today only
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get libraryFilterDateToday;
+
+  /// Filter option - this week
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get libraryFilterDateWeek;
+
+  /// Filter option - this month
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get libraryFilterDateMonth;
+
+  /// Filter option - this year
+  ///
+  /// In en, this message translates to:
+  /// **'This Year'**
+  String get libraryFilterDateYear;
+
+  /// Filter section - sort order
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get libraryFilterSort;
+
+  /// Sort option - newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get libraryFilterSortLatest;
+
+  /// Sort option - oldest first
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get libraryFilterSortOldest;
+
+  /// Badge showing number of active filters
+  ///
+  /// In en, this message translates to:
+  /// **'{count} filter(s) active'**
+  String libraryFilterActive(int count);
+
+  /// Relative time - less than a minute ago
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get timeJustNow;
+
+  /// Relative time - minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute ago} other{{count} minutes ago}}'**
+  String timeMinutesAgo(int count);
+
+  /// Relative time - hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour ago} other{{count} hours ago}}'**
+  String timeHoursAgo(int count);
+
+  /// Dialog title when switching storage mode
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Storage Mode'**
+  String get storageSwitchTitle;
+
+  /// Dialog title when switching to SAF
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to SAF Storage?'**
+  String get storageSwitchToSafTitle;
+
+  /// Dialog title when switching to app storage
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to App Storage?'**
+  String get storageSwitchToAppTitle;
+
+  /// Explanation when switching to SAF
+  ///
+  /// In en, this message translates to:
+  /// **'Your existing downloads will remain in the current location and stay accessible.\n\nNew downloads will be saved to your selected SAF folder.'**
+  String get storageSwitchToSafMessage;
+
+  /// Explanation when switching to app storage
+  ///
+  /// In en, this message translates to:
+  /// **'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/24-Player folder.'**
+  String get storageSwitchToAppMessage;
+
+  /// Section header for existing downloads info
+  ///
+  /// In en, this message translates to:
+  /// **'Existing Downloads'**
+  String get storageSwitchExistingDownloads;
+
+  /// Info about existing downloads count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks in {mode} storage'**
+  String storageSwitchExistingDownloadsInfo(int count, String mode);
+
+  /// Section header for new downloads info
+  ///
+  /// In en, this message translates to:
+  /// **'New Downloads'**
+  String get storageSwitchNewDownloads;
+
+  /// Shows where new downloads will go
+  ///
+  /// In en, this message translates to:
+  /// **'Will be saved to: {location}'**
+  String storageSwitchNewDownloadsLocation(String location);
+
+  /// Button to proceed with storage switch
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get storageSwitchContinue;
+
+  /// Button to select SAF folder
+  ///
+  /// In en, this message translates to:
+  /// **'Select SAF Folder'**
+  String get storageSwitchSelectFolder;
+
+  /// Label for app storage mode
+  ///
+  /// In en, this message translates to:
+  /// **'App Storage'**
+  String get storageAppStorage;
+
+  /// Label for SAF storage mode
+  ///
+  /// In en, this message translates to:
+  /// **'SAF Storage'**
+  String get storageSafStorage;
+
+  /// Badge showing storage mode for a track
+  ///
+  /// In en, this message translates to:
+  /// **'Storage: {mode}'**
+  String storageModeBadge(String mode);
+
+  /// Section title for storage stats
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Statistics'**
+  String get storageStatsTitle;
+
+  /// Count of tracks in app storage
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks in App Storage'**
+  String storageStatsAppCount(int count);
+
+  /// Count of tracks in SAF storage
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks in SAF Storage'**
+  String storageStatsSafCount(int count);
+
+  /// Info when user has files in both storage modes
+  ///
+  /// In en, this message translates to:
+  /// **'Your files are stored in multiple locations'**
+  String get storageModeInfo;
+
+  /// Tutorial welcome page title
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to 24-Player!'**
+  String get tutorialWelcomeTitle;
+
+  /// Tutorial welcome page description
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s learn how to download your favorite music in lossless quality. This quick tutorial will show you the basics.'**
+  String get tutorialWelcomeDesc;
+
+  /// Tutorial welcome tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'Download music from Spotify, Deezer, or paste any supported URL'**
+  String get tutorialWelcomeTip1;
+
+  /// Tutorial welcome tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Get FLAC quality audio from Tidal, Qobuz, or Amazon Music'**
+  String get tutorialWelcomeTip2;
+
+  /// Tutorial welcome tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic metadata, cover art, and lyrics embedding'**
+  String get tutorialWelcomeTip3;
+
+  /// Tutorial search page title
+  ///
+  /// In en, this message translates to:
+  /// **'Finding Music'**
+  String get tutorialSearchTitle;
+
+  /// Tutorial search page description
+  ///
+  /// In en, this message translates to:
+  /// **'There are two easy ways to find music you want to download.'**
+  String get tutorialSearchDesc;
+
+  /// Tutorial search tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Spotify or Deezer URL directly in the search box'**
+  String get tutorialSearchTip1;
+
+  /// Tutorial search tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Or type the song name, artist, or album to search'**
+  String get tutorialSearchTip2;
+
+  /// Tutorial search tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Supports tracks, albums, playlists, and artist pages'**
+  String get tutorialSearchTip3;
+
+  /// Tutorial download page title
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading Music'**
+  String get tutorialDownloadTitle;
+
+  /// Tutorial download page description
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading music is simple and fast. Here\'s how it works.'**
+  String get tutorialDownloadDesc;
+
+  /// Tutorial download tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the download button next to any track to start downloading'**
+  String get tutorialDownloadTip1;
+
+  /// Tutorial download tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred quality (FLAC, Hi-Res, or MP3)'**
+  String get tutorialDownloadTip2;
+
+  /// Tutorial download tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Download entire albums or playlists with one tap'**
+  String get tutorialDownloadTip3;
+
+  /// Tutorial library page title
+  ///
+  /// In en, this message translates to:
+  /// **'Your Library'**
+  String get tutorialLibraryTitle;
+
+  /// Tutorial library page description
+  ///
+  /// In en, this message translates to:
+  /// **'All your downloaded music is organized in the Library tab.'**
+  String get tutorialLibraryDesc;
+
+  /// Tutorial library tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'View download progress and queue in the Library tab'**
+  String get tutorialLibraryTip1;
+
+  /// Tutorial library tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any track to play it with your music player'**
+  String get tutorialLibraryTip2;
+
+  /// Tutorial library tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between list and grid view for better browsing'**
+  String get tutorialLibraryTip3;
+
+  /// Tutorial extensions page title
+  ///
+  /// In en, this message translates to:
+  /// **'Extensions'**
+  String get tutorialExtensionsTitle;
+
+  /// Tutorial extensions page description
+  ///
+  /// In en, this message translates to:
+  /// **'Extend the app\'s capabilities with community extensions.'**
+  String get tutorialExtensionsDesc;
+
+  /// Tutorial extensions tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the Store tab to discover useful extensions'**
+  String get tutorialExtensionsTip1;
+
+  /// Tutorial extensions tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Add new download providers or search sources'**
+  String get tutorialExtensionsTip2;
+
+  /// Tutorial extensions tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Get lyrics, enhanced metadata, and more features'**
+  String get tutorialExtensionsTip3;
+
+  /// Tutorial settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Your Experience'**
+  String get tutorialSettingsTitle;
+
+  /// Tutorial settings page description
+  ///
+  /// In en, this message translates to:
+  /// **'Personalize the app in Settings to match your preferences.'**
+  String get tutorialSettingsDesc;
+
+  /// Tutorial settings tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'Change download location and folder organization'**
+  String get tutorialSettingsTip1;
+
+  /// Tutorial settings tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Set default audio quality and format preferences'**
+  String get tutorialSettingsTip2;
+
+  /// Tutorial settings tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Customize app theme and appearance'**
+  String get tutorialSettingsTip3;
+
+  /// Tutorial completion message
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set! Start downloading your favorite music now.'**
+  String get tutorialReadyMessage;
+
+  /// Example label in tutorial
+  ///
+  /// In en, this message translates to:
+  /// **'EXAMPLE'**
+  String get tutorialExample;
+
+  /// Button to force a complete rescan of library
+  ///
+  /// In en, this message translates to:
+  /// **'Force Full Scan'**
+  String get libraryForceFullScan;
+
+  /// Subtitle for force full scan button
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan all files, ignoring cache'**
+  String get libraryForceFullScanSubtitle;
+
+  /// Button to remove history entries for deleted files
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup Orphaned Downloads'**
+  String get cleanupOrphanedDownloads;
+
+  /// Subtitle for orphaned cleanup button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove history entries for files that no longer exist'**
+  String get cleanupOrphanedDownloadsSubtitle;
+
+  /// Snackbar after orphan cleanup
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count} orphaned entries from history'**
+  String cleanupOrphanedDownloadsResult(int count);
+
+  /// Snackbar when no orphans found
+  ///
+  /// In en, this message translates to:
+  /// **'No orphaned entries found'**
+  String get cleanupOrphanedDownloadsNone;
+
+  /// Cache management page title
+  ///
+  /// In en, this message translates to:
+  /// **'Storage & Cache'**
+  String get cacheTitle;
+
+  /// Heading for cache summary card
+  ///
+  /// In en, this message translates to:
+  /// **'Cache overview'**
+  String get cacheSummaryTitle;
+
+  /// Helper text for cache summary card
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing cache will not remove downloaded music files.'**
+  String get cacheSummarySubtitle;
+
+  /// Total cache size shown in summary
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cache usage: {size}'**
+  String cacheEstimatedTotal(String size);
+
+  /// Section header for cache entries
+  ///
+  /// In en, this message translates to:
+  /// **'Cached Data'**
+  String get cacheSectionStorage;
+
+  /// Section header for cleanup actions
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get cacheSectionMaintenance;
+
+  /// Cache item title for app cache directory
+  ///
+  /// In en, this message translates to:
+  /// **'App cache directory'**
+  String get cacheAppDirectory;
+
+  /// Description of what app cache directory contains
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP responses, WebView data, and other temporary app data.'**
+  String get cacheAppDirectoryDesc;
+
+  /// Cache item title for temporary files directory
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary directory'**
+  String get cacheTempDirectory;
+
+  /// Description of what temporary directory contains
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary files from downloads and audio conversion.'**
+  String get cacheTempDirectoryDesc;
+
+  /// Cache item title for persistent cover images
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image cache'**
+  String get cacheCoverImage;
+
+  /// Description of what cover image cache contains
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded album and track cover art. Will re-download when viewed.'**
+  String get cacheCoverImageDesc;
+
+  /// Cache item title for local library cover art images
+  ///
+  /// In en, this message translates to:
+  /// **'Library cover cache'**
+  String get cacheLibraryCover;
+
+  /// Description of what library cover cache contains
+  ///
+  /// In en, this message translates to:
+  /// **'Cover art extracted from local music files. Will re-extract on next scan.'**
+  String get cacheLibraryCoverDesc;
+
+  /// Cache item title for explore home feed cache
+  ///
+  /// In en, this message translates to:
+  /// **'Explore feed cache'**
+  String get cacheExploreFeed;
+
+  /// Description of what explore feed cache contains
+  ///
+  /// In en, this message translates to:
+  /// **'Explore tab content (new releases, trending). Will refresh on next visit.'**
+  String get cacheExploreFeedDesc;
+
+  /// Cache item title for track ID lookup cache
+  ///
+  /// In en, this message translates to:
+  /// **'Track lookup cache'**
+  String get cacheTrackLookup;
+
+  /// Description of what track lookup cache contains
+  ///
+  /// In en, this message translates to:
+  /// **'Spotify/Deezer track ID lookups. Clearing may slow next few searches.'**
+  String get cacheTrackLookupDesc;
+
+  /// Description of what cleanup unused data does
+  ///
+  /// In en, this message translates to:
+  /// **'Remove orphaned download history and library entries for missing files.'**
+  String get cacheCleanupUnusedDesc;
+
+  /// Label when cache category has no data
+  ///
+  /// In en, this message translates to:
+  /// **'No cached data'**
+  String get cacheNoData;
+
+  /// Cache size and file count
+  ///
+  /// In en, this message translates to:
+  /// **'{size} in {count} files'**
+  String cacheSizeWithFiles(String size, int count);
+
+  /// Cache size only
+  ///
+  /// In en, this message translates to:
+  /// **'{size}'**
+  String cacheSizeOnly(String size);
+
+  /// Track cache entry count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries'**
+  String cacheEntries(int count);
+
+  /// Snackbar after clearing selected cache
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared: {target}'**
+  String cacheClearSuccess(String target);
+
+  /// Dialog title before clearing one cache category
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cache?'**
+  String get cacheClearConfirmTitle;
+
+  /// Dialog message before clearing selected cache
+  ///
+  /// In en, this message translates to:
+  /// **'This will clear cached data for {target}. Downloaded music files will not be deleted.'**
+  String cacheClearConfirmMessage(String target);
+
+  /// Dialog title before clearing all caches
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all cache?'**
+  String get cacheClearAllConfirmTitle;
+
+  /// Dialog message before clearing all caches
+  ///
+  /// In en, this message translates to:
+  /// **'This will clear all cache categories on this page. Downloaded music files will not be deleted.'**
+  String get cacheClearAllConfirmMessage;
+
+  /// Button label to clear all caches
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all cache'**
+  String get cacheClearAll;
+
+  /// Action title for cleaning unused entries
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup unused data'**
+  String get cacheCleanupUnused;
+
+  /// Subtitle for cleanup unused data action
+  ///
+  /// In en, this message translates to:
+  /// **'Remove orphaned download history and missing library entries'**
+  String get cacheCleanupUnusedSubtitle;
+
+  /// Snackbar after unused data cleanup
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup completed: {downloadCount} orphaned downloads, {libraryCount} missing library entries'**
+  String cacheCleanupResult(int downloadCount, int libraryCount);
+
+  /// Button label to refresh cache statistics
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh stats'**
+  String get cacheRefreshStats;
+
+  /// Menu action - save album cover art as file
+  ///
+  /// In en, this message translates to:
+  /// **'Save Cover Art'**
+  String get trackSaveCoverArt;
+
+  /// Subtitle for save cover art action
+  ///
+  /// In en, this message translates to:
+  /// **'Save album art as .jpg file'**
+  String get trackSaveCoverArtSubtitle;
+
+  /// Menu action - save lyrics as .lrc file
+  ///
+  /// In en, this message translates to:
+  /// **'Save Lyrics (.lrc)'**
+  String get trackSaveLyrics;
+
+  /// Subtitle for save lyrics action
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch and save lyrics as .lrc file'**
+  String get trackSaveLyricsSubtitle;
+
+  /// Snackbar while saving lyrics to file
+  ///
+  /// In en, this message translates to:
+  /// **'Saving lyrics...'**
+  String get trackSaveLyricsProgress;
+
+  /// Menu action - re-embed metadata into audio file
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enrich'**
+  String get trackReEnrich;
+
+  /// Subtitle for re-enrich metadata action
+  ///
+  /// In en, this message translates to:
+  /// **'Re-embed metadata without re-downloading'**
+  String get trackReEnrichSubtitle;
+
+  /// Subtitle for re-enrich metadata action for local items
+  ///
+  /// In en, this message translates to:
+  /// **'Search metadata online and embed into file'**
+  String get trackReEnrichOnlineSubtitle;
+
+  /// Menu action - edit embedded metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Metadata'**
+  String get trackEditMetadata;
+
+  /// Snackbar after cover art saved
+  ///
+  /// In en, this message translates to:
+  /// **'Cover art saved to {fileName}'**
+  String trackCoverSaved(String fileName);
+
+  /// Snackbar when no cover art URL or embedded cover
+  ///
+  /// In en, this message translates to:
+  /// **'No cover art source available'**
+  String get trackCoverNoSource;
+
+  /// Snackbar after lyrics saved
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics saved to {fileName}'**
+  String trackLyricsSaved(String fileName);
+
+  /// Snackbar while re-enriching metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enriching metadata...'**
+  String get trackReEnrichProgress;
+
+  /// Snackbar while searching metadata from internet for local items
+  ///
+  /// In en, this message translates to:
+  /// **'Searching metadata online...'**
+  String get trackReEnrichSearching;
+
+  /// Snackbar after successful re-enrichment
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata re-enriched successfully'**
+  String get trackReEnrichSuccess;
+
+  /// Snackbar when FFmpeg embed fails for MP3/Opus
+  ///
+  /// In en, this message translates to:
+  /// **'FFmpeg metadata embed failed'**
+  String get trackReEnrichFfmpegFailed;
+
+  /// Snackbar when save operation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String trackSaveFailed(String error);
+
+  /// Menu item - convert audio format
+  ///
+  /// In en, this message translates to:
+  /// **'Convert Format'**
+  String get trackConvertFormat;
+
+  /// Subtitle for convert format menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to MP3 or Opus'**
+  String get trackConvertFormatSubtitle;
+
+  /// Title of convert bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Convert Audio'**
+  String get trackConvertTitle;
+
+  /// Label for format selection
+  ///
+  /// In en, this message translates to:
+  /// **'Target Format'**
+  String get trackConvertTargetFormat;
+
+  /// Label for bitrate selection
+  ///
+  /// In en, this message translates to:
+  /// **'Bitrate'**
+  String get trackConvertBitrate;
+
+  /// Confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Conversion'**
+  String get trackConvertConfirmTitle;
+
+  /// Confirmation dialog message
+  ///
+  /// In en, this message translates to:
+  /// **'Convert from {sourceFormat} to {targetFormat} at {bitrate}?\n\nThe original file will be deleted after conversion.'**
+  String trackConvertConfirmMessage(
+    String sourceFormat,
+    String targetFormat,
+    String bitrate,
+  );
+
+  /// Snackbar while converting
+  ///
+  /// In en, this message translates to:
+  /// **'Converting audio...'**
+  String get trackConvertConverting;
+
+  /// Snackbar after successful conversion
+  ///
+  /// In en, this message translates to:
+  /// **'Converted to {format} successfully'**
+  String trackConvertSuccess(String format);
+
+  /// Snackbar when conversion fails
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion failed'**
+  String get trackConvertFailed;
+
+  /// Generic action button - create
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get actionCreate;
+
+  /// Library section title for custom folders
+  ///
+  /// In en, this message translates to:
+  /// **'My folders'**
+  String get collectionFoldersTitle;
+
+  /// Custom folder for saved tracks to download later
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist'**
+  String get collectionWishlist;
+
+  /// Custom folder for favorite tracks
+  ///
+  /// In en, this message translates to:
+  /// **'Loved'**
+  String get collectionLoved;
+
+  /// Custom user playlists folder
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get collectionPlaylists;
+
+  /// Single playlist label
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist'**
+  String get collectionPlaylist;
+
+  /// Action to add a track to user playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist'**
+  String get collectionAddToPlaylist;
+
+  /// Action to create a new playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Create playlist'**
+  String get collectionCreatePlaylist;
+
+  /// Empty state title when user has no playlists
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet'**
+  String get collectionNoPlaylistsYet;
+
+  /// Empty state subtitle when user has no playlists
+  ///
+  /// In en, this message translates to:
+  /// **'Create a playlist to start categorizing tracks'**
+  String get collectionNoPlaylistsSubtitle;
+
+  /// Track count label for custom playlists
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track} other{{count} tracks}}'**
+  String collectionPlaylistTracks(int count);
+
+  /// Snackbar after adding track to playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Added to \"{playlistName}\"'**
+  String collectionAddedToPlaylist(String playlistName);
+
+  /// Snackbar when track already exists in playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Already in \"{playlistName}\"'**
+  String collectionAlreadyInPlaylist(String playlistName);
+
+  /// Snackbar after creating playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist created'**
+  String get collectionPlaylistCreated;
+
+  /// Hint text for playlist name input
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist name'**
+  String get collectionPlaylistNameHint;
+
+  /// Validation error for empty playlist name
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist name is required'**
+  String get collectionPlaylistNameRequired;
+
+  /// Action to rename playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Rename playlist'**
+  String get collectionRenamePlaylist;
+
+  /// Action to delete playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Delete playlist'**
+  String get collectionDeletePlaylist;
+
+  /// Confirmation message for deleting playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{playlistName}\" and all tracks inside it?'**
+  String collectionDeletePlaylistMessage(String playlistName);
+
+  /// Snackbar after deleting playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist deleted'**
+  String get collectionPlaylistDeleted;
+
+  /// Snackbar after renaming playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist renamed'**
+  String get collectionPlaylistRenamed;
+
+  /// Wishlist empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist is empty'**
+  String get collectionWishlistEmptyTitle;
+
+  /// Wishlist empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + on tracks to save what you want to download later'**
+  String get collectionWishlistEmptySubtitle;
+
+  /// Loved empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'Loved folder is empty'**
+  String get collectionLovedEmptyTitle;
+
+  /// Loved empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Tap love on tracks to keep your favorites'**
+  String get collectionLovedEmptySubtitle;
+
+  /// Playlist empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist is empty'**
+  String get collectionPlaylistEmptyTitle;
+
+  /// Playlist empty state subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press + on any track to add it here'**
+  String get collectionPlaylistEmptySubtitle;
+
+  /// Tooltip for removing track from playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get collectionRemoveFromPlaylist;
+
+  /// Tooltip for removing track from wishlist/loved folder
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from folder'**
+  String get collectionRemoveFromFolder;
+
+  /// Snackbar after removing a track from a collection
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" removed'**
+  String collectionRemoved(String trackName);
+
+  /// Snackbar after adding track to loved folder
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" added to Loved'**
+  String collectionAddedToLoved(String trackName);
+
+  /// Snackbar after removing track from loved folder
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" removed from Loved'**
+  String collectionRemovedFromLoved(String trackName);
+
+  /// Snackbar after adding track to wishlist
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" added to Wishlist'**
+  String collectionAddedToWishlist(String trackName);
+
+  /// Snackbar after removing track from wishlist
+  ///
+  /// In en, this message translates to:
+  /// **'\"{trackName}\" removed from Wishlist'**
+  String collectionRemovedFromWishlist(String trackName);
+
+  /// Bottom sheet action label - add track to loved folder
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Loved'**
+  String get trackOptionAddToLoved;
+
+  /// Bottom sheet action label - remove track from loved folder
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Loved'**
+  String get trackOptionRemoveFromLoved;
+
+  /// Bottom sheet action label - add track to wishlist
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Wishlist'**
+  String get trackOptionAddToWishlist;
+
+  /// Bottom sheet action label - remove track from wishlist
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Wishlist'**
+  String get trackOptionRemoveFromWishlist;
+
+  /// Bottom sheet action to pick a custom cover image for a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Change cover image'**
+  String get collectionPlaylistChangeCover;
+
+  /// Bottom sheet action to remove custom cover image from a playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Remove cover image'**
+  String get collectionPlaylistRemoveCover;
+
+  /// Share button text with count in selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Share {count} {count, plural, =1{track} other{tracks}}'**
+  String selectionShareCount(int count);
+
+  /// Snackbar when no selected files exist on disk
+  ///
+  /// In en, this message translates to:
+  /// **'No shareable files found'**
+  String get selectionShareNoFiles;
+
+  /// Convert button text with count in selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Convert {count} {count, plural, =1{track} other{tracks}}'**
+  String selectionConvertCount(int count);
+
+  /// Snackbar when no selected tracks support conversion
+  ///
+  /// In en, this message translates to:
+  /// **'No convertible tracks selected'**
+  String get selectionConvertNoConvertible;
+
+  /// Confirmation dialog title for batch conversion
+  ///
+  /// In en, this message translates to:
+  /// **'Batch Convert'**
+  String get selectionBatchConvertConfirmTitle;
+
+  /// Confirmation dialog message for batch conversion
+  ///
+  /// In en, this message translates to:
+  /// **'Convert {count} {count, plural, =1{track} other{tracks}} to {format} at {bitrate}?\n\nOriginal files will be deleted after conversion.'**
+  String selectionBatchConvertConfirmMessage(
+    int count,
+    String format,
+    String bitrate,
+  );
+
+  /// Snackbar during batch conversion progress
+  ///
+  /// In en, this message translates to:
+  /// **'Converting {current} of {total}...'**
+  String selectionBatchConvertProgress(int current, int total);
+
+  /// Snackbar after batch conversion completes
+  ///
+  /// In en, this message translates to:
+  /// **'Converted {success} of {total} tracks to {format}'**
+  String selectionBatchConvertSuccess(int success, int total, String format);
+
+  /// Title for mode selection step in setup wizard
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Mode'**
+  String get setupModeSelectionTitle;
+
+  /// Description for mode selection step
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to use 24-Player? You can always change this later in Settings.'**
+  String get setupModeSelectionDescription;
+
+  /// Title for downloader mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Downloader'**
+  String get setupModeDownloaderTitle;
+
+  /// Downloader mode feature 1
+  ///
+  /// In en, this message translates to:
+  /// **'Download tracks in lossless FLAC quality'**
+  String get setupModeDownloaderFeature1;
+
+  /// Downloader mode feature 2
+  ///
+  /// In en, this message translates to:
+  /// **'Save music to your device for offline listening'**
+  String get setupModeDownloaderFeature2;
+
+  /// Downloader mode feature 3
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your local music library'**
+  String get setupModeDownloaderFeature3;
+
+  /// Title for streaming mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming'**
+  String get setupModeStreamingTitle;
+
+  /// Streaming mode feature 1
+  ///
+  /// In en, this message translates to:
+  /// **'Stream tracks instantly without downloading'**
+  String get setupModeStreamingFeature1;
+
+  /// Streaming mode feature 2
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Queue auto-discovers new music for you'**
+  String get setupModeStreamingFeature2;
+
+  /// Streaming mode feature 3
+  ///
+  /// In en, this message translates to:
+  /// **'Play any track on demand with playback controls'**
+  String get setupModeStreamingFeature3;
+
+  /// Hint that mode can be changed later
+  ///
+  /// In en, this message translates to:
+  /// **'You can switch between modes anytime in Settings.'**
+  String get setupModeChangeableLater;
+
+  /// Title for Smart Queue toggle in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Queue'**
+  String get settingsSmartQueueTitle;
+
+  /// Subtitle for Smart Queue toggle in settings
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically discover and add similar tracks to your queue'**
+  String get settingsSmartQueueSubtitle;
+
+  /// Title for the What's New screen
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New in 4.0'**
+  String get whatsNewTitle;
+
+  /// Subtitle for the What's New screen
+  ///
+  /// In en, this message translates to:
+  /// **'24-Player has evolved — here\'s what changed since 3.x'**
+  String get whatsNewSubtitle;
+
+  /// Welcome page title in What's New screen
+  ///
+  /// In en, this message translates to:
+  /// **'24-Player Mobile 1.2'**
+  String get whatsNewWelcomeTitle;
+
+  /// Welcome page description in What's New screen
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back! This is a major update packed with new features. Swipe through to see what\'s changed.'**
+  String get whatsNewWelcomeDesc;
+
+  /// Welcome page tip 1
+  ///
+  /// In en, this message translates to:
+  /// **'New streaming mode with instant playback'**
+  String get whatsNewWelcomeTip1;
+
+  /// Welcome page tip 2
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned library and full-screen player'**
+  String get whatsNewWelcomeTip2;
+
+  /// Welcome page tip 3
+  ///
+  /// In en, this message translates to:
+  /// **'Batch tools, performance boosts, and more'**
+  String get whatsNewWelcomeTip3;
+
+  /// What's New feature: Streaming Mode title
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming Mode'**
+  String get whatsNewStreamingTitle;
+
+  /// What's New feature: Streaming Mode description
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any track to play instantly — no download needed. Full-screen player with synced lyrics and media controls.'**
+  String get whatsNewStreamingDesc;
+
+  /// What's New feature: Smart Queue title
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Queue'**
+  String get whatsNewSmartQueueTitle;
+
+  /// What's New feature: Smart Queue description
+  ///
+  /// In en, this message translates to:
+  /// **'Your queue auto-curates with related tracks and artist discovery. Never run out of music.'**
+  String get whatsNewSmartQueueDesc;
+
+  /// What's New feature: Dual Mode title
+  ///
+  /// In en, this message translates to:
+  /// **'Dual Mode'**
+  String get whatsNewDualModeTitle;
+
+  /// What's New feature: Dual Mode description
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between Downloader and Streaming modes anytime. All buttons adapt automatically.'**
+  String get whatsNewDualModeDesc;
+
+  /// What's New feature: Library redesign title
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned Library'**
+  String get whatsNewLibraryTitle;
+
+  /// What's New feature: Library redesign description
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist-first layout with drag-and-drop categorization, custom covers, and multi-select batch actions.'**
+  String get whatsNewLibraryDesc;
+
+  /// What's New feature: Full-Screen Player title
+  ///
+  /// In en, this message translates to:
+  /// **'Full-Screen Player'**
+  String get whatsNewPlayerTitle;
+
+  /// What's New feature: Full-Screen Player description
+  ///
+  /// In en, this message translates to:
+  /// **'Cover art parallax, synced lyrics, playback persistence across restarts, and download button in player.'**
+  String get whatsNewPlayerDesc;
+
+  /// What's New feature: Context Menus title
+  ///
+  /// In en, this message translates to:
+  /// **'Long-Press Menus'**
+  String get whatsNewContextMenuTitle;
+
+  /// What's New feature: Context Menus description
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press any track for quick actions — add to playlist, share, convert, or re-enrich metadata.'**
+  String get whatsNewContextMenuDesc;
+
+  /// What's New feature: Performance title
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get whatsNewPerformanceTitle;
+
+  /// What's New feature: Performance description
+  ///
+  /// In en, this message translates to:
+  /// **'Faster startup, reduced memory usage, SQLite-backed persistence, and granular UI updates.'**
+  String get whatsNewPerformanceDesc;
+
+  /// What's New feature: Batch Tools title
+  ///
+  /// In en, this message translates to:
+  /// **'Batch Tools'**
+  String get whatsNewBatchToolsTitle;
+
+  /// What's New feature: Batch Tools description
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-select share, batch convert to MP3/Opus, and batch re-enrich metadata across your library.'**
+  String get whatsNewBatchToolsDesc;
+
+  /// What's New tip: streaming instant play
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any track to start playing instantly'**
+  String get whatsNewStreamingTip1;
+
+  /// What's New tip: streaming synced lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Synced lyrics in the full-screen player'**
+  String get whatsNewStreamingTip2;
+
+  /// What's New tip: streaming download from player
+  ///
+  /// In en, this message translates to:
+  /// **'Download tracks directly from the player'**
+  String get whatsNewStreamingTip3;
+
+  /// What's New tip: smart queue auto-fill
+  ///
+  /// In en, this message translates to:
+  /// **'Queue auto-fills with related tracks'**
+  String get whatsNewSmartQueueTip1;
+
+  /// What's New tip: smart queue artist discovery
+  ///
+  /// In en, this message translates to:
+  /// **'Discover new artists as you listen'**
+  String get whatsNewSmartQueueTip2;
+
+  /// What's New tip: smart queue endless
+  ///
+  /// In en, this message translates to:
+  /// **'Never run out of music to play'**
+  String get whatsNewSmartQueueTip3;
+
+  /// What's New tip: dual mode switch
+  ///
+  /// In en, this message translates to:
+  /// **'Switch modes anytime in Settings'**
+  String get whatsNewDualModeTip1;
+
+  /// What's New tip: dual mode adaptive UI
+  ///
+  /// In en, this message translates to:
+  /// **'UI buttons adapt to your current mode'**
+  String get whatsNewDualModeTip2;
+
+  /// What's New tip: dual mode use cases
+  ///
+  /// In en, this message translates to:
+  /// **'Download for offline, stream for instant play'**
+  String get whatsNewDualModeTip3;
+
+  /// What's New tip: library drag and drop
+  ///
+  /// In en, this message translates to:
+  /// **'Drag and drop to organize playlists'**
+  String get whatsNewLibraryTip1;
+
+  /// What's New tip: library custom covers
+  ///
+  /// In en, this message translates to:
+  /// **'Set custom cover images for playlists'**
+  String get whatsNewLibraryTip2;
+
+  /// What's New tip: library multi-select
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-select tracks for batch actions'**
+  String get whatsNewLibraryTip3;
+
+  /// What's New tip: player parallax
+  ///
+  /// In en, this message translates to:
+  /// **'Cover art with parallax scrolling effect'**
+  String get whatsNewPlayerTip1;
+
+  /// What's New tip: player persistence
+  ///
+  /// In en, this message translates to:
+  /// **'Playback persists across app restarts'**
+  String get whatsNewPlayerTip2;
+
+  /// What's New tip: player lyrics
+  ///
+  /// In en, this message translates to:
+  /// **'Synced lyrics while you listen'**
+  String get whatsNewPlayerTip3;
+
+  /// What's New tip: context menu add to playlist
+  ///
+  /// In en, this message translates to:
+  /// **'Add tracks to any playlist instantly'**
+  String get whatsNewContextMenuTip1;
+
+  /// What's New tip: context menu share/convert
+  ///
+  /// In en, this message translates to:
+  /// **'Share or convert with one tap'**
+  String get whatsNewContextMenuTip2;
+
+  /// What's New tip: context menu re-enrich
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enrich metadata when needed'**
+  String get whatsNewContextMenuTip3;
+
+  /// What's New tip: batch share
+  ///
+  /// In en, this message translates to:
+  /// **'Share multiple tracks at once'**
+  String get whatsNewBatchToolsTip1;
+
+  /// What's New tip: batch convert
+  ///
+  /// In en, this message translates to:
+  /// **'Batch convert to MP3 or Opus format'**
+  String get whatsNewBatchToolsTip2;
+
+  /// What's New tip: batch re-enrich
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enrich metadata across your library'**
+  String get whatsNewBatchToolsTip3;
+
+  /// What's New tip: performance startup
+  ///
+  /// In en, this message translates to:
+  /// **'Faster app startup time'**
+  String get whatsNewPerformanceTip1;
+
+  /// What's New tip: performance memory
+  ///
+  /// In en, this message translates to:
+  /// **'Reduced memory usage during playback'**
+  String get whatsNewPerformanceTip2;
+
+  /// What's New tip: performance SQLite
+  ///
+  /// In en, this message translates to:
+  /// **'SQLite-backed storage for reliability'**
+  String get whatsNewPerformanceTip3;
+
+  /// Ready card message on last What's New page
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set — enjoy the new 24-Player!'**
+  String get whatsNewReadyMessage;
+
+  /// Button text to dismiss What's New screen
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s Go'**
+  String get whatsNewGetStarted;
+
+  /// Page indicator text in What's New screen
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String whatsNewPageIndicator(int current, int total);
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'es',
+    'fr',
+    'hi',
+    'id',
+    'ja',
+    'ko',
+    'nl',
+    'pt',
+    'ru',
+    'tr',
+    'zh',
+  ].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'es':
+      {
+        switch (locale.countryCode) {
+          case 'ES':
+            return AppLocalizationsEsEs();
+        }
+        break;
+      }
+    case 'pt':
+      {
+        switch (locale.countryCode) {
+          case 'PT':
+            return AppLocalizationsPtPt();
+        }
+        break;
+      }
+    case 'zh':
+      {
+        switch (locale.countryCode) {
+          case 'CN':
+            return AppLocalizationsZhCn();
+          case 'TW':
+            return AppLocalizationsZhTw();
+        }
+        break;
+      }
+  }
+
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'hi':
+      return AppLocalizationsHi();
+    case 'id':
+      return AppLocalizationsId();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'ko':
+      return AppLocalizationsKo();
+    case 'nl':
+      return AppLocalizationsNl();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'tr':
+      return AppLocalizationsTr();
+    case 'zh':
+      return AppLocalizationsZh();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}
