@@ -108,7 +108,7 @@ class SettingsTab extends ConsumerWidget {
                   SettingsItem(
                     icon: Icons.favorite_outline,
                     title: 'Donate',
-                    subtitle: 'Support SpotiFLAC-Mobile development',
+                    subtitle: 'Support 24-Player development',
                     onTap: () => _navigateTo(context, const DonatePage()),
                     showDivider: false,
                   ),
@@ -134,7 +134,7 @@ class SettingsTab extends ConsumerWidget {
                     icon: Icons.info_outline,
                     title: l10n.settingsAbout,
                     subtitle: '${l10n.aboutVersion} ${AppInfo.version}',
-                    onTap: () => _navigateTo(context, const AboutPage()),
+                    onTap: () => _navigateTo(context, const AboutScreen()),
                     showDivider: false,
                   ),
                 ],

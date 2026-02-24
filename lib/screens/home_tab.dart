@@ -1055,7 +1055,7 @@ class _HomeTabState extends ConsumerState<HomeTab>
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'SpotiFLAC',
+                              '24-Player',
                               style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),

@@ -127,7 +127,7 @@ abstract class AppLocalizations {
   /// App name - DO NOT TRANSLATE
   ///
   /// In en, this message translates to:
-  /// **'Purple Streamer'**
+  /// **'24-Player'**
   String get appName;
 
   /// App description shown in about page
@@ -877,7 +877,7 @@ abstract class AppLocalizations {
   /// Role description for original creator
   ///
   /// In en, this message translates to:
-  /// **'Creator of the original Purple Streamer'**
+  /// **'Creator of the original 24-Player'**
   String get aboutOriginalCreator;
 
   /// Role description for logo artist
@@ -1201,7 +1201,7 @@ abstract class AppLocalizations {
   /// Setup wizard title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Purple Streamer'**
+  /// **'Welcome to 24-Player'**
   String get setupTitle;
 
   /// Setup wizard subtitle
@@ -1273,7 +1273,7 @@ abstract class AppLocalizations {
   /// Explanation for storage access
   ///
   /// In en, this message translates to:
-  /// **'Purple Streamer needs \"All files access\" permission to save music files to your chosen folder.'**
+  /// **'24-Player needs \"All files access\" permission to save music files to your chosen folder.'**
   String get setupStorageAccessMessage;
 
   /// Android 11+ specific explanation
@@ -1429,7 +1429,7 @@ abstract class AppLocalizations {
   /// Explanation for storage permission
   ///
   /// In en, this message translates to:
-  /// **'Purple Streamer needs storage permission to save your downloaded music files.'**
+  /// **'24-Player needs storage permission to save your downloaded music files.'**
   String get setupStorageDescription;
 
   /// Success message for notification permission
@@ -1891,7 +1891,7 @@ abstract class AppLocalizations {
   /// Snackbar - wrong file type selected
   ///
   /// In en, this message translates to:
-  /// **'Please select a .Purple Streamer-ext file'**
+  /// **'Please select a .24-Player-ext file'**
   String get snackbarSelectExtFile;
 
   /// Snackbar - provider order saved
@@ -3373,7 +3373,7 @@ abstract class AppLocalizations {
   /// Empty state subtitle
   ///
   /// In en, this message translates to:
-  /// **'Install .Purple Streamer-ext files to add new providers'**
+  /// **'Install .24-Player-ext files to add new providers'**
   String get extensionsNoExtensionsSubtitle;
 
   /// Button to install extension from file
@@ -4477,7 +4477,7 @@ abstract class AppLocalizations {
   /// Dialog message for storage permission
   ///
   /// In en, this message translates to:
-  /// **'Purple Streamer needs storage access to scan your music library. Please grant permission in settings.'**
+  /// **'24-Player needs storage access to scan your music library. Please grant permission in settings.'**
   String get libraryStorageAccessMessage;
 
   /// Error when folder doesn't exist
@@ -4486,7 +4486,7 @@ abstract class AppLocalizations {
   /// **'Selected folder does not exist'**
   String get libraryFolderNotExist;
 
-  /// Badge for tracks downloaded via Purple Streamer
+  /// Badge for tracks downloaded via 24-Player
   ///
   /// In en, this message translates to:
   /// **'Downloaded'**
@@ -4669,7 +4669,7 @@ abstract class AppLocalizations {
   /// Explanation when switching to app storage
   ///
   /// In en, this message translates to:
-  /// **'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/Purple Streamer folder.'**
+  /// **'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/24-Player folder.'**
   String get storageSwitchToAppMessage;
 
   /// Section header for existing downloads info
@@ -4753,7 +4753,7 @@ abstract class AppLocalizations {
   /// Tutorial welcome page title
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Purple Streamer!'**
+  /// **'Welcome to 24-Player!'**
   String get tutorialWelcomeTitle;
 
   /// Tutorial welcome page description
@@ -5643,7 +5643,7 @@ abstract class AppLocalizations {
   /// Description for mode selection step
   ///
   /// In en, this message translates to:
-  /// **'How would you like to use Purple Streamer? You can always change this later in Settings.'**
+  /// **'How would you like to use 24-Player? You can always change this later in Settings.'**
   String get setupModeSelectionDescription;
 
   /// Title for downloader mode option
@@ -5721,13 +5721,13 @@ abstract class AppLocalizations {
   /// Subtitle for the What's New screen
   ///
   /// In en, this message translates to:
-  /// **'Purple Streamer has evolved — here\'s what changed since 3.x'**
+  /// **'24-Player has evolved — here\'s what changed since 3.x'**
   String get whatsNewSubtitle;
 
   /// Welcome page title in What's New screen
   ///
   /// In en, this message translates to:
-  /// **'Purple Streamer Mobile 1.2'**
+  /// **'24-Player Mobile 1.2'**
   String get whatsNewWelcomeTitle;
 
   /// Welcome page description in What's New screen
@@ -5997,7 +5997,7 @@ abstract class AppLocalizations {
   /// Ready card message on last What's New page
   ///
   /// In en, this message translates to:
-  /// **'You\'re all set — enjoy the new Purple Streamer!'**
+  /// **'You\'re all set — enjoy the new 24-Player!'**
   String get whatsNewReadyMessage;
 
   /// Button text to dismiss What's New screen

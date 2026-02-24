@@ -87,9 +87,9 @@ class AppSettings {
   hasSeenWhatsNew; // Whether user has seen the What's New screen for current version
 
   const AppSettings({
-    this.interactionMode = 'downloader',
+    this.interactionMode = 'streaming',
     this.defaultService = 'tidal',
-    this.audioQuality = 'LOSSLESS',
+    this.audioQuality = 'HI_RES',
     this.filenameFormat = '{title} - {artist}',
     this.downloadDirectory = '',
     this.storageMode = 'app',
@@ -111,7 +111,7 @@ class AppSettings {
     this.filterContributingArtistsInAlbumArtist = false,
     this.historyViewMode = 'grid',
     this.historyFilterMode = 'all',
-    this.askQualityBeforeDownload = true,
+    this.askQualityBeforeDownload = false,
     this.spotifyClientId = '',
     this.spotifyClientSecret = '',
     this.useCustomSpotifyCredentials = true,

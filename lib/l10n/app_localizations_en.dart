@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Purple Streamer';
+  String get appName => '24-Player';
 
   @override
   String get appDescription =>
@@ -433,7 +433,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutMobileDeveloper => 'Mobile version developer';
 
   @override
-  String get aboutOriginalCreator => 'Creator of the original Purple Streamer';
+  String get aboutOriginalCreator => 'Creator of the original 24-Player';
 
   @override
   String get aboutLogoArtist =>
@@ -621,7 +621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMetadataOpenFolder => 'Open Folder';
 
   @override
-  String get setupTitle => 'Welcome to Purple Streamer';
+  String get setupTitle => 'Welcome to 24-Player';
 
   @override
   String get setupSubtitle => 'Let\'s get you started';
@@ -659,7 +659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupStorageAccessMessage =>
-      'Purple Streamer needs \"All files access\" permission to save music files to your chosen folder.';
+      '24-Player needs \"All files access\" permission to save music files to your chosen folder.';
 
   @override
   String get setupStorageAccessMessageAndroid11 =>
@@ -749,7 +749,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupStorageDescription =>
-      'Purple Streamer needs storage permission to save your downloaded music files.';
+      '24-Player needs storage permission to save your downloaded music files.';
 
   @override
   String get setupNotificationGranted => 'Notification Permission Granted!';
@@ -1028,8 +1028,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackbarFileNotFound => 'File not found';
 
   @override
-  String get snackbarSelectExtFile =>
-      'Please select a .Purple Streamer-ext file';
+  String get snackbarSelectExtFile => 'Please select a .24-Player-ext file';
 
   @override
   String get snackbarProviderPrioritySaved => 'Provider priority saved';
@@ -1853,7 +1852,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get extensionsNoExtensionsSubtitle =>
-      'Install .Purple Streamer-ext files to add new providers';
+      'Install .24-Player-ext files to add new providers';
 
   @override
   String get extensionsInstallButton => 'Install Extension';
@@ -2496,7 +2495,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryStorageAccessMessage =>
-      'Purple Streamer needs storage access to scan your music library. Please grant permission in settings.';
+      '24-Player needs storage access to scan your music library. Please grant permission in settings.';
 
   @override
   String get libraryFolderNotExist => 'Selected folder does not exist';
@@ -2612,7 +2611,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storageSwitchToAppMessage =>
-      'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/Purple Streamer folder.';
+      'Your existing downloads will remain in the current SAF location and stay accessible.\n\nNew downloads will be saved to Music/24-Player folder.';
 
   @override
   String get storageSwitchExistingDownloads => 'Existing Downloads';
@@ -2664,7 +2663,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageModeInfo => 'Your files are stored in multiple locations';
 
   @override
-  String get tutorialWelcomeTitle => 'Welcome to Purple Streamer!';
+  String get tutorialWelcomeTitle => 'Welcome to 24-Player!';
 
   @override
   String get tutorialWelcomeDesc =>
@@ -3233,7 +3232,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupModeSelectionDescription =>
-      'How would you like to use Purple Streamer? You can always change this later in Settings.';
+      'How would you like to use 24-Player? You can always change this later in Settings.';
 
   @override
   String get setupModeDownloaderTitle => 'Downloader';
@@ -3280,10 +3279,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewSubtitle =>
-      'Purple Streamer has evolved — here\'s what changed since 3.x';
+      '24-Player has evolved — here\'s what changed since 3.x';
 
   @override
-  String get whatsNewWelcomeTitle => 'Purple Streamer Mobile 1.2';
+  String get whatsNewWelcomeTitle => '24-Player Mobile 1.2';
 
   @override
   String get whatsNewWelcomeDesc =>
@@ -3431,7 +3430,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewReadyMessage =>
-      'You\'re all set — enjoy the new Purple Streamer!';
+      'You\'re all set — enjoy the new 24-Player!';
 
   @override
   String get whatsNewGetStarted => 'Let\'s Go';

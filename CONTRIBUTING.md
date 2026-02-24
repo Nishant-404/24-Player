@@ -1,6 +1,6 @@
-# Contributing to Purple Streamer
+# Contributing to 24-Player
 
-First off, thank you for considering contributing to Purple Streamer! 🎉
+First off, thank you for considering contributing to 24-Player! 🎉
 
 This document provides guidelines and steps for contributing. Following these guidelines helps maintain code quality and ensures a smooth collaboration process.
 
@@ -77,13 +77,13 @@ Translation files are located in `lib/l10n/arb/`.
 
 1. **Clone your fork**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Purple Streamer.git
-   cd Purple Streamer
+   git clone https://github.com/YOUR_USERNAME/24-Player.git
+   cd 24-Player
    ```
 
 2. **Add upstream remote**
    ```bash
-   git remote add upstream https://github.com/nishant-404/Purple Streamer.git
+   git remote add upstream https://github.com/nishant-404/24-Player.git
    ```
 
 3. **Install dependencies**

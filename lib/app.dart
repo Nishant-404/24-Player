@@ -91,7 +91,7 @@ class SpotiFLACApp extends ConsumerWidget {
         );
 
         return MaterialApp.router(
-          title: 'Purple Streamer',
+          title: '24-Player',
           debugShowCheckedModeBanner: false,
           // Use the tinted versions instead of the raw dynamic ones
           theme: purpleLightTheme,

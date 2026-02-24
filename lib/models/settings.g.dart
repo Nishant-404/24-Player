@@ -7,9 +7,9 @@ part of 'settings.dart';
 // **************************************************************************
 
 AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => AppSettings(
-  interactionMode: json['interactionMode'] as String? ?? 'downloader',
+  interactionMode: json['interactionMode'] as String? ?? 'streaming',
   defaultService: json['defaultService'] as String? ?? 'tidal',
-  audioQuality: json['audioQuality'] as String? ?? 'LOSSLESS',
+  audioQuality: json['audioQuality'] as String? ?? 'HI_RES',
   filenameFormat: json['filenameFormat'] as String? ?? '{title} - {artist}',
   downloadDirectory: json['downloadDirectory'] as String? ?? '',
   storageMode: json['storageMode'] as String? ?? 'app',
@@ -32,7 +32,7 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => AppSettings(
       json['filterContributingArtistsInAlbumArtist'] as bool? ?? false,
   historyViewMode: json['historyViewMode'] as String? ?? 'grid',
   historyFilterMode: json['historyFilterMode'] as String? ?? 'all',
-  askQualityBeforeDownload: json['askQualityBeforeDownload'] as bool? ?? true,
+  askQualityBeforeDownload: json['askQualityBeforeDownload'] as bool? ?? false,
   spotifyClientId: json['spotifyClientId'] as String? ?? '',
   spotifyClientSecret: json['spotifyClientSecret'] as String? ?? '',
   useCustomSpotifyCredentials:

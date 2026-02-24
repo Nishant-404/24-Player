@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nisha.purplestreamer"
+        applicationId = "com.nisha.twentyfourplayer"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

@@ -3286,10 +3286,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get whatsNewSubtitle =>
-      'Purple Streamer has evolved — here\'s what changed since 3.x';
+      '24-Player has evolved — here\'s what changed since 3.x';
 
   @override
-  String get whatsNewWelcomeTitle => 'Purple Streamer Mobile 1.2';
+  String get whatsNewWelcomeTitle => '24-Player Mobile 1.2';
 
   @override
   String get whatsNewWelcomeDesc =>
@@ -3437,7 +3437,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get whatsNewReadyMessage =>
-      'You\'re all set — enjoy the new Purple Streamer!';
+      'You\'re all set — enjoy the new 24-Player!';
 
   @override
   String get whatsNewGetStarted => 'Let\'s Go';

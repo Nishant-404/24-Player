@@ -22,7 +22,7 @@
 		<string>zh-Hant</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Purple Streamer</string>
+	<string>24-Player</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -30,7 +30,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Purple Streamer</string>
+	<string>24-Player</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -80,7 +80,7 @@
 	
 	<!-- Photo Library (for cover art if needed) -->
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Purple Streamer needs access to save album artwork</string>
+	<string>24-Player needs access to save album artwork</string>
 	
 	<!-- URL Schemes for deep linking -->
 	<key>CFBundleURLTypes</key>
@@ -92,7 +92,7 @@
 			<string>com.zarz.spotiflac</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>spotiflac</string>
+				<string>24-Player</string>
 			</array>
 		</dict>
 	</array>
