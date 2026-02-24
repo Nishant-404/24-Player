@@ -5,18 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/services/cover_cache_manager.dart';
-import 'package:spotiflac_android/services/ffmpeg_service.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/services/history_database.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/utils/file_access.dart';
-import 'package:spotiflac_android/utils/lyrics_metadata_helper.dart';
-import 'package:spotiflac_android/providers/download_queue_provider.dart';
-import 'package:spotiflac_android/providers/playback_provider.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/screens/track_metadata_screen.dart';
-import 'package:spotiflac_android/services/downloaded_embedded_cover_resolver.dart';
+import 'package:twentyfour_player/services/cover_cache_manager.dart';
+import 'package:twentyfour_player/services/ffmpeg_service.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/services/history_database.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/utils/file_access.dart';
+import 'package:twentyfour_player/utils/lyrics_metadata_helper.dart';
+import 'package:twentyfour_player/providers/download_queue_provider.dart';
+import 'package:twentyfour_player/providers/playback_provider.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/screens/track_metadata_screen.dart';
+import 'package:twentyfour_player/services/downloaded_embedded_cover_resolver.dart';
 
 /// Screen to display downloaded tracks from a specific album
 class DownloadedAlbumScreen extends ConsumerStatefulWidget {

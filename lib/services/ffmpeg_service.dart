@@ -7,7 +7,7 @@ import 'package:ffmpeg_kit_flutter_new_full/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_new_full/return_code.dart';
 import 'package:ffmpeg_kit_flutter_new_full/session_state.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 
 final _log = AppLogger('FFmpeg');
 

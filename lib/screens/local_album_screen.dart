@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/utils/file_access.dart';
-import 'package:spotiflac_android/utils/lyrics_metadata_helper.dart';
-import 'package:spotiflac_android/services/library_database.dart';
-import 'package:spotiflac_android/services/ffmpeg_service.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/providers/local_library_provider.dart';
-import 'package:spotiflac_android/providers/playback_provider.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/utils/file_access.dart';
+import 'package:twentyfour_player/utils/lyrics_metadata_helper.dart';
+import 'package:twentyfour_player/services/library_database.dart';
+import 'package:twentyfour_player/services/ffmpeg_service.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/providers/local_library_provider.dart';
+import 'package:twentyfour_player/providers/playback_provider.dart';
 
 /// Screen to display tracks from a local library album
 class LocalAlbumScreen extends ConsumerStatefulWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
 
 class TutorialScreen extends ConsumerStatefulWidget {
   const TutorialScreen({super.key});

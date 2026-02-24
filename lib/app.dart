@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:spotiflac_android/screens/main_shell.dart';
-import 'package:spotiflac_android/screens/setup_screen.dart';
-import 'package:spotiflac_android/screens/tutorial_screen.dart';
-import 'package:spotiflac_android/screens/whats_new_screen.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/theme/dynamic_color_wrapper.dart';
-import 'package:spotiflac_android/l10n/app_localizations.dart';
+import 'package:twentyfour_player/screens/main_shell.dart';
+import 'package:twentyfour_player/screens/setup_screen.dart';
+import 'package:twentyfour_player/screens/tutorial_screen.dart';
+import 'package:twentyfour_player/screens/whats_new_screen.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/theme/dynamic_color_wrapper.dart';
+import 'package:twentyfour_player/l10n/app_localizations.dart';
 
 final _routerProvider = Provider<GoRouter>((ref) {
   final isFirstLaunch = ref.watch(

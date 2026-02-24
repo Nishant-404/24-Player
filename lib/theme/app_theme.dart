@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spotiflac_android/models/theme_settings.dart';
+import 'package:twentyfour_player/models/theme_settings.dart';
 
 class AppTheme {
   /// Default seed color (Spotify green)

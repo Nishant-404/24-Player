@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/models/track.dart';
-import 'package:spotiflac_android/services/library_collections_database.dart';
+import 'package:twentyfour_player/models/track.dart';
+import 'package:twentyfour_player/services/library_collections_database.dart';
 
 String trackCollectionKey(Track track) {
   final isrc = track.isrc?.trim();

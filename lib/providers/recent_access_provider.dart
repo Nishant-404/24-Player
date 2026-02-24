@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spotiflac_android/services/app_state_database.dart';
+import 'package:twentyfour_player/services/app_state_database.dart';
 
 const _maxRecentItems = 20;
 

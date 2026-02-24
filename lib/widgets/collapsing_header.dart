@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
 
 /// A collapsing header widget
 /// Title collapses from large to small when scrolling

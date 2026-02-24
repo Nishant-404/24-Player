@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/providers/store_provider.dart';
-import 'package:spotiflac_android/widgets/settings_group.dart';
-import 'package:spotiflac_android/screens/store/extension_details_screen.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/providers/store_provider.dart';
+import 'package:twentyfour_player/widgets/settings_group.dart';
+import 'package:twentyfour_player/screens/store/extension_details_screen.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
 
 class StoreTab extends ConsumerStatefulWidget {
   const StoreTab({super.key});

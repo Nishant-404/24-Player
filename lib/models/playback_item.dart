@@ -1,4 +1,4 @@
-import 'package:spotiflac_android/models/track.dart';
+import 'package:twentyfour_player/models/track.dart';
 
 class PlaybackItem {
   final String id;

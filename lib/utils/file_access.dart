@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/mime_utils.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/mime_utils.dart';
 
 /// Regular expression to detect iOS app container paths.
 /// Matches paths like /var/mobile/Containers/Data/Application/{UUID}

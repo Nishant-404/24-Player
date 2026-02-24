@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spotiflac_android/models/theme_settings.dart';
+import 'package:twentyfour_player/models/theme_settings.dart';
 
 final themeProvider = NotifierProvider<ThemeNotifier, ThemeSettings>(() {
   return ThemeNotifier();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:spotiflac_android/l10n/app_localizations.dart';
+import 'package:twentyfour_player/l10n/app_localizations.dart';
 
-export 'package:spotiflac_android/l10n/app_localizations.dart';
+export 'package:twentyfour_player/l10n/app_localizations.dart';
 
 /// Extension to easily access AppLocalizations from BuildContext
 extension AppLocalizationsX on BuildContext {

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spotiflac_android/models/track.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/logger.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/providers/extension_provider.dart';
+import 'package:twentyfour_player/models/track.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/logger.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/providers/extension_provider.dart';
 
 final _log = AppLogger('TrackProvider');
 

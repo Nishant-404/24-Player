@@ -1,18 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:spotiflac_android/services/download_request_payload.dart';
-import 'package:spotiflac_android/services/stream_request_payload.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/services/download_request_payload.dart';
+import 'package:twentyfour_player/services/stream_request_payload.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 
 final _log = AppLogger('PlatformBridge');
 
 class PlatformBridge {
-  static const _channel = MethodChannel('com.zarz.spotiflac/backend');
+  static const _channel = MethodChannel('com.nisha.twentyfourplayer/backend');
   static const _downloadProgressEvents = EventChannel(
-    'com.zarz.spotiflac/download_progress_stream',
+    'com.nisha.twentyfourplayer/download_progress_stream',
   );
   static const _libraryScanProgressEvents = EventChannel(
-    'com.zarz.spotiflac/library_scan_progress_stream',
+    'com.nisha.twentyfourplayer/library_scan_progress_stream',
   );
 
   static Future<Map<String, dynamic>> parseSpotifyUrl(String url) async {

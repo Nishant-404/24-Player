@@ -1,4 +1,4 @@
-package com.zarz.spotiflac
+package com.nisha.twentyfourplayer
 
 import android.app.Activity
 import android.content.Intent
@@ -33,11 +33,11 @@ import java.io.FileOutputStream
 import java.util.Locale
 
 class MainActivity: AudioServiceFragmentActivity() {
-    private val CHANNEL = "com.zarz.spotiflac/backend"
+    private val CHANNEL = "com.nisha.twentyfourplayer/backend"
     private val DOWNLOAD_PROGRESS_STREAM_CHANNEL =
-        "com.zarz.spotiflac/download_progress_stream"
+        "com.nisha.twentyfourplayer/download_progress_stream"
     private val LIBRARY_SCAN_PROGRESS_STREAM_CHANNEL =
-        "com.zarz.spotiflac/library_scan_progress_stream"
+        "com.nisha.twentyfourplayer/library_scan_progress_stream"
     private val STREAM_POLLING_INTERVAL_MS = 800L
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var pendingSafTreeResult: MethodChannel.Result? = null

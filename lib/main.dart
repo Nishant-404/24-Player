@@ -3,14 +3,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/app.dart';
-import 'package:spotiflac_android/providers/download_queue_provider.dart';
-import 'package:spotiflac_android/providers/extension_provider.dart';
-import 'package:spotiflac_android/providers/library_collections_provider.dart';
-import 'package:spotiflac_android/providers/local_library_provider.dart';
-import 'package:spotiflac_android/services/notification_service.dart';
-import 'package:spotiflac_android/services/share_intent_service.dart';
-import 'package:spotiflac_android/services/cover_cache_manager.dart';
+import 'package:twentyfour_player/app.dart';
+import 'package:twentyfour_player/providers/download_queue_provider.dart';
+import 'package:twentyfour_player/providers/extension_provider.dart';
+import 'package:twentyfour_player/providers/library_collections_provider.dart';
+import 'package:twentyfour_player/providers/local_library_provider.dart';
+import 'package:twentyfour_player/services/notification_service.dart';
+import 'package:twentyfour_player/services/share_intent_service.dart';
+import 'package:twentyfour_player/services/cover_cache_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

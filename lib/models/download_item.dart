@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:spotiflac_android/models/track.dart';
+import 'package:twentyfour_player/models/track.dart';
 
 part 'download_item.g.dart';
 

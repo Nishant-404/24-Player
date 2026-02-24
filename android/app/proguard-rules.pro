@@ -58,7 +58,7 @@
 -keep class kotlin.Metadata { *; }
 
 # Keep MainActivity and related classes
--keep class com.zarz.spotiflac.** { *; }
+-keep class com.nisha.twentyfourplayer.** { *; }
 
 # Prevent R8 from removing metadata
 -keepattributes *Annotation*

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 
 final _log = AppLogger('ShareIntent');
 

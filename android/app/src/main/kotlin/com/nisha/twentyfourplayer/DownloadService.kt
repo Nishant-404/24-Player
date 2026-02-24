@@ -1,4 +1,4 @@
-package com.zarz.spotiflac
+package com.nisha.twentyfourplayer
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -26,9 +26,9 @@ class DownloadService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val WAKELOCK_TAG = "SpotiFLAC:DownloadWakeLock"
         
-        const val ACTION_START = "com.zarz.spotiflac.action.START_DOWNLOAD"
-        const val ACTION_STOP = "com.zarz.spotiflac.action.STOP_DOWNLOAD"
-        const val ACTION_UPDATE_PROGRESS = "com.zarz.spotiflac.action.UPDATE_PROGRESS"
+        const val ACTION_START = "com.nisha.twentyfourplayer.action.START_DOWNLOAD"
+        const val ACTION_STOP = "com.nisha.twentyfourplayer.action.STOP_DOWNLOAD"
+        const val ACTION_UPDATE_PROGRESS = "com.nisha.twentyfourplayer.action.UPDATE_PROGRESS"
         
         const val EXTRA_TRACK_NAME = "track_name"
         const val EXTRA_ARTIST_NAME = "artist_name"

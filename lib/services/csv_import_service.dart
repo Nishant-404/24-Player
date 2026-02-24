@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:spotiflac_android/models/track.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/models/track.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 
 class CsvImportService {
   static final _log = AppLogger('CsvImportService');

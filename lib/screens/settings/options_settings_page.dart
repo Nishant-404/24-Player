@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/models/settings.dart';
-import 'package:spotiflac_android/providers/download_queue_provider.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/providers/extension_provider.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
-import 'package:spotiflac_android/widgets/settings_group.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/models/settings.dart';
+import 'package:twentyfour_player/providers/download_queue_provider.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/providers/extension_provider.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/widgets/settings_group.dart';
 
 class OptionsSettingsPage extends ConsumerWidget {
   const OptionsSettingsPage({super.key});

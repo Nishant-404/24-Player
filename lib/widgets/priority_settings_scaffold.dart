@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
 
 class PrioritySettingsScaffold extends StatelessWidget {
   final bool hasChanges;

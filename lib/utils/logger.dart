@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:spotiflac_android/constants/app_info.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
+import 'package:twentyfour_player/constants/app_info.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
 
 const int _maxLogMessageLength = 500;
 const String _redactedValue = '[REDACTED]';

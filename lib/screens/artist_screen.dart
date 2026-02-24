@@ -3,22 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
-import 'package:spotiflac_android/services/cover_cache_manager.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/models/track.dart';
-import 'package:spotiflac_android/providers/track_provider.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/providers/download_queue_provider.dart';
-import 'package:spotiflac_android/providers/playback_provider.dart';
-import 'package:spotiflac_android/providers/recent_access_provider.dart';
-import 'package:spotiflac_android/providers/local_library_provider.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/file_access.dart';
-import 'package:spotiflac_android/screens/album_screen.dart';
-import 'package:spotiflac_android/screens/home_tab.dart'
+import 'package:twentyfour_player/services/cover_cache_manager.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/models/track.dart';
+import 'package:twentyfour_player/providers/track_provider.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/providers/download_queue_provider.dart';
+import 'package:twentyfour_player/providers/playback_provider.dart';
+import 'package:twentyfour_player/providers/recent_access_provider.dart';
+import 'package:twentyfour_player/providers/local_library_provider.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/file_access.dart';
+import 'package:twentyfour_player/screens/album_screen.dart';
+import 'package:twentyfour_player/screens/home_tab.dart'
     show ExtensionAlbumScreen;
-import 'package:spotiflac_android/widgets/download_service_picker.dart';
-import 'package:spotiflac_android/widgets/track_collection_quick_actions.dart';
+import 'package:twentyfour_player/widgets/download_service_picker.dart';
+import 'package:twentyfour_player/widgets/track_collection_quick_actions.dart';
 
 /// Simple in-memory cache for artist data
 class _ArtistCache {

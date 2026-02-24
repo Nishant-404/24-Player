@@ -7,16 +7,16 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:spotiflac_android/models/playback_item.dart';
-import 'package:spotiflac_android/models/track.dart';
-import 'package:spotiflac_android/providers/extension_provider.dart';
-import 'package:spotiflac_android/providers/local_library_provider.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/services/ffmpeg_service.dart';
-import 'package:spotiflac_android/services/library_database.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/services/stream_request_payload.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/models/playback_item.dart';
+import 'package:twentyfour_player/models/track.dart';
+import 'package:twentyfour_player/providers/extension_provider.dart';
+import 'package:twentyfour_player/providers/local_library_provider.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/services/ffmpeg_service.dart';
+import 'package:twentyfour_player/services/library_database.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/services/stream_request_payload.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _log = AppLogger('PlaybackProvider');
@@ -520,7 +520,7 @@ class PlaybackController extends Notifier<PlaybackState> {
               onSeek: seek,
             ),
             config: const audio_service.AudioServiceConfig(
-              androidNotificationChannelId: 'com.zarz.spotiflac.playback',
+              androidNotificationChannelId: 'com.nisha.twentyfourplayer.playback',
               androidNotificationChannelName: 'Music Playback',
               androidNotificationOngoing: true,
               androidShowNotificationBadge: true,

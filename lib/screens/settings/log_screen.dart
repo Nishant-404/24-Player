@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart' show ShareParams, SharePlus;
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
-import 'package:spotiflac_android/utils/logger.dart';
-import 'package:spotiflac_android/widgets/settings_group.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/utils/logger.dart';
+import 'package:twentyfour_player/widgets/settings_group.dart';
 
 final RegExp _domainPattern =
     RegExp(r'domain:\s*([^\s,]+)', caseSensitive: false);

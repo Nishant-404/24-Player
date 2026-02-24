@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/widgets/priority_settings_scaffold.dart';
-import 'package:spotiflac_android/widgets/settings_group.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/widgets/priority_settings_scaffold.dart';
+import 'package:twentyfour_player/widgets/settings_group.dart';
 
 class LyricsProviderPriorityPage extends ConsumerStatefulWidget {
   const LyricsProviderPriorityPage({super.key});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:spotiflac_android/providers/theme_provider.dart';
-import 'package:spotiflac_android/theme/app_theme.dart';
+import 'package:twentyfour_player/providers/theme_provider.dart';
+import 'package:twentyfour_player/theme/app_theme.dart';
 
 /// Wrapper widget that provides dynamic color support from device wallpaper
 class DynamicColorWrapper extends ConsumerWidget {

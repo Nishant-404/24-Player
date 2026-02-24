@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spotiflac_android/providers/download_queue_provider.dart';
-import 'package:spotiflac_android/services/history_database.dart';
-import 'package:spotiflac_android/services/library_database.dart';
-import 'package:spotiflac_android/services/notification_service.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/providers/download_queue_provider.dart';
+import 'package:twentyfour_player/services/history_database.dart';
+import 'package:twentyfour_player/services/library_database.dart';
+import 'package:twentyfour_player/services/notification_service.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 
 final _log = AppLogger('LocalLibrary');
 

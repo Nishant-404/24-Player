@@ -89,7 +89,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>CFBundleURLName</key>
-			<string>com.zarz.spotiflac</string>
+			<string>com.nisha.twentyfourplayer</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>24-Player</string>

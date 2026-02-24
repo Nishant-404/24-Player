@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spotiflac_android/constants/app_info.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/screens/settings/appearance_settings_page.dart';
-import 'package:spotiflac_android/screens/settings/download_settings_page.dart';
-import 'package:spotiflac_android/screens/settings/extensions_page.dart';
-import 'package:spotiflac_android/screens/settings/library_settings_page.dart';
-import 'package:spotiflac_android/screens/settings/options_settings_page.dart';
-import 'package:spotiflac_android/screens/settings/about_page.dart';
-import 'package:spotiflac_android/screens/settings/cache_management_page.dart';
-import 'package:spotiflac_android/screens/settings/donate_page.dart';
-import 'package:spotiflac_android/screens/settings/log_screen.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
-import 'package:spotiflac_android/widgets/settings_group.dart';
+import 'package:twentyfour_player/constants/app_info.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/screens/settings/appearance_settings_page.dart';
+import 'package:twentyfour_player/screens/settings/download_settings_page.dart';
+import 'package:twentyfour_player/screens/settings/extensions_page.dart';
+import 'package:twentyfour_player/screens/settings/library_settings_page.dart';
+import 'package:twentyfour_player/screens/settings/options_settings_page.dart';
+import 'package:twentyfour_player/screens/settings/about_page.dart';
+import 'package:twentyfour_player/screens/settings/cache_management_page.dart';
+import 'package:twentyfour_player/screens/settings/donate_page.dart';
+import 'package:twentyfour_player/screens/settings/log_screen.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/widgets/settings_group.dart';
 
 class SettingsTab extends ConsumerWidget {
   const SettingsTab({super.key});

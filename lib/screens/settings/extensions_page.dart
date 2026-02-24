@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/providers/extension_provider.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/screens/settings/extension_detail_page.dart';
-import 'package:spotiflac_android/screens/settings/provider_priority_page.dart';
-import 'package:spotiflac_android/screens/settings/metadata_provider_priority_page.dart';
-import 'package:spotiflac_android/utils/app_bar_layout.dart';
-import 'package:spotiflac_android/widgets/settings_group.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/providers/extension_provider.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/screens/settings/extension_detail_page.dart';
+import 'package:twentyfour_player/screens/settings/provider_priority_page.dart';
+import 'package:twentyfour_player/screens/settings/metadata_provider_priority_page.dart';
+import 'package:twentyfour_player/utils/app_bar_layout.dart';
+import 'package:twentyfour_player/widgets/settings_group.dart';
 
 class ExtensionsPage extends ConsumerStatefulWidget {
   const ExtensionsPage({super.key});
@@ -285,7 +285,7 @@ class _ExtensionsPageState extends ConsumerState<ExtensionsPage> {
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
       if (file.path != null) {
-        if (!file.path!.endsWith('.spotiflac-ext')) {
+        if (!file.path!.endsWith('.twentyfourplayer-ext')) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(context.l10n.snackbarSelectExtFile)),

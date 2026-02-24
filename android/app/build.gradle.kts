@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.zarz.spotiflac"
+    namespace = "com.nisha.twentyfourplayer"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

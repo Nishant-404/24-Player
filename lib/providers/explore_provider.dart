@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/logger.dart';
-import 'package:spotiflac_android/providers/extension_provider.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/logger.dart';
+import 'package:twentyfour_player/providers/extension_provider.dart';
 
 final _log = AppLogger('ExploreProvider');
 
@@ -148,7 +148,7 @@ String _getLocalGreeting() {
 
 bool _isYTMusicQuickPicksItems(List<ExploreItem> items) {
   if (items.isEmpty) return false;
-  if (items.first.providerId != 'ytmusic-spotiflac') return false;
+  if (items.first.providerId != 'ytmusic-twentyfourplayer') return false;
   for (final item in items) {
     if (item.type != 'track') {
       return false;

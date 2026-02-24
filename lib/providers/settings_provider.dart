@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:spotiflac_android/models/settings.dart';
-import 'package:spotiflac_android/constants/app_info.dart';
-import 'package:spotiflac_android/providers/playback_provider.dart';
-import 'package:spotiflac_android/services/platform_bridge.dart';
-import 'package:spotiflac_android/utils/logger.dart';
+import 'package:twentyfour_player/models/settings.dart';
+import 'package:twentyfour_player/constants/app_info.dart';
+import 'package:twentyfour_player/providers/playback_provider.dart';
+import 'package:twentyfour_player/services/platform_bridge.dart';
+import 'package:twentyfour_player/utils/logger.dart';
 
 const _settingsKey = 'app_settings';
 const _migrationVersionKey = 'settings_migration_version';

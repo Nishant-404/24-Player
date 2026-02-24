@@ -1,15 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spotiflac_android/l10n/l10n.dart';
-import 'package:spotiflac_android/models/track.dart';
-import 'package:spotiflac_android/providers/download_queue_provider.dart';
-import 'package:spotiflac_android/providers/library_collections_provider.dart';
-import 'package:spotiflac_android/providers/playback_provider.dart';
-import 'package:spotiflac_android/providers/settings_provider.dart';
-import 'package:spotiflac_android/services/cover_cache_manager.dart';
-import 'package:spotiflac_android/widgets/download_service_picker.dart';
-import 'package:spotiflac_android/widgets/playlist_picker_sheet.dart';
+import 'package:twentyfour_player/l10n/l10n.dart';
+import 'package:twentyfour_player/models/track.dart';
+import 'package:twentyfour_player/providers/download_queue_provider.dart';
+import 'package:twentyfour_player/providers/library_collections_provider.dart';
+import 'package:twentyfour_player/providers/playback_provider.dart';
+import 'package:twentyfour_player/providers/settings_provider.dart';
+import 'package:twentyfour_player/services/cover_cache_manager.dart';
+import 'package:twentyfour_player/widgets/download_service_picker.dart';
+import 'package:twentyfour_player/widgets/playlist_picker_sheet.dart';
 
 class TrackCollectionQuickActions extends ConsumerWidget {
   final Track track;
